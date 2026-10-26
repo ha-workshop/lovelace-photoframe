@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Стенд карточки</title>
+    <style>
+      /* Похоже на панельный вид HA: шапка 56px сверху, карточка под ней */
+      :root { --header-height: 56px; }
+      body { margin: 0; background: #111318; font-family: Roboto, sans-serif; }
+      header { height: 56px; display: flex; align-items: center; padding: 0 16px; color: #e3e3e3; background: #1c1f26; font-size: 18px; }
+    </style>
+  </head>
+  <body>
+    <header>Стенд: дашборд «Фоторамка» (имитация HA)</header>
+    <div id="view"></div>
+    <script type="module" src="/dev/card-harness.ts"></script>
+  </body>
+</html>

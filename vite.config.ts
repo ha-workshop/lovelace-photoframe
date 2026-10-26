@@ -1,0 +1,30 @@
+import { defineConfig } from 'vite';
+import preact from '@preact/preset-vite';
+import legacy from '@vitejs/plugin-legacy';
+
+// Целевые WebView фоторамок на Android 5 — Chrome 37+.
+// Legacy-плагин собирает ES5-бандл с полифиллами (nomodule) рядом с современным.
+export default defineConfig({
+  base: './',
+  plugins: [
+    preact(),
+    legacy({
+      targets: ['chrome >= 37', 'android >= 5'],
+      modernPolyfills: true,
+    }),
+  ],
+  build: {
+    // Встроенный минификатор Vite 8 превращает строки в `шаблоны` — Chrome 37 их не парсит.
+    minify: 'terser',
+    terserOptions: { ecma: 5, safari10: true },
+    cssTarget: 'chrome37',
+  },
+  // В dev API и фото отдаёт сервис (npm run server:dev).
+  server: {
+    port: 5173,
+    proxy: {
+      '/api': { target: 'http://localhost:8787', ws: true },
+      '/photos': 'http://localhost:8787',
+    },
+  },
+});

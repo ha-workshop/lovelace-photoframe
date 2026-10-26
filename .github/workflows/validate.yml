@@ -1,0 +1,29 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  hacs:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Скачиваем репозиторий
+      - uses: actions/checkout@v4
+
+      # 2. Настраиваем   Node.js
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # 3. Устанавливаем зависимости и собираем карточку в dist/
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run build:card
+
+      # 4. Запускаем валидацию HACS, когда файл уже готов
+      - uses: hacs/action@main
+        with:
+          category: plugin
+          ignore: brands
