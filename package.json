@@ -1,0 +1,38 @@
+{
+  "name": "photoframe",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n web,api -c cyan,magenta \"vite --host\" \"npm run server:dev\"",
+    "dev:web": "vite --host",
+    "server": "node --no-warnings=ExperimentalWarning server/index.ts",
+    "server:dev": "node --no-warnings=ExperimentalWarning --env-file-if-exists=.env.local --watch server/index.ts",
+    "build": "tsc --noEmit && tsc --noEmit -p server && vite build && vite build -c vite.card.config.ts",
+    "preview": "vite preview --host",
+    "apk": "npm run build && cd android && ./gradlew assembleRelease",
+    "apk:debug": "npm run build && cd android && ./gradlew assembleDebug",
+    "build:card": "vite build -c vite.card.config.ts"
+  },
+  "dependencies": {
+    "@fontsource/inter": "^5.3.0",
+    "@hono/node-server": "^2.1.5",
+    "hono": "^4.13.14",
+    "lucide-preact": "^1.61.0",
+    "nosleep.js": "^0.12.0",
+    "preact": "^10.29.8",
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.10.6",
+    "@types/node": "^26.6.5",
+    "@types/ws": "^8.18.2",
+    "@vitejs/plugin-legacy": "^7.2.1",
+    "autoprefixer": "^10.6.1",
+    "concurrently": "^10.0.6",
+    "postcss-preset-env": "^11.6.1",
+    "terser": "^5.51.2",
+    "typescript": "^7.0.2",
+    "vite": "^7.3.7"
+  }
+}

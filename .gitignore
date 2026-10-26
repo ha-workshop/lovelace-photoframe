@@ -1,0 +1,18 @@
+node_modules
+dist
+.env.local
+android/.gradle
+android/build
+android/app/build
+android/local.properties
+*.apk
+src/photos/demo-*
+data/
+
+# Старый PHP-прототип: в config.php лежит токен Home Assistant
+legacy-php/
+# Локальные настройки редакторов и агентов
+.idea/
+.claude/
+.DS_Store
+*.log
