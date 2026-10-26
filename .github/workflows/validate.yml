@@ -23,7 +23,11 @@ jobs:
       - run: npm run build:card
       # dist/photoframe-card.js лежит в репозитории для HACS — он должен совпадать с исходниками.
       - name: dist up to date
-        run: git diff --exit-code dist/photoframe-card.js || (echo "::error::Пересоберите карточку: npm run build:card" && exit 1)
+        run: |
+          if ! git diff --exit-code dist/photoframe-card.js; then
+            echo "::error::dist/photoframe-card.js is out of date, run npm run build:card"
+            exit 1
+          fi
 
       # 4. Запускаем валидацию HACS, когда файл уже готов
       - uses: hacs/action@main
