@@ -66,7 +66,12 @@ class PhotoFrameCard extends HTMLElement {
   }
 }
 
+declare const __VERSION__: string;
+
 if (!customElements.get('photoframe-card')) customElements.define('photoframe-card', PhotoFrameCard);
+
+// Как у других карточек HACS: версия в консоли — сразу видно, что загрузилось.
+console.info('%c PHOTO-FRAME %c v' + __VERSION__ + ' ', 'color:#fff;background:#0891b2;font-weight:700', 'color:#0891b2;background:#fff');
 
 // Чтобы карточка появилась в списке «Добавить карточку» редактора дашборда.
 const w = window as unknown as { customCards?: Array<Record<string, unknown>> };
