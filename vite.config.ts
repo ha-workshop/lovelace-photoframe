@@ -1,11 +1,16 @@
 import { defineConfig } from 'vite';
 import preact from '@preact/preset-vite';
 import legacy from '@vitejs/plugin-legacy';
+import { readFileSync } from 'node:fs';
+
+const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 
 // Целевые WebView фоторамок на Android 5 — Chrome 37+.
 // Legacy-плагин собирает ES5-бандл с полифиллами (nomodule) рядом с современным.
 export default defineConfig({
   base: './',
+  // Та же версия, что в сборке карточки (стенд и dev-сервер грузят card.tsx напрямую).
+  define: { __VERSION__: JSON.stringify(version) },
   plugins: [
     preact(),
     legacy({

@@ -151,7 +151,7 @@
   "photos.delete_all": "Delete all photos",
   "photos.formats": "PNG, JPG, WEBP — resized to 1920 px",
   "photos.local_hint": "Photos are stored on this device.",
-  "photos.pick": "Tap to choose photos",
+  "photos.pick": "Drop photos here or tap to choose",
   "photos.service_hint": "Shared album: photos go to the service and show on every frame.",
   "photos.uploading": "Uploading photos…",
   "range.24h": "24 hours",
@@ -263,5 +263,17 @@
   "weather.today": "Today",
   "weather.wind": "{v} m/s",
   "weather.windy": "Windy",
-  "weather.windy-variant": "Windy"
+  "weather.windy-variant": "Windy",
+  "errors.upload_admin": "Only Home Assistant admins can upload photos",
+  "errors.upload_folder": "Folder /media/{folder} not found — create it in the HA media library (Samba, File editor or terminal)",
+  "settings.kiosk": "Kiosk mode on this device",
+  "settings.kiosk_auto": "As set in the card",
+  "settings.kiosk_on": "On — hide HA menus",
+  "settings.kiosk_off": "Off",
+  "setup.dashboard_title": "Photo frame",
+  "setup.title": "Photo Frame is installed",
+  "setup.text": "Create a “Photo frame” dashboard in the sidebar? It shows the frame full-screen — everything else is set up right on it.",
+  "setup.create": "Create",
+  "setup.later": "Not now",
+  "setup.failed": "Failed: {error}"
 }

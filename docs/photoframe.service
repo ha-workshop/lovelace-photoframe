@@ -1,0 +1,23 @@
+# systemd-юнит для отдельного режима (PWA + Node-сервис).
+# Установка на сервере:
+#   sudo cp docs/photoframe.service /etc/systemd/system/photoframe.service
+#   sudo systemctl daemon-reload && sudo systemctl enable --now photoframe
+[Unit]
+Description=Photo Frame service (PWA + Home Assistant proxy)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=photoframe
+WorkingDirectory=/opt/photoframe
+Environment=SERVICE_PORT=8787
+Environment=DATA_DIR=/opt/photoframe/data
+# Адрес и токен HA нужны только при первом запуске с пустой базой — дальше правятся в интерфейсе.
+EnvironmentFile=-/opt/photoframe/.env.local
+ExecStart=/usr/bin/node --no-warnings=ExperimentalWarning server/index.ts
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

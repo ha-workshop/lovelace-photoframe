@@ -151,7 +151,7 @@
   "photos.delete_all": "Удалить все фото",
   "photos.formats": "PNG, JPG, WEBP — кадр уменьшается до 1920 px",
   "photos.local_hint": "Фото хранятся в памяти этого устройства.",
-  "photos.pick": "Нажмите, чтобы выбрать фото",
+  "photos.pick": "Перетащите фото сюда или нажмите, чтобы выбрать",
   "photos.service_hint": "Общий альбом: фото попадают в сервис и показываются на всех рамках.",
   "photos.uploading": "Загрузка фото...",
   "range.24h": "24 часа",
@@ -263,5 +263,17 @@
   "weather.today": "Сегодня",
   "weather.wind": "{v} м/с",
   "weather.windy": "Ветрено",
-  "weather.windy-variant": "Ветрено"
+  "weather.windy-variant": "Ветрено",
+  "errors.upload_admin": "Загружать фото может только администратор Home Assistant",
+  "errors.upload_folder": "Нет папки /media/{folder} — создайте её в медиатеке HA (Samba, File editor или терминал)",
+  "settings.kiosk": "Режим киоска на этом устройстве",
+  "settings.kiosk_auto": "Как в карточке",
+  "settings.kiosk_on": "Вкл — прятать меню HA",
+  "settings.kiosk_off": "Выкл",
+  "setup.dashboard_title": "Фоторамка",
+  "setup.title": "Photo Frame установлен",
+  "setup.text": "Создать дашборд «Фоторамка» в боковом меню? В нём будет рамка на весь экран — дальше всё настраивается прямо на ней.",
+  "setup.create": "Создать",
+  "setup.later": "Не сейчас",
+  "setup.failed": "Не получилось: {error}"
 }

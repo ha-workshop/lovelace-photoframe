@@ -13,6 +13,8 @@ export interface CardConfig {
   type: string;
   // Дома в карточке — только раскладки одного HA: id и имя, без адресов и токенов.
   media_folder?: string;
+  // Прятать меню и шапку HA, пока карточка на экране (на устройстве можно переопределить).
+  kiosk?: boolean;
   settings?: Partial<Settings>;
   homes?: Home[];
   layouts?: Record<string, Layout>;
@@ -77,6 +79,7 @@ export class CardBackend {
     return next;
   }
 
+  // Папки нет — HA отвечает ошибкой; отдаём понятный текст, чтобы показать его в настройках.
   listPhotos(): Promise<Photo[]> {
     return this.client.call<{ children?: Array<{ media_content_id: string; media_class: string; title: string }> }>({
       type: 'media_source/browse_media',
@@ -89,7 +92,7 @@ export class CardBackend {
         media_content_id: c.media_content_id,
         expires: 86400,
       }).then((r): Photo => ({ id: c.media_content_id, url: r.url }))));
-    });
+    }, () => { throw new Error(t('errors.upload_folder', { folder: this.folder })); });
   }
 
   addPhotos(files: File[]): Promise<void> {
@@ -100,11 +103,13 @@ export class CardBackend {
       const form = new FormData();
       form.append('media_content_id', this.folderId);
       form.append('file', new Blob([bytes], { type: 'image/jpeg' }), f.name.replace(/\.[^.]+$/, '') + '.jpg');
-      return fetch('/api/media_source/local_source/upload', {
-        method: 'POST',
-        headers: { Authorization: 'Bearer ' + this.client.accessToken },
-        body: form,
-      }).then((r) => { if (!r.ok) throw new Error(t('errors.upload', { status: r.status })); });
+      return this.client.fetch('/api/media_source/local_source/upload', { method: 'POST', body: form }).then((r) => {
+        if (r.ok) return;
+        // Понятные причины вместо голого кода ответа.
+        if (r.status === 401 || r.status === 403) throw new Error(t('errors.upload_admin'));
+        if (r.status === 400 || r.status === 404) throw new Error(t('errors.upload_folder', { folder: this.folder }));
+        throw new Error(t('errors.upload', { status: r.status }));
+      });
     }), Promise.resolve()).then(() => undefined);
   }
 
