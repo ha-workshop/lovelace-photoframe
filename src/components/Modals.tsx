@@ -102,9 +102,10 @@ export function SettingsModal(props: { onClose: () => void }) {
     <Modal title={<span class="modal-title"><ImagePlus size={20} class="accent-text" /><span>{t('settings.title')}</span></span>} onClose={props.onClose}>
       <div class="tabs">
         <button class={tab === 'photos' ? 'active' : ''} onClick={() => setTab('photos')}>{t('settings.tab.photos')}</button>
-        <button class={tab === 'ha' ? 'active' : ''} onClick={() => setTab('ha')}>Home Assistant</button>
+        {/* В карточке HA подключать нечего и сервиса нет — вкладки HA нет, а «Сервис» становится «Раскладкой». */}
+        {!store.card && <button class={tab === 'ha' ? 'active' : ''} onClick={() => setTab('ha')}>Home Assistant</button>}
         <button class={tab === 'homes' ? 'active' : ''} onClick={() => setTab('homes')}>{t('settings.tab.homes')}</button>
-        <button class={tab === 'sync' ? 'active' : ''} onClick={() => setTab('sync')}>{t('settings.tab.sync')}</button>
+        <button class={tab === 'sync' ? 'active' : ''} onClick={() => setTab('sync')}>{store.card ? t('settings.tab.layout') : t('settings.tab.sync')}</button>
       </div>
 
       {tab === 'photos' && (
@@ -254,7 +255,7 @@ export function SettingsModal(props: { onClose: () => void }) {
 
       {tab === 'sync' && (
         <div>
-          <div class={'sync-state sync-' + sync}><i />{syncText(sync)}</div>
+          {!store.card && <div class={'sync-state sync-' + sync}><i />{syncText(sync)}</div>}
           {store.card && store.cardError && <div class="c-red small">{t('sync.save_failed', { error: store.cardError })}</div>}
           {!store.card && (
             <label class="field">

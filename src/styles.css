@@ -72,6 +72,7 @@ svg { display: block; flex-shrink: 0; }
   pointer-events: none;
 }
 .ambient.visible { opacity: 1; transform: none; }
+.clock-link { pointer-events: auto; cursor: pointer; }
 .ambient-clock { text-shadow: 0 2px 30px rgba(0, 0, 0, 0.35); }
 .ambient-time { font-size: 22vh; font-weight: 200; letter-spacing: -0.04em; line-height: 0.9; }
 .ambient-date { margin-top: 2vh; font-size: 3vh; font-weight: 400; color: var(--ink-2); letter-spacing: 0.01em; }

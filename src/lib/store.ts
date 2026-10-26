@@ -105,6 +105,9 @@ class Store {
   private listeners: Array<() => void> = [];
   private events: EventSource | null = null;
   card: CardBackend | null = null;
+  // Состояние экрана, которое должно пережить пересоздание карточки: HA создаёт карточку заново
+  // после каждого сохранения дашборда (перенос карточки в редакторе) — без этого рамка «схлопывалась» на фото.
+  ui = { controls: false, editing: false };
   private photoTimer = 0;
 
   subscribe(fn: () => void) {

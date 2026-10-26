@@ -16,7 +16,17 @@ async function initialConfig() {
   return { type: 'custom:photoframe-card', media_folder: 'photoframe', layouts };
 }
 
-const card = document.createElement('photoframe-card') as HTMLElement & { setConfig(c: unknown): void; hass: unknown };
+type CardEl = HTMLElement & { setConfig(c: unknown): void; hass: unknown };
+let card = document.createElement('photoframe-card') as CardEl;
+
+function recreateCard() {
+  const next = document.createElement('photoframe-card') as CardEl;
+  next.setConfig(config);
+  next.hass = hass();
+  card.replaceWith(next);
+  card = next;
+  (window as any).__recreated = ((window as any).__recreated || 0) + 1;
+}
 let config: any;
 
 function hass() {
@@ -31,7 +41,8 @@ function hass() {
       if (msg.type === 'lovelace/config/save') {
         config = msg.config.views[0].cards[0];
         localStorage.setItem(KEY, JSON.stringify(config));
-        setTimeout(() => card.setConfig(config), 50);
+        // Как HA: после сохранения дашборда карточка создаётся заново (новый элемент), а не обновляется.
+        setTimeout(() => recreateCard(), 50);
         return Promise.resolve(null);
       }
       if (msg.type === 'media_source/browse_media') return Promise.resolve({ children: [] });
@@ -68,9 +79,17 @@ function mountInHaDom(): HTMLElement {
   const ha = mk('home-assistant', document.body);
   const main = mk('home-assistant-main', ha.attachShadow({ mode: 'open' }));
   const mainRoot = main.attachShadow({ mode: 'open' });
-  const drawer = mk('ha-drawer', mainRoot, 'display:flex;--mdc-drawer-width:256px');
-  mk('ha-sidebar', drawer, 'display:block;width:var(--mdc-drawer-width);background:#1c1f26;height:100vh').textContent = 'Боковое меню HA';
-  const resolver = mk('partial-panel-resolver', drawer, 'flex:1;display:block;min-width:0');
+  const drawer = mk('ha-drawer', mainRoot, 'display:block;--mdc-drawer-width:256px');
+  // Как mwc-drawer: меню в aside, контент с отступом слева. Отступ зашит числом — так в реальном HA
+  // осталась пустая полоса, когда прятали только переменную.
+  drawer.attachShadow({ mode: 'open' }).innerHTML =
+    '<aside class="mdc-drawer" style="position:fixed;top:0;left:0;bottom:0;width:256px;background:#e8e8e8"><slot name="drawer"></slot></aside>'
+    + '<div class="mdc-drawer-app-content" style="margin-left:256px"><slot name="appContent"></slot></div>';
+  const side = mk('ha-sidebar', drawer, 'display:block;height:100vh');
+  side.setAttribute('slot', 'drawer');
+  side.textContent = 'Боковое меню HA';
+  const resolver = mk('partial-panel-resolver', drawer, 'display:block;min-width:0');
+  resolver.setAttribute('slot', 'appContent');
   const panel = mk('ha-panel-lovelace', resolver);
   const hui = mk('hui-root', panel.attachShadow({ mode: 'open' }), 'display:block;--header-height:56px');
   const huiRoot = hui.attachShadow({ mode: 'open' });

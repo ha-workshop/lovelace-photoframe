@@ -275,5 +275,6 @@
   "setup.text": "Create a “Photo frame” dashboard in the sidebar? It shows the frame full-screen — everything else is set up right on it.",
   "setup.create": "Create",
   "setup.later": "Not now",
-  "setup.failed": "Failed: {error}"
+  "setup.failed": "Failed: {error}",
+  "settings.tab.layout": "Layout"
 }

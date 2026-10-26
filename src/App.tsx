@@ -64,8 +64,10 @@ export function App() {
   const n = urls.length;
 
   const [index, setIndex] = useState(0);
-  const [controls, setControls] = useState(false);
-  const [editing, setEditing] = useState(false);
+  // Открыта ли панель и идёт ли редактирование — из общего хранилища, чтобы пережить пересоздание карточки.
+  const [controls, setControls] = useState(store.ui.controls);
+  const [editing, setEditing] = useState(store.ui.editing);
+  useEffect(() => { store.ui.controls = controls; store.ui.editing = editing; }, [controls, editing]);
   const [showSettings, setShowSettings] = useState(false);
   const [cameraUrl, setCameraUrl] = useState('');
   const [sheetId, setSheetId] = useState<string | null>(null);

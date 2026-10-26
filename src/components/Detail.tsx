@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { Power, Table2 } from 'lucide-preact';
 import { isAvailable, isUnknown, unitOf, useHA } from '../lib/hooks';
 import { deviceSiblings, kindOf, load, summarize, RANGE_MS, type Range, type Series, type Summary } from '../lib/history';
@@ -6,6 +6,7 @@ import type { HAClient } from '../lib/ha';
 import { Chart, fmtDay, fmtNum, fmtTime, fmtWhen } from './Chart';
 import { Modal } from './Modals';
 import { WeatherCard } from './Weather';
+import { useSize } from '../lib/useSize';
 import { t } from '../i18n';
 
 const RANGES: Range[] = ['24h', '7d', '30d'];
@@ -130,19 +131,14 @@ export function DetailModal(props: { entities: string[]; onClose: () => void }) 
   const [error, setError] = useState('');
   const [siblings, setSiblings] = useState<string[]>([]);
   const [table, setTable] = useState(false);
-  const [width, setWidth] = useState(600);
   const boxRef = useRef<HTMLDivElement>(null);
+  // Ширина под график — по самому окну подробностей (меняется и без изменения окна браузера).
+  const width = useSize(boxRef).w || 600;
 
   const state = ha.states[active];
   const unit = unitOf(ha, active).trim();
   const kind = kindOf(state);
 
-  useLayoutEffect(() => {
-    const measure = () => { if (boxRef.current) setWidth(boxRef.current.clientWidth); };
-    measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-  }, []);
 
   useEffect(() => {
     deviceSiblings(ha, props.entities[0]).then((ids) => setSiblings(ids.filter((id) => !!ha.states[id])), () => {});

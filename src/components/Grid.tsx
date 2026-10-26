@@ -1,10 +1,10 @@
-import { useLayoutEffect, useRef, useState } from 'preact/hooks';
-import type { RefObject } from 'preact';
+import { useRef, useState } from 'preact/hooks';
 import { Pencil, X } from 'lucide-preact';
 import { useHA } from '../lib/hooks';
 import { useStore } from '../lib/store';
 import { GRID_COLS, bottom, clampBox, settle, type Card } from '../lib/layout';
 import { CardAside, CardBody, Panel, cardTitle } from './CardView';
+import { useSize } from '../lib/useSize';
 import { t } from '../i18n';
 
 // Сетка на 12 колонок с квадратными клетками: высота ряда = ширине колонки.
@@ -18,20 +18,6 @@ const DRAG_START = 6;   // px, после которых касание счит
 // Место под шапку и поля панели: содержимому достаётся меньше, чем размер карточки.
 const BODY_PAD_X = 44;
 const BODY_PAD_Y = 84;
-
-function useBox(ref: RefObject<HTMLElement>) {
-  const [box, setBox] = useState({ w: 0, h: 0 });
-  useLayoutEffect(() => {
-    const measure = () => {
-      const el = ref.current;
-      if (el) setBox({ w: el.clientWidth, h: el.clientHeight });
-    };
-    measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-  }, []);
-  return box;
-}
 
 interface Drag {
   id: string;
@@ -60,7 +46,7 @@ export function Grid({ editing, onCamera, onEdit }: Props) {
   const ha = useHA();
   const store = useStore();
   const ref = useRef<HTMLDivElement>(null);
-  const box = useBox(ref);
+  const box = useSize(ref);
   const [drag, setDrag] = useState<Drag | null>(null);
   const dragRef = useRef<Drag | null>(null);
   const cards = store.state.layout.cards;
