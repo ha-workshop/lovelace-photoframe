@@ -66,7 +66,7 @@ Photo Frame — это **одна карточка дашборда** (`custom:p
    категория **Dashboard**.
 
    [![Открыть в HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=mZer0ne&repository=lovelace-photoframe&category=plugin)
-2. Найдите **Photo Frame** в HACS и установите. Ресурс `/hacsfiles/lovelace-photoframe/photoframe-card.js`
+2. Найдите **Photo Frame** в HACS и установите. Ресурс `/hacsfiles/lovelace-photoframe/dist/photoframe-card.js`
    HACS добавит сам (если нет — «Настройки → Дашборды → Ресурсы», тип *JavaScript-модуль*).
 3. Создайте папку для фото: `/media/photoframe` (через Samba, File editor или терминал).
 4. Создайте дашборд **«Фоторамка»** → вид типа **Панель (одна карточка)** → добавьте карточку

@@ -62,7 +62,7 @@ Photo Frame is **one dashboard card** (`custom:photoframe-card`) — not an add-
 
    [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=mZer0ne&repository=lovelace-photoframe&category=plugin)
 2. Find **Photo Frame** in HACS and install it. HACS adds the resource
-   `/hacsfiles/lovelace-photoframe/photoframe-card.js` (if not: *Settings → Dashboards → Resources*,
+   `/hacsfiles/lovelace-photoframe/dist/photoframe-card.js` (if not: *Settings → Dashboards → Resources*,
    type *JavaScript module*).
 3. Create a folder for photos: `/media/photoframe` (Samba, File editor or terminal).
 4. Create a **Photo frame** dashboard → a view of type **Panel (single card)** → add the
