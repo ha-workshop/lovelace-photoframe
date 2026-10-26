@@ -8,6 +8,7 @@ import type { Home } from '../lib/store';
 import { formatDate, formatTime, useNow } from '../lib/time';
 import type { Status } from '../lib/ha';
 import { Grid } from './Grid';
+import { goToMainDashboard, useKioskActive } from '../lib/kiosk';
 import { t } from '../i18n';
 
 const statusText = (s: Status) => t('status.' + s);
@@ -51,6 +52,7 @@ export function Controls(props: Props) {
   const ha = useHA();
   const now = useNow();
   const many = props.homes.length > 1;
+  const kiosk = useKioskActive();
   const swipe = useHomeSwipe(many && !props.editing, props.onSwitchHome);
   const home = props.homes.filter((h) => h.id === props.active)[0];
   // Выйти из редактирования, когда панель спрятали.
@@ -60,7 +62,8 @@ export function Controls(props: Props) {
     <div ref={props.innerRef} class={'controls' + (props.visible ? ' visible' : '')}>
       <div class="grabber-top"><div class="grabber-bar" /></div>
       <header class="bar">
-        <div class="bar-time">
+        {/* В киоске мини-часы — выход на главный дашборд HA (меню HA скрыто, иначе не уйти). */}
+        <div class={'bar-time' + (kiosk ? ' clock-link' : '')} onClick={kiosk ? goToMainDashboard : undefined}>
           <span class="bar-clock">{formatTime(now)}</span>
           <span class="bar-date">{formatDate(now)}</span>
         </div>

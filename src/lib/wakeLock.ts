@@ -21,7 +21,12 @@ function requestNative(): Promise<boolean> {
   );
 }
 
+let started = false;
+
+// Один раз на страницу: карточку HA пересоздаёт при каждом сохранении, обработчики не должны копиться.
 export function keepScreenOn() {
+  if (started) return;
+  started = true;
   requestNative();
 
   // Блокировка снимается, когда вкладка скрыта, — берём заново при возврате.
