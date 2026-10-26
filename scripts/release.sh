@@ -18,7 +18,8 @@ cd "$(dirname "$0")/.."
 [[ "$(git rev-parse --abbrev-ref HEAD)" == "main" ]] || { echo "Нужна ветка main" >&2; exit 1; }
 [[ -z "$(git status --porcelain)" ]] || { echo "Есть незакоммиченные изменения" >&2; exit 1; }
 git fetch -q origin
-[[ "$(git rev-parse HEAD)" == "$(git rev-parse origin/main)" ]] || { echo "Ветка расходится с origin/main — сначала git pull" >&2; exit 1; }
+# Локальные неотправленные коммиты — можно (уйдут вместе с релизом); отставать от origin/main — нельзя.
+git merge-base --is-ancestor origin/main HEAD || { echo "Ветка отстаёт от origin/main — сначала git pull" >&2; exit 1; }
 git rev-parse -q --verify "refs/tags/$TAG" >/dev/null && { echo "Тег $TAG уже есть" >&2; exit 1; }
 
 npm version "$VERSION" --no-git-tag-version --allow-same-version >/dev/null
