@@ -11,6 +11,8 @@ export interface Hass {
   language?: string;
   auth?: { data?: { access_token?: string } };
   callWS<T>(msg: Record<string, unknown>): Promise<T>;
+  // fetch с авторизацией фронтенда HA: сам обновляет просроченный токен.
+  fetchWithAuth?(path: string, init?: RequestInit): Promise<Response>;
   callService(domain: string, service: string, data?: Record<string, unknown>, target?: Record<string, unknown>): Promise<unknown>;
   connection: {
     subscribeMessage<T>(cb: (event: T) => void, msg: Record<string, unknown>): Promise<() => Promise<void>>;
@@ -40,6 +42,13 @@ export class HassClient extends HAClient {
 
   get isAdmin() {
     return !!(this.hass && this.hass.user && this.hass.user.is_admin);
+  }
+
+  fetch(path: string, init: RequestInit = {}): Promise<Response> {
+    const h = this.hass;
+    if (h && h.fetchWithAuth) return h.fetchWithAuth(path, init);
+    const headers = { ...(init.headers as Record<string, string> || {}), Authorization: 'Bearer ' + this.accessToken };
+    return fetch(path, { ...init, headers });
   }
 
   get accessToken() {

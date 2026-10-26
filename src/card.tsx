@@ -5,6 +5,8 @@ import { store } from './lib/store';
 import { HassClient, type Hass } from './lib/hassClient';
 import { CardBackend, type CardConfig } from './lib/cardBackend';
 import { keepScreenOn } from './lib/wakeLock';
+import { enterKiosk, kioskWanted, onKioskPref } from './lib/kiosk';
+import { offerSetup } from './lib/setup';
 
 // Рамка как карточка дашборда Home Assistant (HACS → Dashboard).
 // Кладётся в панельный вид дашборда — занимает весь экран под шапкой HA (или весь экран в режиме киоска).
@@ -19,6 +21,16 @@ class PhotoFrameCard extends HTMLElement {
   private backend: CardBackend | null = null;
   private config: CardConfig = { type: 'custom:photoframe-card' };
   private root: HTMLElement | null = null;
+  private exitKiosk: (() => void) | null = null;
+  private offKiosk: (() => void) | null = null;
+
+  // Включить/выключить киоск по текущим настройкам. Фронтенд HA дорисовывается не сразу —
+  // поэтому вызывается и при монтировании, и при каждом обновлении hass, пока не получится.
+  private syncKiosk() {
+    const want = this.isConnected && kioskWanted(!!this.config.kiosk);
+    if (want && !this.exitKiosk) this.exitKiosk = enterKiosk();
+    if (!want && this.exitKiosk) { this.exitKiosk(); this.exitKiosk = null; }
+  }
 
   setConfig(config: CardConfig) {
     this.config = config;
@@ -27,10 +39,12 @@ class PhotoFrameCard extends HTMLElement {
       this.backend.config = config;
       store.applyCardConfig(config);
     }
+    this.syncKiosk();
   }
 
   set hass(hass: Hass) {
     this.client.setHass(hass);
+    this.syncKiosk();
     if (!this.backend) {
       this.backend = new CardBackend(this.client, this.config);
       store.attachCard(this.backend);
@@ -38,11 +52,18 @@ class PhotoFrameCard extends HTMLElement {
     this.mount();
   }
 
-  connectedCallback() { this.mount(); }
+  connectedCallback() {
+    this.mount();
+    this.offKiosk = onKioskPref(() => this.syncKiosk());
+    this.syncKiosk();
+  }
 
   disconnectedCallback() {
     if (this.root) render(null, this.root);
     this.root = null;
+    // Ушли с дашборда — меню и шапку HA возвращаем.
+    if (this.exitKiosk) { this.exitKiosk(); this.exitKiosk = null; }
+    if (this.offKiosk) { this.offKiosk(); this.offKiosk = null; }
   }
 
   getCardSize() { return 12; }
@@ -72,6 +93,9 @@ if (!customElements.get('photoframe-card')) customElements.define('photoframe-ca
 
 // Как у других карточек HACS: версия в консоли — сразу видно, что загрузилось.
 console.info('%c PHOTO-FRAME %c v' + __VERSION__ + ' ', 'color:#fff;background:#0891b2;font-weight:700', 'color:#0891b2;background:#fff');
+
+// Первый заход администратора после установки — предложить дашборд «Фоторамка».
+offerSetup();
 
 // Чтобы карточка появилась в списке «Добавить карточку» редактора дашборда.
 const w = window as unknown as { customCards?: Array<Record<string, unknown>> };

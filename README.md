@@ -65,8 +65,9 @@ Photo Frame is **one dashboard card** (`custom:photoframe-card`) — not an add-
    `/hacsfiles/lovelace-photoframe/dist/photoframe-card.js` (if not: *Settings → Dashboards → Resources*,
    type *JavaScript module*).
 3. Create a folder for photos: `/media/photoframe` (Samba, File editor or terminal).
-4. Create a **Photo frame** dashboard → a view of type **Panel (single card)** → add the
-   **Photo Frame** card. Or in YAML:
+4. Reload the browser and open any dashboard as an admin: Photo Frame offers to
+   **create a “Photo frame” dashboard** in the sidebar — one tap. Prefer doing it by hand?
+   Create a dashboard → a view of type **Panel (single card)** → add the **Photo Frame** card. Or in YAML:
 
 ```yaml
 views:
@@ -86,6 +87,7 @@ Everything is configured on the frame itself — no YAML needed. For reference, 
 | Option | Meaning | Default |
 |---|---|---|
 | `media_folder` | photo folder in the HA media library | `photoframe` |
+| `kiosk` | hide the HA header and sidebar (each device can override) | `false` |
 | `settings.slideIntervalMs` | photo interval, ms | `10000` |
 | `settings.idleSec` | seconds without touches before returning to photos (0 — never) | `45` |
 | `layouts` | card layouts per home (filled in by the editor) | starter layout |
@@ -96,8 +98,9 @@ Everything is configured on the frame itself — no YAML needed. For reference, 
 - Open the dashboard in the Home Assistant app or a full-screen browser.
 - The frame keeps the screen on with Wake Lock (needs HTTPS). If your HA app has a *Keep screen on*
   setting, turn it on too.
-- To hide the HA header and sidebar use [kiosk-mode](https://github.com/NemesisRE/kiosk-mode);
-  a built-in kiosk/screensaver mode over regular dashboards is planned.
+- **Built-in kiosk mode** hides the HA header and sidebar while the frame is on screen and brings them
+  back when you leave the dashboard. Turn it on per device (*Settings → Kiosk mode on this device*),
+  for everyone with `kiosk: true` in the card config, or with `?kiosk` in the URL (`?kiosk=0` turns it off).
 
 ## Two modes: HACS card and standalone app
 
@@ -125,8 +128,15 @@ npm run build:card     # dist/photoframe-card.js — the file HACS installs
 ```
 
 `card-harness.html` emulates a dashboard for testing the card (live data from your HA through the
-service, read-only). To release, publish a GitHub Release — the workflow builds `photoframe-card.js`
-and attaches it.
+service, read-only); `card-harness.html?hadom` also mimics the HA frontend DOM for kiosk mode.
+
+**Deploy to your own server** — `cp deploy.env.example .deploy.env`, fill it in, then:
+`./deploy.sh card` puts a fresh build into your HA (same place HACS does — handy before a release),
+`./deploy.sh service` updates the standalone PWA + service (systemd unit: `docs/photoframe.service`).
+
+**Release** — `scripts/release.sh 0.2.0`: bumps the version, rebuilds `dist/photoframe-card.js`,
+tags, pushes and creates a GitHub Release; the workflow attaches the built card to it.
+HACS shows the latest release as the available version.
 
 ## License
 

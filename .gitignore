@@ -16,3 +16,6 @@ legacy-php/
 .claude/
 .DS_Store
 *.log
+
+# Настройки деплоя (сервер, пути)
+.deploy.env

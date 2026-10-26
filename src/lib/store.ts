@@ -184,9 +184,15 @@ class Store {
     this.set({ sync: 'card', homes, layouts, settings });
   }
 
+  // Последняя ошибка с фото (нет папки, нет прав) — показывается во вкладке «Фото».
+  photoError = '';
+
   private reloadCardPhotos() {
     if (!this.card) return Promise.resolve();
-    return this.card.listPhotos().then((photos) => this.set({ photos }), () => this.set({ photos: [] }));
+    return this.card.listPhotos().then(
+      (photos) => { this.photoError = ''; this.set({ photos }); },
+      (e: Error) => { this.photoError = e.message; this.set({ photos: [] }); },
+    );
   }
 
   private saveCard(patch: Partial<CardConfig>) {

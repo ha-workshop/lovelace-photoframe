@@ -4,6 +4,7 @@ import { CloudUpload, Copy, ImagePlus, RotateCcw, Server, Trash2, X } from 'luci
 import { useHA } from '../lib/hooks';
 import { absolute, serviceBase, setServiceBase } from '../lib/api';
 import { defaultLayout, type Layout } from '../lib/layout';
+import { kioskPref, setKioskPref, type KioskPref } from '../lib/kiosk';
 import { applyLanguage, languages, preferredLanguage, setPreferredLanguage, t } from '../i18n';
 import { MAIN_HOME, mainHome, useStore, type Home, type Settings, type Sync } from '../lib/store';
 
@@ -50,15 +51,23 @@ export function SettingsModal(props: { onClose: () => void }) {
   const [jsonError, setJsonError] = useState('');
   const set = (patch: Partial<Settings>) => setDraft({ ...draft, ...patch });
 
-  const upload = (input: HTMLInputElement) => {
-    const files = Array.prototype.slice.call(input.files || []) as File[];
+  const [dragOver, setDragOver] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  // Файлы из выбора или из перетаскивания; не-картинки отбрасываем.
+  const upload = (list: FileList | null, input?: HTMLInputElement) => {
+    const files = (Array.prototype.slice.call(list || []) as File[]).filter((f) => /^image\//.test(f.type));
+    if (input) input.value = '';
     if (!files.length) return;
     setBusy(true);
-    const done = () => { setBusy(false); input.value = ''; };
-    store.addPhotos(files).then(done, done);
+    setUploadError('');
+    store.addPhotos(files).then(
+      () => setBusy(false),
+      (e: Error) => { setBusy(false); setUploadError(e.message || String(e)); },
+    );
   };
 
   const [language, setLanguage] = useState(preferredLanguage());
+  const [kiosk, setKiosk] = useState<KioskPref>(kioskPref());
   const [homes, setHomes] = useState<Home[]>(store.state.homes);
   const homesChanged = JSON.stringify(homes) !== JSON.stringify(store.state.homes);
   const setHome = (id: string, patch: Partial<Home>) => setHomes(homes.map((h) => (h.id === id ? { ...h, ...patch } : h)));
@@ -105,12 +114,18 @@ export function SettingsModal(props: { onClose: () => void }) {
             : store.card
               ? t('photos.card_hint', { folder: store.card.folder })
               : t('photos.service_hint')}</p>
-          <label class={'drop-zone' + (busy ? ' busy' : '')}>
-            <input type="file" multiple accept="image/*" onChange={(e) => upload(e.currentTarget)} disabled={busy} />
+          <label
+            class={'drop-zone' + (busy ? ' busy' : '') + (dragOver ? ' over' : '')}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => { e.preventDefault(); setDragOver(false); if (!busy) upload(e.dataTransfer && e.dataTransfer.files); }}
+          >
+            <input type="file" multiple accept="image/*" onChange={(e) => upload(e.currentTarget.files, e.currentTarget)} disabled={busy} />
             <CloudUpload size={40} class="muted" />
             <p class="drop-title">{busy ? t('photos.uploading') : t('photos.pick')}</p>
             <p class="hint small">{t('photos.formats')}</p>
           </label>
+          {(uploadError || store.photoError) && <div class="c-red small upload-error">{uploadError || store.photoError}</div>}
 
           {photos.length > 0 && (
             <div class="thumbs thumbs-small">
@@ -141,6 +156,16 @@ export function SettingsModal(props: { onClose: () => void }) {
               {languages().map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
             </select>
           </div>
+          {store.card && (
+            <div class="option">
+              <label>{t('settings.kiosk')}</label>
+              <select value={kiosk} onChange={(e) => { const v = e.currentTarget.value as KioskPref; setKiosk(v); setKioskPref(v); }}>
+                <option value="">{t('settings.kiosk_auto')}</option>
+                <option value="on">{t('settings.kiosk_on')}</option>
+                <option value="off">{t('settings.kiosk_off')}</option>
+              </select>
+            </div>
+          )}
         </div>
       )}
 
