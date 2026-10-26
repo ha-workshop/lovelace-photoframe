@@ -4884,7 +4884,7 @@ class Rc extends HTMLElement {
   }
 }
 customElements.get("photoframe-card") || customElements.define("photoframe-card", Rc);
-console.info("%c PHOTO-FRAME %c v0.1.0 ", "color:#fff;background:#0891b2;font-weight:700", "color:#0891b2;background:#fff");
+console.info("%c PHOTO-FRAME %c v0.2.0 ", "color:#fff;background:#0891b2;font-weight:700", "color:#0891b2;background:#fff");
 Pc();
 const rn = window;
 rn.customCards = rn.customCards || [];
