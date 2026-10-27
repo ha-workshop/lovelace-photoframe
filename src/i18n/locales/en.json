@@ -315,5 +315,10 @@
   "editor.part_show": "Show in the card",
   "frame.name": "This frame's name in Home Assistant",
   "frame.name_placeholder": "e.g. Kitchen",
-  "frame.hint": "The frame is a device in HA (Settings → Devices): its album, start screen, buttons and services for automations live there."
+  "frame.hint": "The frame is a device in HA (Settings → Devices): its album, start screen, buttons and services for automations live there.",
+  "photos.album": "Upload to album",
+  "photos.album_root": "No album (whole folder)",
+  "photos.count": "Photos in the media library: {n}",
+  "photos.open_media": "Open in HA media",
+  "photos.formats_server": "PNG, JPG, WEBP, HEIC — several at once, the server does the processing"
 }

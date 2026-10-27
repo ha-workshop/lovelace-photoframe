@@ -56,7 +56,8 @@ const cache: Record<string, Promise<string>> = {};
 const order: string[] = [];
 const KEEP = 4;
 
-function targetWidth() {
+// Ширина кадра для этого экрана — её же рамка просит у интеграции (готовые кадры с сервера).
+export function targetWidth() {
   const dpr = quality() === 'lite' ? 1 : Math.min(window.devicePixelRatio || 1, 2);
   const w = Math.max(screen.width, screen.height) * dpr;
   return Math.round(Math.min(quality() === 'lite' ? 1280 : 2560, w));
@@ -90,6 +91,8 @@ function shrink(url: string, width: number): Promise<string> {
 
 export function preparePhoto(url: string): Promise<string> {
   if (!url || /^(data|blob):/.test(url) || !HTMLCanvasElement.prototype.toBlob) return Promise.resolve(url);
+  // Кадр от интеграции уже нужной ширины — сервер уменьшил его сам.
+  if (url.indexOf('/api/photoframe/photo/') !== -1) return Promise.resolve(url);
   const width = targetWidth();
   const key = url + '@' + width;
   if (key in cache) return cache[key];

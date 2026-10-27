@@ -7,6 +7,7 @@ import type { HAClient } from './ha';
 import type { HomeScreens, Layout } from './layout';
 import type { Home, Photo, Settings } from './store';
 import { resize } from './photos';
+import { targetWidth } from './quality';
 import { t } from '../i18n';
 
 export const CARD_TYPE = 'custom:photoframe-card';
@@ -17,6 +18,8 @@ export interface CardConfig {
   media_folder?: string;
   // Источник «Моих медиа» (обычно local; в media_dirs его можно назвать иначе) — сообщает интеграция.
   media_source?: string;
+  // Альбомы — подпапки папки фото (от интеграции).
+  albums?: string[];
   // Прятать меню и шапку HA, пока карточка на экране (на устройстве можно переопределить).
   kiosk?: boolean;
   settings?: Partial<Settings>;
@@ -107,6 +110,16 @@ export class CardBackend {
     return this.sourceJob;
   }
 
+  // Ссылка на папку фото (или альбом) в медиатеке HA — там их смотрят, удаляют и раскладывают.
+  mediaBrowserUrl(album?: string): Promise<string> {
+    return this.source().then((source) => {
+      const base = 'media-source://media_source/' + source + '/' + (this.config.media_folder || 'photoframe').replace(/^\/+|\/+$/g, '');
+      const steps = ['app,media-source://media_source', ',' + base];
+      if (album && album !== 'all') steps.push(',' + base + '/' + album);
+      return this.client.resolveUrl('/media-browser/browser/' + steps.map(encodeURIComponent).join('/'));
+    });
+  }
+
   private folderId(): Promise<string> {
     return this.source().then((source) => 'media-source://media_source/' + source + '/' + this.folder);
   }
@@ -161,7 +174,17 @@ export class CardBackend {
   }
 
   // Только id фото в папке (без подписанных ссылок) — дёшево проверить, не поменялся ли набор.
+  // С интеграцией фото готовит сервер: список альбома со ссылками на кадры под ширину этого экрана.
+  private integrationPhotos(): Promise<Photo[]> {
+    return this.client.call<{ photos: Array<{ id: string; url: string }> }>({
+      type: 'photoframe/photos',
+      album: this.album || 'all',
+      width: targetWidth(),
+    }).then((r) => r.photos.map((p) => ({ id: p.id, url: this.client.resolveUrl(p.url) })));
+  }
+
   listPhotoIds(): Promise<string[]> {
+    if (this.integration) return this.integrationPhotos().then((list) => list.map((p) => String(p.id)));
     return this.folderId().then((folder) => this.client.call<{ children?: Array<{ media_content_id: string; media_class: string }> }>({
       type: 'media_source/browse_media',
       media_content_id: folder,
@@ -170,6 +193,7 @@ export class CardBackend {
 
   // Папки нет — HA отвечает ошибкой; отдаём понятный текст, чтобы показать его в настройках.
   listPhotos(): Promise<Photo[]> {
+    if (this.integration) return this.integrationPhotos();
     return this.folderId().then((folder) => this.client.call<{ children?: Array<{ media_content_id: string; media_class: string; title: string }> }>({
       type: 'media_source/browse_media',
       media_content_id: folder,
@@ -184,7 +208,20 @@ export class CardBackend {
     }, () => { throw new Error(t('errors.upload_folder', { folder: this.folder })); });
   }
 
-  addPhoto(f: File): Promise<void> {
+  // album: куда загрузить (подпапка); не задан — альбом этой рамки, а «все» — корень папки фото.
+  addPhoto(f: File, album?: string): Promise<void> {
+    if (this.integration) {
+      // Файл как есть: поворот по EXIF, HEIC → JPEG и уменьшение делает сервер.
+      const form = new FormData();
+      form.append('album', album != null ? album : this.album && this.album !== 'all' ? this.album : '');
+      form.append('file', f, f.name);
+      return this.client.fetch('/api/photoframe/upload', { method: 'POST', body: form }).then((r) => {
+        if (r.ok) return;
+        if (r.status === 401 || r.status === 403) throw new Error(t('errors.upload_admin'));
+        if (r.status === 415) throw new Error(t('errors.decode', { name: f.name }));
+        throw new Error(t('errors.upload', { status: r.status }));
+      });
+    }
     return resize(f).then((dataUrl) => this.addPhotoData(dataUrl, f.name.replace(/\.[^.]+$/, '') + '.jpg'));
   }
 

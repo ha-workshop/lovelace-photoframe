@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import { CloudUpload, Copy, ImagePlus, LogIn, LogOut, RotateCcw, Trash2, X } from 'lucide-preact';
 import { haSession, login, logout } from '../lib/haAuth';
@@ -121,13 +121,14 @@ export function SettingsModal(props: { onClose: () => void; onCustomize: () => v
   const [progress, setProgress] = useState('');
   // Файлы из выбора или из перетаскивания; не-картинки отбрасываем.
   const upload = (list: FileList | null, input?: HTMLInputElement) => {
-    const files = (Array.prototype.slice.call(list || []) as File[]).filter((f) => /^image\//.test(f.type));
+    // HEIC с iPhone в других браузерах приходит без типа — пропускаем его по расширению (сервер переведёт в JPEG).
+    const files = (Array.prototype.slice.call(list || []) as File[]).filter((f) => /^image\//.test(f.type) || /\.(heic|heif)$/i.test(f.name));
     if (input) input.value = '';
     if (!files.length) return;
     setBusy(true);
     setUploadError('');
     setProgress('');
-    store.addPhotos(files, (done, total) => setProgress(total > 1 ? done + ' / ' + total : '')).then(
+    store.addPhotos(files, (done, total) => setProgress(total > 1 ? done + ' / ' + total : ''), integration ? uploadAlbum : undefined).then(
       () => setBusy(false),
       (e: Error) => { setBusy(false); setUploadError(e.message || String(e)); },
     );
@@ -137,6 +138,14 @@ export function SettingsModal(props: { onClose: () => void; onCustomize: () => v
   const [kiosk, setKiosk] = useState<KioskPref>(kioskPref());
   const [qPref, setQPref] = useState<QualityPref>(qualityPref());
   const session = haSession();
+  // Фото живут в медиатеке HA — смотреть и удалять их там; здесь только загрузка (и альбом с интеграцией).
+  const integration = !!store.card && store.card.integration;
+  const albums = (store.card && store.card.config.albums) || [];
+  const [uploadAlbum, setUploadAlbum] = useState(store.card && store.card.album && store.card.album !== 'all' ? store.card.album : '');
+  const [mediaUrl, setMediaUrl] = useState('');
+  useEffect(() => {
+    if (store.card) store.card.mediaBrowserUrl(uploadAlbum).then(setMediaUrl, () => setMediaUrl(''));
+  }, [uploadAlbum, !!store.card]);
   const [frameName, setFrameNameDraft] = useState(currentFrameName());
   const [homes, setHomes] = useState<Home[]>(store.state.homes);
   const homesChanged = JSON.stringify(homes) !== JSON.stringify(store.state.homes);
@@ -182,14 +191,30 @@ export function SettingsModal(props: { onClose: () => void; onCustomize: () => v
             onDragLeave={() => setDragOver(false)}
             onDrop={(e) => { e.preventDefault(); setDragOver(false); if (!busy) upload(e.dataTransfer && e.dataTransfer.files); }}
           >
-            <input type="file" multiple accept="image/*" onChange={(e) => upload(e.currentTarget.files, e.currentTarget)} disabled={busy} />
+            <input type="file" multiple accept="image/*,.heic,.heif" onChange={(e) => upload(e.currentTarget.files, e.currentTarget)} disabled={busy} />
             <CloudUpload size={40} class="muted" />
             <p class="drop-title">{busy ? t('photos.uploading') + (progress ? ' ' + progress : '') : t('photos.pick')}</p>
-            <p class="hint small">{t('photos.formats')}</p>
+            <p class="hint small">{t(integration ? 'photos.formats_server' : 'photos.formats')}</p>
           </label>
           {(uploadError || store.photoError) && <div class="c-red small upload-error">{uploadError || store.photoError}</div>}
 
-          {photos.length > 0 && (
+          {integration && albums.length > 0 && (
+            <div class="option">
+              <label>{t('photos.album')}</label>
+              <select value={uploadAlbum} onChange={(e) => setUploadAlbum(e.currentTarget.value)}>
+                <option value="">{t('photos.album_root')}</option>
+                {albums.map((a) => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </div>
+          )}
+          {store.card && (
+            <div class="photos-count">
+              <span>{t('photos.count', { n: photos.length })}</span>
+              {mediaUrl && <a href={mediaUrl} target="_blank" rel="noopener">{t('photos.open_media')}</a>}
+            </div>
+          )}
+
+          {!store.card && photos.length > 0 && (
             <div class="thumbs thumbs-small">
               {photos.map((p) => (
                 <div key={p.id} class="thumb" style={{ backgroundImage: 'url(' + p.url + ')' }}>
@@ -338,7 +363,7 @@ export function SettingsModal(props: { onClose: () => void; onCustomize: () => v
       )}
 
       <div class="modal-foot">
-        {tab === 'photos' && photos.length > 0
+        {tab === 'photos' && !store.card && photos.length > 0
           ? <button class="btn btn-danger" onClick={() => store.clearPhotos()}><Trash2 size={14} /><span>{t('photos.delete_all')}</span></button>
           : <span />}
         <button class="btn btn-accent" onClick={save}>{t('common.done')}</button>
