@@ -8,14 +8,18 @@ import './styles.css';
 import { App } from './App';
 import { keepScreenOn } from './lib/wakeLock';
 import { store } from './lib/store';
+import { finishLogin } from './lib/haAuth';
 
 // Фото из src/photos попадают в сборку PWA и показываются всегда.
 store.bundled = Object.values(
   import.meta.glob('./photos/*.{jpg,jpeg,png,webp,JPG,JPEG}', { eager: true, query: '?url', import: 'default' }),
 ) as string[];
 
-render(<App />, document.getElementById('app')!);
-keepScreenOn();
+// Вернулись со страницы входа HA — сначала забираем токены, потом рисуем (иначе мелькнут настройки).
+finishLogin().then(() => {
+  render(<App />, document.getElementById('app')!);
+  keepScreenOn();
+});
 
 // Service worker: в браузере и в WebView, где он поддерживается (Chrome 40+ / WebView 51+, iOS 11.3+).
 // В dev не регистрируем, чтобы не ловить устаревший кэш; в APK файлы и так локальные.

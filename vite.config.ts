@@ -24,12 +24,5 @@ export default defineConfig({
     terserOptions: { ecma: 5, safari10: true },
     cssTarget: 'chrome37',
   },
-  // В dev API и фото отдаёт сервис (npm run server:dev).
-  server: {
-    port: 5173,
-    proxy: {
-      '/api': { target: 'http://localhost:8787', ws: true },
-      '/photos': 'http://localhost:8787',
-    },
-  },
+  server: { port: 5173 },
 });

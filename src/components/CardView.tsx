@@ -62,6 +62,17 @@ function tileCols(size: Size) {
   return Math.max(1, Math.min(5, Math.floor(size.w / 150)));
 }
 
+// Плитки под размер карточки: если ряды не помещаются по высоте — больше колонок (пока плитки не уже 120 px),
+// потом компактные плитки, потом строки «значок + имя». Не влезают и строки — тогда прокрутка.
+function tileClass(n: number, size: Size) {
+  const GAP = 10;
+  const height = (cols: number) => (size.h + GAP) / Math.ceil(n / cols) - GAP;
+  let cols = tileCols(size);
+  while (cols < Math.min(n, 6) && height(cols) < 96 && size.w / (cols + 1) >= 120) cols++;
+  const h = height(cols);
+  return 'lights cols-' + cols + (h >= 96 ? '' : h >= 70 ? ' compact' : ' list');
+}
+
 function Climate({ card, size }: { card: Card; size: Size }) {
   const ha = useHA();
   const detail = useDetail();
@@ -128,7 +139,7 @@ function SwitchTile({ it }: { it: Item }) {
 
 function Switches({ card, size }: { card: Card; size: Size }) {
   return (
-    <div class={'lights cols-' + tileCols(size) + (size.h < 300 ? ' compact' : '')}>
+    <div class={tileClass(card.items.length, size)}>
       {card.items.map((it) => <SwitchTile key={it.entity} it={it} />)}
     </div>
   );
@@ -188,7 +199,7 @@ function Scenes({ card, size }: { card: Card; size: Size }) {
     setTimeout(() => setFired(''), 1200);
   };
   return (
-    <div class={'lights cols-' + tileCols(size) + (size.h < 300 ? ' compact' : '')}>
+    <div class={tileClass(card.items.length, size)}>
       {card.items.map((it) => {
         const Icon = iconFor(it.icon || 'sparkles');
         return (

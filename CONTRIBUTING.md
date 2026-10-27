@@ -19,8 +19,8 @@ Adding a language needs no code changes — the file is picked up automatically.
 
 ## Code
 
-- `npm run dev` starts the PWA and the local service; `card-harness.html` emulates an HA dashboard
-  for the card.
+- `npm run dev` starts the PWA (sign in to your HA from its settings); `card-harness.html?ha=<HA url>`
+  emulates an HA dashboard for the card.
 - The standalone PWA must keep working on Android 5 WebViews (Chrome 37): no CSS Grid, no `gap`
   in flexbox, ES5 output — see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 - Run `npx tsc --noEmit` and `npm run build` before opening a pull request.

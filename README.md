@@ -1,3 +1,5 @@
+<p align="center"><img src="https://raw.githubusercontent.com/mZer0ne/lovelace-photoframe/main/docs/icon.png" width="128" height="128" alt="Photo Frame"></p>
+
 # Photo Frame for Home Assistant
 
 **English** · [Русский](README.ru.md)
@@ -12,11 +14,11 @@ air conditioner, cameras, speakers and TV are right there. Leave it alone for a 
 
 | Photo frame | Control panel |
 |---|---|
-| ![Photo frame mode](docs/screenshots/ambient.jpg) | ![Control panel](docs/screenshots/controls.jpg) |
+| ![Photo frame mode](https://raw.githubusercontent.com/mZer0ne/lovelace-photoframe/main/docs/screenshots/ambient.jpg) | ![Control panel](https://raw.githubusercontent.com/mZer0ne/lovelace-photoframe/main/docs/screenshots/controls.jpg) |
 
 | Temperature history | Energy use |
 |---|---|
-| ![Temperature chart](docs/screenshots/chart-temperature.jpg) | ![Energy per day](docs/screenshots/chart-energy.jpg) |
+| ![Temperature chart](https://raw.githubusercontent.com/mZer0ne/lovelace-photoframe/main/docs/screenshots/chart-temperature.jpg) | ![Energy per day](https://raw.githubusercontent.com/mZer0ne/lovelace-photoframe/main/docs/screenshots/chart-energy.jpg) |
 
 ## Features
 
@@ -31,9 +33,10 @@ air conditioner, cameras, speakers and TV are right there. Leave it alone for a 
   power and energy.
 - **Charts and stats.** Tap a thermometer or a sensor for its history over 24 hours, 7 or 30 days:
   min, max, average, hourly/daily consumption, how often and how long something was on.
-- **Several homes.** Apartment and country house — swipe sideways. Each home is its own card layout
-  built from devices in this Home Assistant (a remote house can be linked via Remote Home Assistant).
-  Every device has its own *main home* it returns to.
+- **Screens and homes.** Each home has several screens — *Living room*, *Cameras*, *Climate* — each with its
+  own card grid; swipe sideways to flip through them (past the last screen — the next home's screens).
+  Homes are built from devices in this Home Assistant (a remote house can be linked via Remote Home Assistant).
+  Every device has its own *start screen* it returns to.
 - **The screen stays on.** Photos instead of sleep (Screen Wake Lock over HTTPS).
 - **Careful by default.** Unavailable sensors are hidden; turning off a breaker takes two taps.
 - **English and Russian** UI: the language follows your HA profile (or the browser) and can be
@@ -52,8 +55,8 @@ Photo Frame is **one dashboard card** (`custom:photoframe-card`) — not an add-
   Other users can use the frame, they just don't get the *Customize* button.
 - **Photos come from the HA media library**, folder `/media/photoframe`. Upload from the frame
   (*Settings → Photos*) or via *Media* in HA.
-- **The main home is a per-device setting**, not a dashboard one: the kitchen tablet starts on
-  *Apartment*, the one at the country house on *Country house*.
+- **The start screen is a per-device setting**, not a dashboard one: the kitchen tablet starts on
+  *Apartment · Kitchen*, the one at the country house on *Country house · Cameras*.
 
 ## Installation
 
@@ -102,37 +105,37 @@ Everything is configured on the frame itself — no YAML needed. For reference, 
   back when you leave the dashboard. Turn it on per device (*Settings → Kiosk mode on this device*),
   for everyone with `kiosk: true` in the card config, or with `?kiosk` in the URL (`?kiosk=0` turns it off).
 
-## Two modes: HACS card and standalone app
+## HACS card and standalone app
 
-The same interface runs two ways. A token is needed only in the second one — and it lives only on the server.
+The same interface runs two ways — both without tokens or extra servers. Everything lives in HA.
 
-| | HACS card | Standalone app (PWA) |
+| | HACS card | Standalone app (PWA / Android frame) |
 |---|---|---|
-| Runs in | an HA dashboard / the HA app | a browser, *Add to Home Screen*, old Android frames |
-| You install | just this card via HACS | a small Node.js service (SQLite) next to HA |
-| Access to HA | as the signed-in user | the service talks to HA |
-| Token | **not needed** | long-lived token **on the server only**, devices never see it |
-| Layout | in the dashboard config | in the service database (SQLite) |
-| Photos | HA media library (`/media/photoframe`) | the service's shared album |
-| Homes | layouts of one HA | a home can have its own HA |
+| Runs in | an HA dashboard / the HA app | a browser, *Add to Home Screen*, an old Android frame (APK shell) |
+| Access to HA | as the signed-in user | signs in to HA through its own login page, like the HA frontend |
+| Homes & screens | in the card config on the dashboard | the same card config on the *Photo Frame* dashboard |
+| Photos | HA media library (`/media/photoframe`) | the same media library |
 
-The standalone mode is for devices that can't open HA (an old Android 5 frame) or homes on different
-HA servers. How to run the service: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+The app is served by HA itself: `./deploy.sh pwa` puts it into `<config>/www/photoframe`, so it opens at
+`http://<HA>:8123/local/photoframe/index.html`. Opened from the same domain (or inside HA as a *Webpage*
+dashboard) it picks up your HA sign-in; otherwise *Settings → Home Assistant → Sign in with Home Assistant*.
+A change on the card or on any frame shows up everywhere at once.
 
 ## Development
 
 ```bash
 npm install
-npm run dev            # PWA + service
+npm run dev            # the PWA at http://localhost:5173 (sign in to your HA from its settings)
 npm run build:card     # dist/photoframe-card.js — the file HACS installs
+npm run apk:install    # Android shell for old frames, installed over adb
 ```
 
-`card-harness.html` emulates a dashboard for testing the card (live data from your HA through the
-service, read-only); `card-harness.html?hadom` also mimics the HA frontend DOM for kiosk mode.
+`card-harness.html?ha=http://<HA>:8123` emulates a dashboard for testing the card (live data from your
+HA, read-only); `?hadom` also mimics the HA frontend DOM for kiosk mode.
 
-**Deploy to your own server** — `cp deploy.env.example .deploy.env`, fill it in, then:
+**Deploy to your own HA** — `cp deploy.env.example .deploy.env`, fill it in, then:
 `./deploy.sh card` puts a fresh build into your HA (same place HACS does — handy before a release),
-`./deploy.sh service` updates the standalone PWA + service (systemd unit: `docs/photoframe.service`).
+`./deploy.sh pwa` updates the standalone app in `www/photoframe`.
 
 **Release** — `scripts/release.sh 0.2.0`: bumps the version, rebuilds `dist/photoframe-card.js`,
 tags, pushes and creates a GitHub Release; the workflow attaches the built card to it.

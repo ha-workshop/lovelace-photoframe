@@ -3,7 +3,9 @@
 #
 #   ./deploy.sh card      собрать карточку и положить её в Home Assistant по SSH
 #                         (туда же, куда ставит HACS — удобно проверять сборку до релиза)
-#   ./deploy.sh service   отдельный режим: PWA + Node-сервис на сервере (rsync, npm ci, сборка, перезапуск)
+#   ./deploy.sh pwa       собрать PWA и положить её в www Home Assistant:
+#                         http://<HA>:8123/local/photoframe/index.html — вход через страницу входа HA,
+#                         экраны и фото — в HA (общие с карточкой). Её же открывает APK-оболочка.
 #   ./deploy.sh all       и то, и другое
 #
 #   DRY_RUN=1 ./deploy.sh card   — только показать, что будет сделано
@@ -32,25 +34,23 @@ deploy_card() {
   echo "  Обновите страницу дашборда без кэша (в приложении HA — «Перезагрузить ресурсы» / перезапуск приложения)."
 }
 
-deploy_service() {
-  : "${DEPLOY_HOST:?DEPLOY_HOST не задан}"; : "${SERVICE_DIR:?SERVICE_DIR не задан}"
-  echo "→ Копирование кода в $DEPLOY_HOST:$SERVICE_DIR"
-  remote "mkdir -p '$SERVICE_DIR'"
-  # Данные (data/), локальные секреты и всё сгенерированное на сервере не трогаем.
-  run rsync -az --delete ${SSH_OPTS:+-e "ssh $SSH_OPTS"} \
-    --exclude .git --exclude node_modules --exclude dist --exclude data --exclude legacy-php \
-    --exclude .env.local --exclude .deploy.env --exclude .idea --exclude .claude --exclude 'src/photos/demo-*' \
-    ./ "$DEPLOY_HOST:$SERVICE_DIR/"
-  echo "→ Установка зависимостей и сборка на сервере"
-  remote "cd '$SERVICE_DIR' && npm ci --no-audit --no-fund && npx vite build"
-  echo "→ Перезапуск: ${SERVICE_RESTART:-sudo systemctl restart photoframe}"
-  remote "${SERVICE_RESTART:-sudo systemctl restart photoframe}"
-  echo "✓ Сервис обновлён: http://${DEPLOY_HOST#*@}:${SERVICE_PORT:-8787}"
+deploy_pwa() {
+  : "${DEPLOY_HOST:?DEPLOY_HOST не задан}"; : "${HA_CONFIG_DIR:?HA_CONFIG_DIR не задан}"
+  local dir="$HA_CONFIG_DIR/www/${PWA_SUBDIR:-photoframe}"
+  local out; out="$(mktemp -d)"
+  echo "→ Сборка PWA"
+  run npx vite build --outDir "$out" --emptyOutDir
+  echo "→ Копирование в $DEPLOY_HOST:$dir"
+  remote "mkdir -p '$dir'"
+  # --delete только внутри своей подпапки: соседние файлы в www не трогаем.
+  run rsync -az --delete ${SSH_OPTS:+-e "ssh $SSH_OPTS"} "$out/" "$DEPLOY_HOST:$dir/"
+  run rm -rf "$out"
+  echo "✓ PWA: http://${DEPLOY_HOST#*@}:8123/local/${PWA_SUBDIR:-photoframe}/index.html"
 }
 
 case "${1:-}" in
   card) deploy_card ;;
-  service) deploy_service ;;
-  all) deploy_card; deploy_service ;;
-  *) echo "Использование: ./deploy.sh card|service|all" >&2; exit 1 ;;
+  pwa) deploy_pwa ;;
+  all) deploy_card; deploy_pwa ;;
+  *) echo "Использование: ./deploy.sh card|pwa|all" >&2; exit 1 ;;
 esac

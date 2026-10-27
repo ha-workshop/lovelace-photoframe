@@ -2,6 +2,8 @@
 // Blob в IndexedDB появился только в Chrome 38, а строки работают везде.
 // Перед сохранением кадр ужимается до MAX_SIDE — у рамок мало памяти.
 
+import { t } from '../i18n';
+
 export interface Photo { id: number; data: string }
 
 const DB_NAME = 'photoframe';
@@ -47,14 +49,17 @@ export function resize(file: File): Promise<string> {
     reader.onerror = () => reject(reader.error);
     reader.onload = () => {
       const img = new Image();
-      img.onerror = reject;
+      img.onerror = () => reject(new Error(t('errors.decode', { name: file.name })));
       img.onload = () => {
         const k = Math.min(1, MAX_SIDE / Math.max(img.width, img.height));
         const canvas = document.createElement('canvas');
         canvas.width = Math.round(img.width * k);
         canvas.height = Math.round(img.height * k);
         canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.85));
+        const data = canvas.toDataURL('image/jpeg', 0.85);
+        // Safari держит память холстов до сборки мусора — в пачке фото она кончается. Отпускаем сразу.
+        canvas.width = canvas.height = 0;
+        resolve(data);
       };
       img.src = reader.result as string;
     };
@@ -62,10 +67,6 @@ export function resize(file: File): Promise<string> {
   });
 }
 
-// По одному файлу, чтобы не держать в памяти все исходники разом.
-export function addPhotos(files: File[]): Promise<void> {
-  return files.reduce<Promise<unknown>>(
-    (p, f) => p.then(() => resize(f)).then((data) => tx('readwrite', (s) => s.add({ data }))),
-    Promise.resolve(),
-  ).then(() => undefined);
+export function addPhoto(file: File): Promise<void> {
+  return resize(file).then((data) => tx('readwrite', (s) => s.add({ data }))).then(() => undefined);
 }

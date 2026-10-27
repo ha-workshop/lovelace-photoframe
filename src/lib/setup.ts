@@ -33,9 +33,10 @@ function navigate(path: string) {
   window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } }));
 }
 
-export function createDashboard(hass: Hass): Promise<string> {
+// Дашборд «Фоторамка» с карточкой. callWS — запрос к HA: hass фронтенда или подключение PWA.
+export function createDashboard(callWS: (msg: Record<string, unknown>) => Promise<unknown>): Promise<string> {
   const title = t('setup.dashboard_title');
-  return hass.callWS({
+  return callWS({
     type: 'lovelace/dashboards/create',
     url_path: DASHBOARD_PATH,
     title,
@@ -43,7 +44,7 @@ export function createDashboard(hass: Hass): Promise<string> {
     mode: 'storage',
     show_in_sidebar: true,
     require_admin: false,
-  }).then(() => hass.callWS({
+  }).then(() => callWS({
     type: 'lovelace/config/save',
     url_path: DASHBOARD_PATH,
     config: { title, views: [{ title, path: 'frame', type: 'panel', cards: [{ type: CARD_TYPE, media_folder: 'photoframe' }] }] },
@@ -83,7 +84,7 @@ function banner(hass: Hass) {
   create.onclick = () => {
     create.disabled = true;
     create.textContent = t('common.loading');
-    createDashboard(hass).then((path) => {
+    createDashboard((msg) => hass.callWS(msg)).then((path) => {
       remember('done');
       box.remove();
       navigate(path);

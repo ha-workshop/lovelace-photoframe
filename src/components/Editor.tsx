@@ -201,7 +201,8 @@ export function CardEditor(props: EditorProps) {
             {card.items.map((it, i) => {
               const Icon = iconFor(it.icon || guessIcon(it.entity, ha.states[it.entity] && ha.states[it.entity].attributes.device_class));
               return (
-                <div class="item-row" key={it.entity + i}>
+                <div class="item-block" key={it.entity + i}>
+                <div class="item-row">
                   <button class="item-icon" title={t('editor.change_icon')} onClick={() => {
                     const k = iconKeys.indexOf((it.icon || '') as IconKey);
                     setItem(i, { icon: iconKeys[(k + 1) % iconKeys.length] });
@@ -209,7 +210,7 @@ export function CardEditor(props: EditorProps) {
                   <div class="item-main">
                     <input value={it.name || ''} placeholder={it.device ? (ha.devices[it.device] ? ha.devices[it.device].name : t('editor.device')) : itemName(ha, { entity: it.entity })} onInput={(e) => setItem(i, { name: e.currentTarget.value || undefined })} />
                     {it.device
-                      ? <span class="mono">{t('editor.device_items', { list: expandItem(ha, card.type, it).map((x) => x.name || x.entity).join(', ') || t('editor.no_matching') })}</span>
+                      ? <span class="mono">{t('editor.device')}</span>
                       : <span class="mono">{it.entity}{!isAvailable(ha, it.entity) && <em class="na-tag"> · {t('editor.unavailable')}</em>}</span>}
                     {card.type === 'climate' && (
                       <button class="link" onClick={() => setPicking({ index: i, field: 'hum' })}><Droplets size={12} />{it.hum ? it.hum : t('editor.add_humidity')}</button>
@@ -221,6 +222,9 @@ export function CardEditor(props: EditorProps) {
                   <button class="icon-btn" onClick={() => moveItem(i, -1)}><ArrowUp size={16} /></button>
                   <button class="icon-btn" onClick={() => moveItem(i, 1)}><ArrowDown size={16} /></button>
                   <button class="icon-btn danger" onClick={() => set({ items: card.items.filter((_, k) => k !== i) })}><Trash2 size={16} /></button>
+                </div>
+                {/* Устройство: его сущности — что показывать, в каком порядке и под какими именами. */}
+                {it.device && <DeviceParts it={it} type={card.type} onChange={(patch) => setItem(i, patch)} />}
                 </div>
               );
             })}
@@ -253,5 +257,46 @@ export function CardEditor(props: EditorProps) {
         <button class="btn btn-accent" onClick={() => props.onSave(card)}>{t('common.save')}</button>
       </div>
     </Modal>
+  );
+}
+
+// Сущности устройства: галочка — показывать в карточке, своё имя (пусто — из HA), стрелки — порядок.
+function DeviceParts(props: { it: Item; type: CardType; onChange: (patch: Partial<Item>) => void }) {
+  const ha = useHA();
+  const it = props.it;
+  const skip = it.skip || [];
+  const names = it.names || {};
+  // Все подходящие сущности в порядке пользователя, с именами из HA — скрытые тоже (их можно вернуть).
+  const parts = expandItem(ha, props.type, { ...it, skip: [], names: {} });
+  if (!parts.length) return <span class="mono">{t('editor.no_matching')}</span>;
+  const ids = parts.map((x) => x.entity);
+  const move = (i: number, dir: number) => {
+    const next = ids.slice();
+    const tmp = next[i]; next[i] = next[i + dir]; next[i + dir] = tmp;
+    props.onChange({ order: next });
+  };
+  const rename = (id: string, name: string) => {
+    const next = { ...names };
+    if (name) next[id] = name; else delete next[id];
+    props.onChange({ names: Object.keys(next).length ? next : undefined });
+  };
+  const toggle = (id: string, shown: boolean) => {
+    const next = shown ? skip.filter((x) => x !== id) : skip.concat(id);
+    props.onChange({ skip: next.length ? next : undefined });
+  };
+  return (
+    <div class="device-parts">
+      {parts.map((x, i) => {
+        const shown = skip.indexOf(x.entity) === -1;
+        return (
+          <div key={x.entity} class={'device-part' + (shown ? '' : ' off')}>
+            <input type="checkbox" checked={shown} title={shown ? t('editor.part_hide') : t('editor.part_show')} onChange={(e) => toggle(x.entity, e.currentTarget.checked)} />
+            <input class="part-name" value={names[x.entity] || ''} placeholder={x.name || x.entity} onInput={(e) => rename(x.entity, e.currentTarget.value)} />
+            <button class="icon-btn" disabled={i === 0} onClick={() => move(i, -1)}><ArrowUp size={14} /></button>
+            <button class="icon-btn" disabled={i === parts.length - 1} onClick={() => move(i, 1)}><ArrowDown size={14} /></button>
+          </div>
+        );
+      })}
+    </div>
   );
 }

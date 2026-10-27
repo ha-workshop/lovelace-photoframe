@@ -24,9 +24,14 @@ export function expandItem(ha: HAClient, type: CardType, it: Item): Item[] {
   // Реестр ещё не загружен — пока показываем запомненную сущность устройства.
   if (!dev) return it.entity ? [{ entity: it.entity, name: it.name }] : [];
   const ids = dev.entities.filter((id) => ha.registry[id] && ha.registry[id].ec == null && !!ha.states[id]);
-  const mine = ids.filter((id) => fits(type, ha.states[id]));
+  const skip = it.skip || [];
+  const order = it.order || [];
+  const pos = (id: string) => { const i = order.indexOf(id); return i === -1 ? 1e6 : i; };
+  const mine = ids.filter((id) => fits(type, ha.states[id]) && skip.indexOf(id) === -1)
+    .map((id, i) => ({ id, i })).sort((a, b) => pos(a.id) - pos(b.id) || a.i - b.i).map((x) => x.id);
   const single = mine.length === 1;
-  const short = (id: string) => (single ? it.name || dev.name : ha.registry[id].en || dev.name || undefined);
+  const names = it.names || {};
+  const short = (id: string) => names[id] || (single ? it.name || dev.name : ha.registry[id].en || dev.name || undefined);
   if (type === 'climate') return mine.map((id) => ({ entity: id, hum: sibling(ha, ids, 'humidity'), name: short(id) }));
   if (type === 'ac') return mine.map((id) => ({ entity: id, temp: it.temp || sibling(ha, ids, 'temperature'), name: short(id) }));
   return mine.map((id) => ({ entity: id, name: short(id), icon: undefined }));

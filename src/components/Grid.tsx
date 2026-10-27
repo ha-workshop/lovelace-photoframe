@@ -1,19 +1,21 @@
 import { useRef, useState } from 'preact/hooks';
-import { Pencil, X } from 'lucide-preact';
+import { EyeOff, Pencil, Plus, X } from 'lucide-preact';
 import { useHA } from '../lib/hooks';
 import { useStore } from '../lib/store';
-import { GRID_COLS, bottom, clampBox, settle, type Card } from '../lib/layout';
+import { GRID_COLS, MOBILE_COLS, bottom, clampBox, mobileView, settle, withMobile, type Card } from '../lib/layout';
 import { CardAside, CardBody, Panel, cardTitle } from './CardView';
 import { useSize } from '../lib/useSize';
 import { t } from '../i18n';
 
 // Сетка на 12 колонок с квадратными клетками: высота ряда = ширине колонки.
 // В режиме редактирования карточку тянут пальцем (перенос) или за уголок (размер) — с привязкой к клеткам.
+// На узком экране (телефон) — своя сетка на MOBILE_COLS колонок: места и размеры карточек там свои (card.m),
+// а содержимое общее; × там прячет карточку только на телефоне.
 
 const GAP = 12;
 // Поле вокруг сетки внутри прокручиваемой области: в него выступают кнопки-«значки» на углах карточек.
 const PAD = 16;
-const NARROW = 700;     // уже — карточки идут столбиком на всю ширину
+const NARROW = 700;     // уже — телефонная сетка
 const DRAG_START = 6;   // px, после которых касание считается перетаскиванием
 // Место под шапку и поля панели: содержимому достаётся меньше, чем размер карточки.
 const BODY_PAD_X = 44;
@@ -49,12 +51,15 @@ export function Grid({ editing, onCamera, onEdit }: Props) {
   const box = useSize(ref);
   const [drag, setDrag] = useState<Drag | null>(null);
   const dragRef = useRef<Drag | null>(null);
-  const cards = store.state.layout.cards;
+  const all = store.state.layout.cards;
 
   const innerW = box.w - PAD * 2;
   const innerH = box.h - PAD * 2;
   const narrow = box.w > 0 && innerW < NARROW;
-  const cell = (innerW - GAP * (GRID_COLS - 1)) / GRID_COLS;
+  const cols = narrow ? MOBILE_COLS : GRID_COLS;
+  const cards = narrow ? mobileView(all) : all;
+  const hidden = narrow ? all.filter((c) => c.m && c.m.hide) : [];
+  const cell = (innerW - GAP * (cols - 1)) / cols;
   const step = cell + GAP;
   // Сколько целых рядов клеток помещается без прокрутки. Остаток (меньше клетки) делим поровну
   // сверху и снизу — карточки стоят по центру экрана, а не прилипают к шапке.
@@ -63,7 +68,7 @@ export function Grid({ editing, onCamera, onEdit }: Props) {
   const rect = (c: Card) => ({ left: c.x * step, top: c.y * step, width: c.w * step - GAP, height: c.h * step - GAP });
 
   const start = (e: TouchEvent | MouseEvent, card: Card, mode: Drag['mode']) => {
-    if (!editing || narrow) return;
+    if (!editing) return;
     if ('button' in e && e.button !== 0) return;
     e.stopPropagation();
     const p = point(e);
@@ -82,7 +87,7 @@ export function Grid({ editing, onCamera, onEdit }: Props) {
       const o = cur.orig;
       const target = clampBox(cur.mode === 'move'
         ? { ...o, x: o.x + dx / step, y: o.y + dy / step }
-        : { ...o, w: o.w + dx / step, h: o.h + dy / step });
+        : { ...o, w: o.w + dx / step, h: o.h + dy / step }, cols);
       const next = { ...cur, dx, dy, active, preview: settle(cards, target) };
       dragRef.current = next;
       setDrag(next);
@@ -96,7 +101,7 @@ export function Grid({ editing, onCamera, onEdit }: Props) {
       document.removeEventListener('touchmove', move, { passive: false } as any);
       document.removeEventListener('touchend', up);
       document.removeEventListener('touchcancel', up);
-      if (cur && cur.active) store.saveLayout({ ...store.state.layout, cards: cur.preview });
+      if (cur && cur.active) save(cur.preview);
     };
     window.addEventListener('mousemove', move);
     window.addEventListener('mouseup', up);
@@ -106,30 +111,22 @@ export function Grid({ editing, onCamera, onEdit }: Props) {
     document.addEventListener('touchcancel', up);
   };
 
+  // Узкий вид пишет только места на телефоне (m), широкий — саму раскладку.
+  const save = (view: Card[]) => store.saveLayout({ ...store.state.layout, cards: narrow ? withMobile(all, view) : view });
   const shown = drag && drag.active ? drag.preview : cards;
-  const remove = (card: Card) => store.saveLayout({ ...store.state.layout, cards: settle(cards.filter((c) => c.id !== card.id)) });
-
-  // Узкий экран: столбиком в порядке сетки, высота — как у карточки той же «клеточной» высоты на 6 колонках.
-  if (narrow) {
-    const cell6 = (innerW - GAP * 5) / 6;
-    let top = 0;
-    const list = cards.slice().sort((a, b) => a.y - b.y || a.x - b.x).map((card) => {
-      const height = Math.max(3, Math.min(card.h, 6)) * (cell6 + GAP) - GAP;
-      const style = { left: 0, top, width: innerW, height };
-      top += height + GAP;
-      return { card, style };
-    });
-    return (
-      <main class="grid" ref={ref}>
-        {editing && <div class="grid-note">{t('grid.narrow_note')}</div>}
-        <div class="grid-inner" style={{ height: top, margin: PAD }}>
-          {list.map(({ card, style }) => (
-            <Cell key={card.id} card={card} style={style} editing={editing} onCamera={onCamera} onEdit={onEdit} onRemove={remove} ha={ha} />
-          ))}
-        </div>
-      </main>
-    );
-  }
+  // На телефоне × — «скрыть здесь», на широком экране — удалить карточку совсем.
+  const remove = (card: Card) => {
+    if (!narrow) { store.saveLayout({ ...store.state.layout, cards: settle(all.filter((c) => c.id !== card.id)) }); return; }
+    const view = cards.filter((c) => c.id !== card.id);
+    const next = withMobile(all, settle(view)).map((c) => (c.id === card.id ? { ...c, m: { x: 0, y: 0, w: MOBILE_COLS, h: 3, hide: true } } : c));
+    store.saveLayout({ ...store.state.layout, cards: next });
+  };
+  // Вернуть скрытую на телефоне карточку — в конец телефонной сетки.
+  const unhide = (card: Card) => {
+    const h = 3;
+    const next = withMobile(all, cards).map((c) => (c.id === card.id ? { ...c, m: { x: 0, y: bottom(cards), w: MOBILE_COLS, h } } : c));
+    store.saveLayout({ ...store.state.layout, cards: next });
+  };
 
   // В редактировании сетка клеток заполняет весь экран (новые карточки добавляются кнопкой «+» в шапке).
   const used = bottom(shown);
@@ -137,9 +134,22 @@ export function Grid({ editing, onCamera, onEdit }: Props) {
   // Центрируем, только когда всё помещается; если есть прокрутка — начинаем сверху.
   const top = rows <= fitRows ? offsetY : 0;
   return (
-    <main class={'grid' + (editing ? ' editing' : '') + (drag && drag.active ? ' dragging-card' : '')} ref={ref}>
+    <main class={'grid' + (editing ? ' editing' : '') + (drag && drag.active ? ' dragging-card' : '') + (narrow ? ' narrow' : '')} ref={ref}>
+      {editing && narrow && (
+        <div class="grid-note">
+          <span>{t('grid.narrow_note')}</span>
+          {hidden.length > 0 && (
+            <div class="hidden-cards">
+              <span class="muted"><EyeOff size={14} />{t('grid.hidden_on_phone')}</span>
+              {hidden.map((c) => (
+                <button key={c.id} class="chip" onClick={() => unhide(c)}><Plus size={14} /><span>{cardTitle(ha, c)}</span></button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       <div class="grid-inner" style={{ height: Math.max(0, rows * step - GAP), margin: (PAD + top) + 'px ' + PAD + 'px' }}>
-        {editing && box.w > 0 && <GridDots rows={rows} cell={cell} step={step} />}
+        {editing && box.w > 0 && <GridDots rows={rows} cols={cols} cell={cell} step={step} />}
         {box.w > 0 && shown.map((card) => {
           const isDragged = !!drag && drag.active && drag.id === card.id;
           let style = rect(card);
@@ -161,6 +171,7 @@ export function Grid({ editing, onCamera, onEdit }: Props) {
                 onCamera={onCamera}
                 onEdit={onEdit}
                 onRemove={remove}
+                narrow={narrow}
                 onStart={start}
                 ha={ha}
               />
@@ -172,10 +183,10 @@ export function Grid({ editing, onCamera, onEdit }: Props) {
   );
 }
 
-function GridDots({ rows, cell, step }: { rows: number; cell: number; step: number }) {
+function GridDots({ rows, cols, cell, step }: { rows: number; cols: number; cell: number; step: number }) {
   const dots = [];
   for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < GRID_COLS; c++) {
+    for (let c = 0; c < cols; c++) {
       dots.push(<div key={r + ':' + c} class="grid-dot" style={{ left: c * step, top: r * step, width: cell, height: cell }} />);
     }
   }
@@ -191,10 +202,11 @@ interface CellProps {
   onCamera: (url: string) => void;
   onEdit: (card: Card) => void;
   onRemove: (card: Card) => void;
+  narrow?: boolean;
   onStart?: (e: TouchEvent | MouseEvent, card: Card, mode: 'move' | 'resize') => void;
 }
 
-function Cell({ card, style, editing, dragged, ha, onCamera, onEdit, onRemove, onStart }: CellProps) {
+function Cell({ card, style, editing, dragged, ha, onCamera, onEdit, onRemove, narrow, onStart }: CellProps) {
   const tint = card.color ? ' tint-' + card.color : '';
   return (
     <div
@@ -208,7 +220,7 @@ function Cell({ card, style, editing, dragged, ha, onCamera, onEdit, onRemove, o
       </Panel>
       {editing && (
         <>
-          <button class="badge-btn badge-del" onMouseDown={stop} onTouchStart={stop} onClick={() => onRemove(card)} title={t('common.delete')}><X size={16} /></button>
+          <button class="badge-btn badge-del" onMouseDown={stop} onTouchStart={stop} onClick={() => onRemove(card)} title={narrow ? t('grid.hide_on_phone') : t('common.delete')}>{narrow ? <EyeOff size={14} /> : <X size={16} />}</button>
           <button class="badge-btn badge-edit" onMouseDown={stop} onTouchStart={stop} onClick={() => onEdit(card)} title={t('common.edit')}><Pencil size={14} /></button>
           {onStart && (
             <div

@@ -1,6 +1,74 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#060913"/>
-  <rect x="88" y="120" width="336" height="272" rx="28" fill="none" stroke="#38bdf8" stroke-width="28"/>
-  <path d="M136 344l84-96 60 64 40-40 56 72z" fill="#38bdf8"/>
-  <circle cx="320" cy="200" r="28" fill="#f8fafc"/>
+  <defs>
+    <!-- Фон — как у приложения: ночная синева с тёплым и бирюзовым свечением -->
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#141a3a"/>
+      <stop offset="1" stop-color="#05060c"/>
+    </linearGradient>
+    <radialGradient id="glowWarm" cx="0.78" cy="0.12" r="0.6">
+      <stop offset="0" stop-color="#fbbf24" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#fbbf24" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowCool" cx="0.15" cy="0.9" r="0.6">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Снимок в рамке: закат над горами и водой -->
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6366f1"/>
+      <stop offset="0.5" stop-color="#f472b6"/>
+      <stop offset="1" stop-color="#fbbf24"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f59e0b" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#312e81"/>
+    </linearGradient>
+    <clipPath id="photo"><rect x="122" y="140" width="268" height="232" rx="22"/></clipPath>
+
+    <!-- Стекло рамки: полупрозрачное паспарту, блик сверху -->
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.34"/>
+      <stop offset="0.55" stop-color="#ffffff" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.2"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.9"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.6"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="112" fill="url(#glowWarm)"/>
+  <rect width="512" height="512" rx="112" fill="url(#glowCool)"/>
+
+  <!-- Тень под рамкой -->
+  <rect x="96" y="134" width="320" height="284" rx="48" fill="#000" opacity="0.45" filter="url(#shadow)"/>
+
+  <!-- Стеклянная рамка -->
+  <rect x="92" y="110" width="328" height="292" rx="48" fill="url(#glass)"/>
+  <rect x="92.75" y="110.75" width="326.5" height="290.5" rx="47.25" fill="none" stroke="url(#edge)" stroke-width="1.5"/>
+
+  <!-- Снимок -->
+  <g clip-path="url(#photo)">
+    <rect x="122" y="140" width="268" height="232" fill="url(#sky)"/>
+    <circle cx="300" cy="232" r="30" fill="#fff7d6"/>
+    <path d="M122 300 L190 226 L232 266 L282 212 L356 286 L390 262 L390 372 L122 372 Z" fill="#3b2a6b"/>
+    <path d="M122 318 L176 276 L220 304 L262 270 L320 312 L390 290 L390 372 L122 372 Z" fill="#1e1b4b"/>
+    <rect x="122" y="330" width="268" height="42" fill="url(#water)"/>
+    <rect x="262" y="338" width="76" height="4" rx="2" fill="#fff7d6" opacity="0.7"/>
+    <rect x="276" y="350" width="48" height="3" rx="1.5" fill="#fff7d6" opacity="0.45"/>
+  </g>
+  <rect x="122.5" y="140.5" width="267" height="231" rx="21.5" fill="none" stroke="#ffffff" stroke-opacity="0.35"/>
+
+  <!-- Блик по стеклу -->
+  <path d="M92 158 Q92 110 140 110 L300 110 L170 402 L140 402 Q92 402 92 354 Z" fill="url(#shine)" opacity="0.5"/>
 </svg>

@@ -1,10 +1,4 @@
-import { absolute } from './api';
-
-function toWs(url: string) {
-  // Пустой адрес сервиса — тот же origin, что у страницы.
-  const full = /^https?:/.test(url) ? url : location.protocol + '//' + location.host + url;
-  return full.replace(/^http/, 'ws');
-}
+import { updateIntervalMs } from './quality';
 
 // Минимальный клиент WebSocket API Home Assistant.
 // Без зависимостей и без async/await в горячем пути — чтобы ES5-сборка была лёгкой.
@@ -34,6 +28,9 @@ export class HAClient {
   registry: Record<string, RegistryEntry> = {};
   devices: Record<string, Device> = {};
   status: Status = 'idle';
+  // Администратор ли вошедший пользователь HA (сохранять раскладку в дашборд может только он).
+  protected admin = false;
+  get isAdmin() { return this.admin; }
   private ws: WebSocket | null = null;
   private msgId = 1;
   private listeners: Listener[] = [];
@@ -44,13 +41,12 @@ export class HAClient {
   // Подписки с собственным потоком событий (прогноз погоды): события приходят с id подписки.
   private subs: Record<number, (event: any) => void> = {};
 
-  // proxy — подключаемся к сервису рамок, он сам авторизуется в HA (токена на рамке нет).
-  // Без proxy — напрямую в HA с токеном: только когда сервиса нет.
-  // home — какой дом спрашивать у сервиса (у каждого дома может быть свой HA).
-  constructor(private baseUrl: string, private token: string, private proxy: boolean, readonly home = 'main') {}
+  // baseUrl — адрес HA; token — отдаёт свежий access-токен входа через HA (lib/haAuth).
+  constructor(private baseUrl: string, private token: () => Promise<string>) {}
 
-  private homeQuery(sep: string) {
-    return this.home === 'main' ? '' : sep + 'home=' + encodeURIComponent(this.home);
+  // Путь на сервере HA (/media/…, /api/…) → полный адрес; рамка может быть открыта не с домена HA.
+  resolveUrl(path: string) {
+    return !path || /^(data:|blob:|https?:)/.test(path) ? path : this.baseUrl.replace(/\/+$/, '') + path;
   }
 
   subscribe(fn: Listener) {
@@ -58,17 +54,36 @@ export class HAClient {
     return () => { this.listeners = this.listeners.filter((l) => l !== fn); };
   }
 
-  protected emit() { this.listeners.forEach((l) => l()); }
+  // Датчики шлют события потоком (у большого HA — десятки в секунду). Перерисовываемся пачкой,
+  // не чаще updateIntervalMs(): на слабых устройствах это главная экономия. Статус связи — сразу.
+  private emitTimer = 0;
 
-  protected setStatus(s: Status) { this.status = s; this.emit(); }
+  protected emitNow() {
+    clearTimeout(this.emitTimer);
+    this.emitTimer = 0;
+    this.listeners.forEach((l) => l());
+  }
+
+  protected emit() {
+    if (!this.emitTimer) this.emitTimer = window.setTimeout(() => this.emitNow(), updateIntervalMs());
+  }
+
+  protected setStatus(s: Status) { this.status = s; this.emitNow(); }
 
   connect() {
-    if (!this.proxy && (!this.baseUrl || !this.token)) { this.setStatus('idle'); return; }
+    if (!this.baseUrl) { this.setStatus('idle'); return; }
     this.stopped = false;
     this.setStatus('connecting');
-    const wsUrl = this.proxy
-      ? toWs(absolute('/api/ha/websocket' + this.homeQuery('?')))
-      : this.baseUrl.replace(/\/+$/, '').replace(/^http/, 'ws') + '/api/websocket';
+    // Перед каждым подключением — свежий access-токен (живёт 30 минут).
+    this.token().then((value) => {
+      if (this.stopped) return;
+      if (value) this.open(value);
+      else { this.stopped = true; this.setStatus('auth_invalid'); }
+    }, () => this.scheduleReconnect());
+  }
+
+  private open(token: string) {
+    const wsUrl = this.baseUrl.replace(/\/+$/, '').replace(/^http/, 'ws') + '/api/websocket';
     let ws: WebSocket;
     try { ws = new WebSocket(wsUrl); } catch (e) { this.scheduleReconnect(); return; }
     this.ws = ws;
@@ -76,15 +91,15 @@ export class HAClient {
     ws.onmessage = (ev) => {
       const data = JSON.parse(ev.data);
       if (data.type === 'auth_required') {
-        ws.send(JSON.stringify({ type: 'auth', access_token: this.token }));
+        ws.send(JSON.stringify({ type: 'auth', access_token: token }));
       } else if (data.type === 'auth_invalid') {
-        // Через сервис токен чинят на стороне сервиса — пробуем снова, но реже.
+        // Вход отозван в HA — нужно войти заново.
         this.stopped = true;
         this.setStatus('auth_invalid');
         ws.close();
-        if (this.proxy) this.scheduleReconnect(30000);
       } else if (data.type === 'auth_ok') {
         this.setStatus('connected');
+        this.call<{ is_admin?: boolean }>({ type: 'auth/current_user' }).then((u) => { this.admin = !!u.is_admin; this.emit(); }, () => {});
         this.send({ type: 'subscribe_events', event_type: 'state_changed' });
         this.call<HassState[]>({ type: 'get_states' }).then((list) => {
           const next: Record<string, HassState> = {};
@@ -196,21 +211,29 @@ export class HAClient {
     });
   }
 
-  // Обложки и картинки сущностей. Внешние (обложки Яндекс Музыки) грузим как есть,
-  // HA-шные (/api/media_player_proxy/…) — через сервис, он добавит авторизацию.
+  // Обложки и картинки сущностей. Внешние (обложки Яндекс Музыки) — как есть, HA-шные
+  // (/api/media_player_proxy/…?token=…) уже подписаны токеном сущности — нужен только адрес HA.
   pictureUrl(path: string | undefined) {
-    if (!path) return '';
-    if (/^https?:/.test(path)) return path;
-    return this.proxy ? absolute('/api/ha/picture?path=' + encodeURIComponent(path) + this.homeQuery('&')) : this.baseUrl.replace(/\/+$/, '') + path;
+    return this.resolveUrl(path || '');
+  }
+
+  // Запрос к REST API HA с авторизацией (загрузка фото в медиатеку). XHR, а не fetch: fetch нет в Chrome 37.
+  fetch(path: string, init: { method?: string; body?: FormData } = {}): Promise<{ ok: boolean; status: number }> {
+    return this.token().then((access) => new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open(init.method || 'GET', this.baseUrl.replace(/\/+$/, '') + path);
+      xhr.setRequestHeader('Authorization', 'Bearer ' + access);
+      xhr.onload = () => resolve({ ok: xhr.status >= 200 && xhr.status < 300, status: xhr.status });
+      xhr.onerror = () => reject(new Error('network'));
+      xhr.send(init.body || null);
+    }));
   }
 
   toggle(entityId: string) { return this.callService(entityId, 'toggle'); }
   turnOff(entityId: string) { return this.callService(entityId, 'turn_off'); }
 
-  // Через сервис — его прокси с авторизацией. Напрямую camera_proxy_stream принимает
-  // не долгоживущий токен, а access_token из атрибутов камеры.
+  // camera_proxy_stream принимает access_token из атрибутов камеры (он сам обновляется в HA).
   cameraStreamUrl(entityId: string) {
-    if (this.proxy) return absolute('/api/ha/camera/' + entityId + this.homeQuery('?'));
     const s = this.states[entityId];
     const camToken = s && s.attributes.access_token;
     if (!camToken) return '';
