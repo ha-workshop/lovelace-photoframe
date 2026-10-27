@@ -1552,13 +1552,19 @@ class Ot {
   // standalone — это PWA со своим подключением к HA, а не карточка внутри фронтенда HA.
   // integration — данные в интеграции Photo Frame (photoframe/config/*), а не в конфиге дашборда.
   constructor(e, n, s, i = !1, a = !1) {
-    this.client = e, this.config = n, this.dashboard = s, this.standalone = i, this.integration = a, this.queue = Promise.resolve(), this.saving = 0;
+    this.client = e, this.config = n, this.dashboard = s, this.standalone = i, this.integration = a, this.sourceJob = null, this.queue = Promise.resolve(), this.saving = 0;
   }
   get folder() {
     return (this.config.media_folder || "photoframe").replace(/^\/+|\/+$/g, "");
   }
-  get folderId() {
-    return "media-source://media_source/local/" + this.folder;
+  source() {
+    return this.config.media_source ? Promise.resolve(this.config.media_source) : (this.sourceJob || (this.sourceJob = this.client.call({ type: "media_source/browse_media", media_content_id: "media-source://media_source" }).then((e) => {
+      const s = [e.media_content_id || ""].concat((e.children || []).map((i) => i.media_content_id)).map((i) => (/^media-source:\/\/media_source\/([^/]+)\//.exec(i) || [])[1]).filter(Boolean);
+      return s.indexOf("local") !== -1 ? "local" : s[0] || "local";
+    }, () => "local")), this.sourceJob);
+  }
+  folderId() {
+    return this.source().then((e) => "media-source://media_source/" + e + "/" + this.folder);
   }
   get canEdit() {
     return this.integration ? this.config.can_edit !== !1 : this.client.isAdmin;
@@ -1599,17 +1605,17 @@ class Ot {
   }
   // Только id фото в папке (без подписанных ссылок) — дёшево проверить, не поменялся ли набор.
   listPhotoIds() {
-    return this.client.call({
+    return this.folderId().then((e) => this.client.call({
       type: "media_source/browse_media",
-      media_content_id: this.folderId
-    }).then((e) => (e.children || []).filter((n) => n.media_class === "image").map((n) => n.media_content_id));
+      media_content_id: e
+    })).then((e) => (e.children || []).filter((n) => n.media_class === "image").map((n) => n.media_content_id));
   }
   // Папки нет — HA отвечает ошибкой; отдаём понятный текст, чтобы показать его в настройках.
   listPhotos() {
-    return this.client.call({
+    return this.folderId().then((e) => this.client.call({
       type: "media_source/browse_media",
-      media_content_id: this.folderId
-    }).then((e) => {
+      media_content_id: e
+    })).then((e) => {
       const n = (e.children || []).filter((s) => s.media_class === "image");
       return Promise.all(n.map((s) => this.client.call({
         type: "media_source/resolve_media",
@@ -1625,13 +1631,13 @@ class Ot {
   }
   // Уже уменьшенный кадр (dataURL JPEG) — так же лежат фото, загруженные в браузер до перехода на HA.
   addPhotoData(e, n) {
-    return Promise.resolve().then(() => {
-      const s = atob(e.split(",")[1]), i = new Uint8Array(s.length);
-      for (let r = 0; r < s.length; r++) i[r] = s.charCodeAt(r);
-      const a = new FormData();
-      return a.append("media_content_id", this.folderId), a.append("file", new Blob([i], { type: "image/jpeg" }), n), this.client.fetch("/api/media_source/local_source/upload", { method: "POST", body: a }).then((r) => {
-        if (!r.ok)
-          throw r.status === 401 || r.status === 403 ? new Error(h("errors.upload_admin")) : r.status === 400 || r.status === 404 ? new Error(h("errors.upload_folder", { folder: this.folder })) : new Error(h("errors.upload", { status: r.status }));
+    return this.folderId().then((s) => {
+      const i = atob(e.split(",")[1]), a = new Uint8Array(i.length);
+      for (let c = 0; c < i.length; c++) a[c] = i.charCodeAt(c);
+      const r = new FormData();
+      return r.append("media_content_id", s), r.append("file", new Blob([a], { type: "image/jpeg" }), n), this.client.fetch("/api/media_source/local_source/upload", { method: "POST", body: r }).then((c) => {
+        if (!c.ok)
+          throw c.status === 401 || c.status === 403 ? new Error(h("errors.upload_admin")) : c.status === 400 || c.status === 404 ? new Error(h("errors.upload_folder", { folder: this.folder })) : new Error(h("errors.upload", { status: c.status }));
       });
     });
   }
