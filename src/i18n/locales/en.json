@@ -320,5 +320,9 @@
   "photos.album_root": "No album (whole folder)",
   "photos.count": "Photos in the media library: {n}",
   "photos.open_media": "Open in HA media",
-  "photos.formats_server": "PNG, JPG, WEBP, HEIC — several at once, the server does the processing"
+  "photos.formats_server": "PNG, JPG, WEBP, HEIC — several at once, the server does the processing",
+  "settings.fit": "How to show photos",
+  "settings.fit_auto": "Auto — whole if orientation differs",
+  "settings.fit_contain": "Whole, with glow around",
+  "settings.fit_cover": "Fill the screen, crop edges"
 }

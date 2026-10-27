@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { RefObject } from 'preact';
 import type { Tone } from '../lib/photoTone';
-import { preparePhoto } from '../lib/quality';
+import { preparePhoto, shouldContain, usePhotoFit } from '../lib/quality';
 
 interface Props {
   urls: string[];
@@ -14,7 +14,7 @@ interface Props {
 }
 
 // contain — кадр другой ориентации, чем экран: показываем целиком, а по краям — подсветка (glow) из него же.
-interface Layer { id: number; url: string; on: boolean; contain: boolean; glow: string }
+interface Layer { id: number; url: string; on: boolean; w: number; h: number; glow: string }
 
 // Размер кадра и его крошечная копия (48 px) для подсветки по краям. Растянутая на экран, она сама выглядит
 // размытой — фильтр blur не нужен (на «Красиво» он добавляется для мягкости).
@@ -42,6 +42,8 @@ function measure(url: string): Promise<{ w: number; h: number; glow: string }> {
 // готовится уменьшенным под экран — раньше альбом целиком висел слоями и съедал память слабых рамок.
 // В режиме управления поверх ложится растянутая миниатюра кадра — выглядит как размытие, но ничего не стоит.
 export function Backdrop({ urls, index, tone, soft, softRef, onShow }: Props) {
+  // Перерисовываться, когда на устройстве поменяли «Как показывать фото».
+  usePhotoFit();
   const [layers, setLayers] = useState<Layer[]>([]);
   const seq = useRef(0);
   const n = urls.length;
@@ -53,10 +55,7 @@ export function Backdrop({ urls, index, tone, soft, softRef, onShow }: Props) {
     preparePhoto(src).then((url) => measure(url).then((m) => ({ url, m }))).then(({ url, m }) => {
       if (!alive) return;
       const id = ++seq.current;
-      // Фото не обрезаем и не растягиваем: ориентация совпала с экраном — во весь экран (поля почти не теряются),
-      // нет — целиком, с подсветкой по краям.
-      const contain = !!m.w && (m.w >= m.h) !== (window.innerWidth >= window.innerHeight);
-      setLayers((prev) => prev.slice(-1).map((l) => ({ ...l, on: false })).concat({ id, url, on: false, contain, glow: contain ? m.glow : '' }));
+      setLayers((prev) => prev.slice(-1).map((l) => ({ ...l, on: false })).concat({ id, url, on: false, w: m.w, h: m.h, glow: m.glow }));
       // Сначала кадр появляется прозрачным, на следующем кадре анимации — проявляется.
       requestAnimationFrame(() => requestAnimationFrame(() => {
         if (alive) setLayers((prev) => prev.map((l) => (l.id === id ? { ...l, on: true } : l)));
@@ -71,7 +70,9 @@ export function Backdrop({ urls, index, tone, soft, softRef, onShow }: Props) {
   return (
     <div class="backdrop">
       {n === 0 && <div class="slide active aurora" />}
-      {layers.map((l) => (l.contain ? (
+      {/* Фото не растягиваем. Как вписать — настройка устройства (Настройки → Фото): по умолчанию во весь экран,
+          а кадр другой ориентации — целиком, с подсветкой по краям. */}
+      {layers.map((l) => (shouldContain(l.w, l.h) ? (
         <div key={l.id} class={'slide contain' + (l.on ? ' active' : '')}>
           {l.glow && <div class="slide-glow" style={{ backgroundImage: 'url(' + l.glow + ')' }} />}
           <div class="slide-photo" style={{ backgroundImage: 'url(' + l.url + ')' }} />
