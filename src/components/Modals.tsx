@@ -2,6 +2,7 @@ import { useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import { CloudUpload, Copy, ImagePlus, LogIn, LogOut, RotateCcw, Trash2, X } from 'lucide-preact';
 import { haSession, login, logout } from '../lib/haAuth';
+import { frameName as currentFrameName } from '../lib/frame';
 import { defaultLayout, screenTitle, type Layout } from '../lib/layout';
 import { kioskPref, setKioskPref, type KioskPref } from '../lib/kiosk';
 import { autoQuality, qualityPref, setQualityPref, type QualityPref } from '../lib/quality';
@@ -136,6 +137,7 @@ export function SettingsModal(props: { onClose: () => void; onCustomize: () => v
   const [kiosk, setKiosk] = useState<KioskPref>(kioskPref());
   const [qPref, setQPref] = useState<QualityPref>(qualityPref());
   const session = haSession();
+  const [frameName, setFrameNameDraft] = useState(currentFrameName());
   const [homes, setHomes] = useState<Home[]>(store.state.homes);
   const homesChanged = JSON.stringify(homes) !== JSON.stringify(store.state.homes);
   const setHome = (id: string, patch: Partial<Home>) => setHomes(homes.map((h) => (h.id === id ? { ...h, ...patch } : h)));
@@ -268,6 +270,16 @@ export function SettingsModal(props: { onClose: () => void; onCustomize: () => v
             <p class="hint">{t('ha.local_hint')}</p>
           </div>
           <HaStorage />
+          {/* С интеграцией Photo Frame рамка — устройство в HA: там её альбом, стартовый экран, кнопки и службы. */}
+          {store.frameClient && (
+            <label class="field">
+              <span>{t('frame.name')}</span>
+              <input value={frameName} placeholder={t('frame.name_placeholder')}
+                onInput={(e) => setFrameNameDraft(e.currentTarget.value)}
+                onChange={(e) => store.renameFrame(e.currentTarget.value.trim())} />
+              <small class="option-hint">{t('frame.hint')}</small>
+            </label>
+          )}
         </div>
       )}
 

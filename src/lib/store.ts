@@ -9,6 +9,7 @@ import { CardBackend, loadCardConfig, loadIntegration, type CardConfig, type Int
 import { HAClient } from './ha';
 import { accessToken, haSession } from './haAuth';
 import { createDashboard, DASHBOARD_PATH } from './setup';
+import { connectFrame, frameName, setFrameName, type FrameCommand, type FrameState } from './frame';
 import { t } from '../i18n';
 
 export interface Settings {
@@ -326,6 +327,50 @@ class Store {
     }
     const card = this.card!;
     card.watch((c) => this.applyCardConfig(c));
+    // Эта рамка — устройство в HA: на связи, альбом и стартовый экран из HA, команды.
+    this.frameClient = client;
+    this.connectThisFrame();
+  }
+
+  private frameOff: (() => void) | null = null;
+
+  private connectThisFrame() {
+    const client = this.frameClient;
+    if (!client) return;
+    if (this.frameOff) this.frameOff();
+    this.frameOff = connectFrame(client, (ev) => (ev.type === 'state' ? this.applyFrameState(ev) : this.commandListeners.forEach((l) => l(ev))));
+  }
+
+  // ── Рамка как устройство в HA ───────────────────────
+  frameClient: HAClient | null = null;
+  private commandListeners: Array<(c: FrameCommand) => void> = [];
+
+  // Команды из HA (кнопки устройства, службы): следующее фото, показать камеру… Выполняет App.
+  onCommand(fn: (c: FrameCommand) => void) {
+    this.commandListeners.push(fn);
+    return () => { this.commandListeners = this.commandListeners.filter((l) => l !== fn); };
+  }
+
+  private applyFrameState(s: FrameState) {
+    // Имя рамки в HA главнее — переименовали устройство, рамка знает своё новое имя.
+    if (s.name && s.name !== frameName()) setFrameName(s.name);
+    if (s.start_screen) {
+      const [home, screen] = s.start_screen.split('/');
+      if (home !== mainHome() || screen !== startScreen()) this.setStart(home, screen);
+    }
+    const card = this.card;
+    const album = s.album || 'all';
+    if (card && card.album !== album) {
+      card.album = album;
+      this.reloadCardPhotos();
+    }
+    this.notify();
+  }
+
+  // Имя рамки поменяли на ней самой — переподключаемся, HA узнает новое имя.
+  renameFrame(name: string) {
+    setFrameName(name);
+    if (this.frameClient && this.frameClient.status === 'connected') this.connectThisFrame();
   }
 
   private loadHaCard() {
