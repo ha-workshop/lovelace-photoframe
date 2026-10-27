@@ -193,6 +193,7 @@ export function App() {
           innerRef={ambientRef}
           onSheet={(card) => setSheetId(card.id)}
           onConnection={() => setShowSettings(true)}
+          photoThumb={tone ? tone.thumb : undefined}
           customizing={customizing}
           onDone={() => setCustomizing(false)}
         />

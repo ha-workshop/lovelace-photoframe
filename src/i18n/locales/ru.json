@@ -324,5 +324,16 @@
   "settings.fit": "Как показывать фото",
   "settings.fit_auto": "Авто — чужую ориентацию целиком",
   "settings.fit_contain": "Целиком, с подсветкой по краям",
-  "settings.fit_cover": "Во весь экран, края обрезаются"
+  "settings.fit_cover": "Во весь экран, края обрезаются",
+  "lock.size.xs": "XS",
+  "lock.size.xl": "XL",
+  "lock.widgets_pos": "Расположение",
+  "lock.widgets_pos.clock": "С часами",
+  "lock.widgets_pos.top": "Сверху",
+  "lock.widgets_pos.bottom": "Снизу",
+  "lock.date_pos": "Дата",
+  "lock.date_pos.auto": "Авто",
+  "lock.date_pos.above": "Над часами",
+  "lock.date_pos.below": "Под часами",
+  "lock.color.contrast": "Авто — в обратку к фото"
 }
