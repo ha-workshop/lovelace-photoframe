@@ -5,11 +5,13 @@ import type { RefObject } from 'preact';
 // за пальцем, а панель проявляется из прозрачности. Свайп вниз за шапку — обратно.
 // Пока палец на экране, стили меняются напрямую, без перерисовки Preact: на слабых рамках так плавно.
 // Долгое нажатие на фото (без движения) — настройка экрана с фото, как на iPhone.
+// Влево-вправо по фото — следующее и предыдущее фото. Куда жест, решает первое заметное движение пальца.
 
 const OPEN_DISTANCE = 0.18;   // доля высоты экрана, после которой жест засчитывается
 const FLICK_SPEED = 0.5;      // px/ms — короткий быстрый взмах тоже засчитывается
 const LONG_PRESS = 600;       // мс без движения — долгое нажатие
 const STILL = 10;             // px — дрожание пальца, которое ещё не движение
+const PHOTO_DISTANCE = 0.12;  // доля ширины экрана для смены фото
 
 interface Targets {
   root: RefObject<HTMLElement>;
@@ -31,12 +33,20 @@ function point(e: TouchEvent | MouseEvent) {
   return 'touches' in e ? (e.touches[0] || e.changedTouches[0]).clientY : e.clientY;
 }
 
-export function useSwipe(t: Targets, open: boolean, setOpen: (v: boolean) => void, enabled: boolean, onLongPress?: () => void) {
+function pointX(e: TouchEvent | MouseEvent) {
+  return 'touches' in e ? (e.touches[0] || e.changedTouches[0]).clientX : e.clientX;
+}
+
+// onPhoto(+1) — следующее фото (смахнули влево), onPhoto(-1) — предыдущее (вправо).
+export function useSwipe(t: Targets, open: boolean, setOpen: (v: boolean) => void, enabled: boolean, onLongPress?: () => void,
+  onPhoto?: (dir: number) => void) {
   useEffect(() => {
     const root = t.root.current;
     if (!root || !enabled) return;
 
-    let startY = 0, startT = 0, dy = 0, active = false, pressTimer = 0;
+    let startY = 0, startX = 0, startT = 0, dy = 0, dx = 0, active = false, pressTimer = 0;
+    // Ось жеста: '' — ещё не ясно, 'y' — вверх-вниз (панель), 'x' — влево-вправо (фото).
+    let axis = '';
 
     const paint = (p: number) => {
       // p: 0 — фото, 1 — панель. Экран с фото идёт за пальцем на всю высоту, панель проявляется.
@@ -56,7 +66,7 @@ export function useSwipe(t: Targets, open: boolean, setOpen: (v: boolean) => voi
       const target = e.target as HTMLElement;
       // Закрыть можно только потянув за шапку — остальная панель скроллится и нажимается.
       if (open && (!closest(target, '.bar') || closest(target, 'button'))) return;
-      startY = point(e); startT = Date.now(); dy = 0; active = true;
+      startY = point(e); startX = pointX(e); startT = Date.now(); dy = 0; dx = 0; axis = ''; active = true;
       root.classList.add('dragging');
       // Долгое нажатие на фото (не на плашке) — настройка экрана с фото.
       clearTimeout(pressTimer);
@@ -73,7 +83,15 @@ export function useSwipe(t: Targets, open: boolean, setOpen: (v: boolean) => voi
     const move = (e: TouchEvent | MouseEvent) => {
       if (!active) return;
       dy = point(e) - startY;
-      if (Math.abs(dy) > STILL) clearTimeout(pressTimer);
+      dx = pointX(e) - startX;
+      if (Math.abs(dy) > STILL || Math.abs(dx) > STILL) clearTimeout(pressTimer);
+      if (!axis && (Math.abs(dy) > STILL || Math.abs(dx) > STILL)) {
+        axis = !open && onPhoto && Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      }
+      if (axis === 'x') {
+        if (e.cancelable) e.preventDefault();
+        return;
+      }
       const h = root.clientHeight;
       // Палец и экран идут один к одному: протянул на половину высоты — панель проявилась наполовину.
       const p = open ? 1 - Math.max(0, dy) / h : Math.max(0, -dy) / h;
@@ -85,6 +103,11 @@ export function useSwipe(t: Targets, open: boolean, setOpen: (v: boolean) => voi
       if (!active) return;
       active = false;
       root.classList.remove('dragging');
+      if (axis === 'x') {
+        const fast = Math.abs(dx) / Math.max(1, Date.now() - startT) > FLICK_SPEED && Math.abs(dx) > 30;
+        if (onPhoto && (Math.abs(dx) > root.clientWidth * PHOTO_DISTANCE || fast)) onPhoto(dx < 0 ? 1 : -1);
+        return;
+      }
       const h = root.clientHeight;
       const speed = Math.abs(dy) / Math.max(1, Date.now() - startT);
       const far = Math.abs(dy) > h * OPEN_DISTANCE || (speed > FLICK_SPEED && Math.abs(dy) > 30);
@@ -110,5 +133,5 @@ export function useSwipe(t: Targets, open: boolean, setOpen: (v: boolean) => voi
       window.removeEventListener('mousemove', move);
       window.removeEventListener('mouseup', up);
     };
-  }, [open, enabled]);
+  }, [open, enabled, onPhoto]);
 }

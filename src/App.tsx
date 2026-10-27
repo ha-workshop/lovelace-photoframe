@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { HAClient } from './lib/ha';
 import { DetailContext, HAContext } from './lib/hooks';
 import { useLanguage } from './i18n';
@@ -126,12 +126,17 @@ export function App() {
   useEffect(() => applyBacklight(awake, store.brightness), [awake, store.brightness]);
   useEffect(() => onHardwareWake(() => store.wakeScreen()), []);
 
-  // Слайдшоу идёт всегда — и под панелью управления, просто «размытое».
+  // Слайдшоу идёт всегда — и под панелью управления, просто «размытое». Листнули вручную —
+  // отсчёт до следующего фото начинается заново.
   useEffect(() => {
     if (n < 2 || !awake) return;
     const t = setInterval(() => setIndex((i) => (i + 1) % n), settings.slideIntervalMs);
     return () => clearInterval(t);
-  }, [n, settings.slideIntervalMs, awake]);
+  }, [n, settings.slideIntervalMs, awake, index]);
+  // Смахнули по фото влево — следующее, вправо — предыдущее.
+  const stepPhoto = useCallback((dir: number) => {
+    if (n > 1) setIndex((i) => ((i % n) + dir + n) % n);
+  }, [n]);
 
   // Стрелка к управлению домом: при запуске и после каждого касания фото — на несколько секунд.
   useEffect(() => {
@@ -169,7 +174,7 @@ export function App() {
   }, []);
   // Настройка экрана с фото (как на iPhone): долгое нажатие на фото или «Настроить» в настройках.
   const [customizing, setCustomizing] = useState(false);
-  useSwipe({ root: rootRef, controls: controlsRef, ambient: ambientRef, soft: softRef }, controls, setControls, !busy && !customizing, () => setCustomizing(true));
+  useSwipe({ root: rootRef, controls: controlsRef, ambient: ambientRef, soft: softRef }, controls, setControls, !busy && !customizing, () => setCustomizing(true), stepPhoto);
 
   // Без касаний — прячем управление/карточку и возвращаемся к фото (вместо сна экрана).
   // Во время редактирования раскладки не прячем.
