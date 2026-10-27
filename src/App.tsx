@@ -5,6 +5,7 @@ import { useLanguage } from './i18n';
 import { useQuality } from './lib/quality';
 import { useStore } from './lib/store';
 import { reportFrame } from './lib/frame';
+import { applyBacklight, dimOpacity, onHardwareWake } from './lib/screen';
 import { ACCENTS, clampBox, settle, type Card } from './lib/layout';
 import { useTone } from './lib/photoTone';
 import { useSwipe } from './lib/swipe';
@@ -119,16 +120,34 @@ export function App() {
   const needsSetup = sync === 'local' && !store.haClient;
   useEffect(() => { if (needsSetup) setShowSettings(true); }, [needsSetup]);
 
+  // Экран из HA: спит — чёрный, слайдшоу стоит. Камеру (позвонили в дверь) показываем и спящей рамкой.
+  const awake = store.screenOn || !!cameraUrl;
+  useEffect(() => applyBacklight(awake, store.brightness), [awake, store.brightness]);
+  useEffect(() => onHardwareWake(() => store.wakeScreen()), []);
+
   // Слайдшоу идёт всегда — и под панелью управления, просто «размытое».
   useEffect(() => {
-    if (n < 2) return;
+    if (n < 2 || !awake) return;
     const t = setInterval(() => setIndex((i) => (i + 1) % n), settings.slideIntervalMs);
     return () => clearInterval(t);
-  }, [n, settings.slideIntervalMs]);
+  }, [n, settings.slideIntervalMs, awake]);
 
+  // Стрелка к управлению домом: при запуске и после каждого касания фото — на несколько секунд.
   useEffect(() => {
-    const t = setTimeout(() => setHint(false), 8000);
-    return () => clearTimeout(t);
+    let timer = window.setTimeout(() => setHint(false), 8000);
+    // Фото — фон под экраном с часами, касание ловим на всём приложении (пока панель закрыта).
+    const el = rootRef.current;
+    const show = () => {
+      if (store.ui.controls) return;
+      setHint(true);
+      clearTimeout(timer);
+      timer = window.setTimeout(() => setHint(false), 5000);
+    };
+    if (el) { el.addEventListener('touchstart', show); el.addEventListener('mousedown', show); }
+    return () => {
+      clearTimeout(timer);
+      if (el) { el.removeEventListener('touchstart', show); el.removeEventListener('mousedown', show); }
+    };
   }, []);
 
   const modal = showSettings || !!cameraUrl || !!editCard || adding || !!detail;
@@ -189,10 +208,11 @@ export function App() {
         <Backdrop urls={urls} index={index % Math.max(n, 1)} tone={tone} soft={controls} softRef={softRef} onShow={setShown} />
         <Ambient
           visible={!controls}
-          showHint={hint && !sheet}
           innerRef={ambientRef}
           onSheet={(card) => setSheetId(card.id)}
           onConnection={() => setShowSettings(true)}
+          showHint={hint && !sheet}
+          onHome={() => { setHint(false); setControls(true); }}
           photoThumb={tone ? tone.thumb : undefined}
           customizing={customizing}
           onDone={() => setCustomizing(false)}
@@ -215,6 +235,8 @@ export function App() {
         />
       </div>
       {sheet && <Sheet card={sheet} tone={tone} onCamera={setCameraUrl} onClose={() => setSheetId(null)} />}
+      <div class={'screen-dim' + (awake ? '' : ' asleep')} style={{ opacity: dimOpacity(awake, store.brightness) }}
+        onClick={awake ? undefined : () => store.wakeScreen()} />
       {cameraUrl && <CameraModal url={cameraUrl} onClose={() => setCameraUrl('')} />}
       {showSettings && (
         <SettingsModal

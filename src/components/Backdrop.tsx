@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { RefObject } from 'preact';
 import type { Tone } from '../lib/photoTone';
-import { preparePhoto, shouldContain, usePhotoFit } from '../lib/quality';
+import { preparePhoto, shouldContain, usePhotoFit, useQuality } from '../lib/quality';
+import { canShowNative, onNativeShown, preloadNative, showNative } from '../lib/nativePhoto';
 
 interface Props {
   urls: string[];
@@ -43,13 +44,28 @@ function measure(url: string): Promise<{ w: number; h: number; glow: string }> {
 // В режиме управления поверх ложится растянутая миниатюра кадра — выглядит как размытие, но ничего не стоит.
 export function Backdrop({ urls, index, tone, soft, softRef, onShow }: Props) {
   // Перерисовываться, когда на устройстве поменяли «Как показывать фото».
-  usePhotoFit();
+  const fit = usePhotoFit();
+  const quality = useQuality();
   const [layers, setLayers] = useState<Layer[]>([]);
   const seq = useRef(0);
   const n = urls.length;
   const src = n ? urls[index % n] : '';
+  // В APK кадры с сервера рисует Android (lib/nativePhoto), здесь — только размытие и затемнение поверх.
+  const native = !!src && canShowNative(src);
+  useEffect(() => onNativeShown(onShow), []);
+  useEffect(() => {
+    const html = document.documentElement;
+    if (native) html.classList.add('native-photos'); else html.classList.remove('native-photos');
+  }, [native]);
 
   useEffect(() => {
+    if (native) {
+      setLayers([]);
+      showNative(src, fit, quality === 'lite');
+      if (n > 1) preloadNative(urls[(index + 1) % n]);
+      return;
+    }
+    if (canShowNative('/')) showNative('', fit, false);
     if (!src) { setLayers([]); return; }
     let alive = true;
     preparePhoto(src).then((url) => measure(url).then((m) => ({ url, m }))).then(({ url, m }) => {
@@ -65,7 +81,7 @@ export function Backdrop({ urls, index, tone, soft, softRef, onShow }: Props) {
     // Следующий кадр готовим заранее, пока показывается этот.
     if (n > 1) preparePhoto(urls[(index + 1) % n]);
     return () => { alive = false; };
-  }, [src]);
+  }, [src, native, native ? fit : '', native ? quality : '']);
 
   return (
     <div class="backdrop">

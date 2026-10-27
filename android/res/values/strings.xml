@@ -8,4 +8,6 @@
     <string name="retry">Повторить</string>
     <string name="change_url">Сменить адрес</string>
     <string name="load_error">Не удалось открыть рамку</string>
+    <string name="admin_description">Выключать экран рамки ночью и по команде из Home Assistant</string>
+    <string name="admin_explain">Разрешите рамке выключать экран — тогда сон из Home Assistant гасит экран полностью</string>
 </resources>

@@ -32,13 +32,13 @@ function clockRegion(prefs: LockPrefs): Region {
   return [0.2, 0.55, 0.8, 0.9];
 }
 
+const HINT_REGION: Region = [0.4, 0.88, 0.6, 1];
+
 function widgetsRegion(prefs: LockPrefs): Region {
   if (prefs.widgetsPos === 'top') return [0.15, 0, 0.85, 0.2];
   if (prefs.widgetsPos === 'bottom') return [0.15, 0.78, 0.85, 0.96];
   return layoutOf(prefs) === 'corner' ? [0.5, 0.7, 1, 0.96] : clockRegion(prefs);
 }
-
-const HINT_REGION: Region = [0.25, 0.88, 0.75, 1];
 
 function luminance([r, g, b]: number[]) {
   const f = (v: number) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
@@ -100,12 +100,14 @@ function AmbientTime({ prefs }: { prefs: LockPrefs }) {
 
 interface Props {
   visible: boolean;
-  showHint: boolean;
   innerRef: RefObject<HTMLDivElement>;
   // Крошечная копия кадра на экране — для цвета часов «в обратку».
   photoThumb?: string;
   onSheet: (card: Card) => void;
   onConnection: () => void;
+  // Стрелка к управлению домом — то же, что смахнуть вверх.
+  showHint: boolean;
+  onHome: () => void;
   // Режим настройки экрана с фото (долгое нажатие) и выход из него.
   customizing: boolean;
   onDone: () => void;
@@ -158,10 +160,11 @@ export function Ambient(props: Props) {
           })}
         </div>
 
-        <div class="grabber">
-          <div class={'grabber-text' + (props.showHint ? ' visible' : '') + (hintInk.dark ? ' ink-dark' : '')} style={contrast ? { color: hintInk.color } : undefined}>{t('ambient.swipe_hint')}</div>
-          <div class="grabber-bar" />
-        </div>
+        {/* Вместо полоски iOS — стрелка к управлению домом: появляется при касании фото, сама гаснет */}
+        <button class={'home-hint' + (props.showHint ? ' visible' : '') + (hintInk.dark ? ' ink-dark' : '')} aria-label={t('ambient.home_hint')}
+          style={contrast ? { color: hintInk.color } : undefined} onClick={props.onHome} tabIndex={props.showHint ? 0 : -1}>
+          <ChevronUp size={36} strokeWidth={1.8} />
+        </button>
       </div>
 
       {edit && (
