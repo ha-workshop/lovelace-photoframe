@@ -56,7 +56,17 @@ const cache: Record<string, Promise<string>> = {};
 const order: string[] = [];
 const KEEP = 4;
 
-// Ширина кадра для этого экрана — её же рамка просит у интеграции (готовые кадры с сервера).
+// Размер экрана в пикселях кадра (с плотностью экрана; на «Лёгком» длинная сторона не больше 1280, иначе 2560).
+// Его рамка просит у интеграции — сервер присылает кадр ровно такой, чтобы закрыть экран.
+export function targetSize(): { w: number; h: number } {
+  const dpr = quality() === 'lite' ? 1 : Math.min(window.devicePixelRatio || 1, 2);
+  let w = screen.width * dpr, h = screen.height * dpr;
+  const k = Math.min(1, (quality() === 'lite' ? 1280 : 2560) / Math.max(w, h));
+  w = Math.round(w * k); h = Math.round(h * k);
+  return { w, h };
+}
+
+// Длинная сторона кадра для этого экрана — до неё рамка сама ужимает фото, если интеграции нет.
 export function targetWidth() {
   const dpr = quality() === 'lite' ? 1 : Math.min(window.devicePixelRatio || 1, 2);
   const w = Math.max(screen.width, screen.height) * dpr;

@@ -1,4 +1,4 @@
-var tn, j, Xo, ke, so, Ko, $o, rn, _t, Ge, ei, Rn, Mn, En, ti, Tt = {}, Ot = [], Pa = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, lt = Array.isArray;
+var tn, j, Xo, ke, so, Ko, $o, rn, _t, Xe, ei, Rn, Mn, En, ti, Tt = {}, Ot = [], Qa = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, lt = Array.isArray;
 function ye(t, e) {
   for (var n in e) t[n] = e[n];
   return t;
@@ -27,7 +27,7 @@ function De(t, e) {
   for (var n; e < t.__k.length; e++) if ((n = t.__k[e]) != null && n.__e != null) return n.__e;
   return typeof t.type == "function" ? De(t) : null;
 }
-function La(t) {
+function Pa(t) {
   if (t.__P && t.__d) {
     var e = t.__v, n = e.__e, s = [], i = [], a = ye({}, e);
     a.__v = e.__v + 1, j.vnode && j.vnode(a), Un(t.__P, a, e, t.__n, t.__P.namespaceURI, 32 & e.__u ? [n] : null, s, n ?? De(e), !!(32 & e.__u), i), a.__v = e.__v, a.__.__k[a.__i] = a, ri(s, a, i), e.__e = e.__ = null, a.__e != n && ni(a);
@@ -43,19 +43,19 @@ function Sn(t) {
 }
 function Qt() {
   try {
-    for (var t, e = 1; ke.length; ) ke.length > e && ke.sort($o), t = ke.shift(), e = ke.length, La(t);
+    for (var t, e = 1; ke.length; ) ke.length > e && ke.sort($o), t = ke.shift(), e = ke.length, Pa(t);
   } finally {
     ke.length = Qt.__r = 0;
   }
 }
 function oi(t, e, n, s, i, a, r, c, d, A, f) {
   var u, l, p, m, w, x, C = s && s.__k || Ot, g = e.length;
-  for (d = ja(n, e, C, d, g), u = 0; u < g; u++) (p = n.__k[u]) != null && (l = p.__i != -1 && C[p.__i] || Tt, p.__i = u, x = Un(t, p, l, i, a, r, c, d, A, f), m = p.__e, p.ref && l.ref != p.ref && (l.ref && Yn(l.ref, null, p), f.push(p.ref, p.__c || m, p)), w == null && m != null && (w = m), 4 & p.__u ? (d = ii(p, d, t), l.__e && (l.__e = null)) : typeof p.type == "function" && x !== void 0 ? d = x : m && (d = m.nextSibling), p.__u &= -7);
+  for (d = La(n, e, C, d, g), u = 0; u < g; u++) (p = n.__k[u]) != null && (l = p.__i != -1 && C[p.__i] || Tt, p.__i = u, x = Un(t, p, l, i, a, r, c, d, A, f), m = p.__e, p.ref && l.ref != p.ref && (l.ref && Yn(l.ref, null, p), f.push(p.ref, p.__c || m, p)), w == null && m != null && (w = m), 4 & p.__u ? (d = ii(p, d, t), l.__e && (l.__e = null)) : typeof p.type == "function" && x !== void 0 ? d = x : m && (d = m.nextSibling), p.__u &= -7);
   return n.__e = w, d;
 }
-function ja(t, e, n, s, i) {
+function La(t, e, n, s, i) {
   var a, r, c, d, A, f = n.length, u = f, l = 0;
-  for (t.__k = new Array(i), a = 0; a < i; a++) (r = e[a]) != null && typeof r != "boolean" && typeof r != "function" ? (typeof r == "string" || typeof r == "number" || typeof r == "bigint" || r.constructor == String ? r = t.__k[a] = vt(null, r, null, null, null) : lt(r) ? r = t.__k[a] = vt(ae, { children: r }, null, null, null) : r.constructor === void 0 && r.__b > 0 ? r = t.__k[a] = vt(r.type, r.props, r.key, r.ref ? r.ref : null, r.__v) : t.__k[a] = r, d = a + l, r.__ = t, r.__b = t.__b + 1, c = null, (A = r.__i = Fa(r, n, d, u)) != -1 && (u--, (c = n[A]) && (c.__u |= 2)), c == null || c.__v == null ? (A == -1 && (i > f ? l-- : i < f && l++), typeof r.type != "function" && (r.__u |= 4)) : A != d && (A == d - 1 ? l-- : A == d + 1 ? l++ : (A > d ? l-- : l++, r.__u |= 4))) : t.__k[a] = null;
+  for (t.__k = new Array(i), a = 0; a < i; a++) (r = e[a]) != null && typeof r != "boolean" && typeof r != "function" ? (typeof r == "string" || typeof r == "number" || typeof r == "bigint" || r.constructor == String ? r = t.__k[a] = vt(null, r, null, null, null) : lt(r) ? r = t.__k[a] = vt(ae, { children: r }, null, null, null) : r.constructor === void 0 && r.__b > 0 ? r = t.__k[a] = vt(r.type, r.props, r.key, r.ref ? r.ref : null, r.__v) : t.__k[a] = r, d = a + l, r.__ = t, r.__b = t.__b + 1, c = null, (A = r.__i = ja(r, n, d, u)) != -1 && (u--, (c = n[A]) && (c.__u |= 2)), c == null || c.__v == null ? (A == -1 && (i > f ? l-- : i < f && l++), typeof r.type != "function" && (r.__u |= 4)) : A != d && (A == d - 1 ? l-- : A == d + 1 ? l++ : (A > d ? l-- : l++, r.__u |= 4))) : t.__k[a] = null;
   if (u) for (a = 0; a < f; a++) (c = n[a]) != null && (2 & c.__u) == 0 && (c.__e == s && (s = De(c)), li(c, c));
   return s;
 }
@@ -76,7 +76,7 @@ function si(t, e) {
     si(n, e);
   }) : e.push(t)), e;
 }
-function Fa(t, e, n, s) {
+function ja(t, e, n, s) {
   var i, a, r, c = t.key, d = t.type, A = e[n], f = A != null && (2 & A.__u) == 0;
   if (A === null && c == null || f && c == A.key && d == A.type) return n;
   if (s > (f ? 1 : 0)) {
@@ -85,7 +85,7 @@ function Fa(t, e, n, s) {
   return -1;
 }
 function ao(t, e, n) {
-  e[0] == "-" ? t.setProperty(e, n ?? "") : t[e] = n == null ? "" : typeof n != "number" || Pa.test(e) ? n : n + "px";
+  e[0] == "-" ? t.setProperty(e, n ?? "") : t[e] = n == null ? "" : typeof n != "number" || Qa.test(e) ? n : n + "px";
 }
 function pt(t, e, n, s, i) {
   var a, r;
@@ -94,7 +94,7 @@ function pt(t, e, n, s, i) {
     if (typeof s == "string" && (t.style.cssText = s = ""), s) for (e in s) n && e in n || ao(t.style, e, "");
     if (n) for (e in n) s && n[e] == s[e] || ao(t.style, e, n[e]);
   }
-  else if (e[0] == "o" && e[1] == "n") a = e != (e = e.replace(ei, "$1")), r = e.toLowerCase(), e = r in t || e == "onFocusOut" || e == "onFocusIn" ? r.slice(2) : e.slice(2), t.l || (t.l = {}), t.l[e + a] = n, n ? s ? n[Ge] = s[Ge] : (n[Ge] = Rn, t.addEventListener(e, a ? En : Mn, a)) : t.removeEventListener(e, a ? En : Mn, a);
+  else if (e[0] == "o" && e[1] == "n") a = e != (e = e.replace(ei, "$1")), r = e.toLowerCase(), e = r in t || e == "onFocusOut" || e == "onFocusIn" ? r.slice(2) : e.slice(2), t.l || (t.l = {}), t.l[e + a] = n, n ? s ? n[Xe] = s[Xe] : (n[Xe] = Rn, t.addEventListener(e, a ? En : Mn, a)) : t.removeEventListener(e, a ? En : Mn, a);
   else {
     if (i == "http://www.w3.org/2000/svg") e = e.replace(/xlink(H|:h)/, "h").replace(/sName$/, "s");
     else if (e != "width" && e != "height" && e != "href" && e != "list" && e != "form" && e != "tabIndex" && e != "download" && e != "rowSpan" && e != "colSpan" && e != "role" && e != "popover" && e in t) try {
@@ -110,7 +110,7 @@ function ro(t) {
     if (this.l) {
       var n = this.l[e.type + t];
       if (e[_t] == null) e[_t] = Rn++;
-      else if (e[_t] < n[Ge]) return;
+      else if (e[_t] < n[Xe]) return;
       return n(j.event ? j.event(e) : e);
     }
   };
@@ -122,7 +122,7 @@ function Un(t, e, n, s, i, a, r, c, d, A) {
   e: if (typeof S == "function") {
     u = r.length;
     try {
-      if (g = e.props, M = S.prototype && S.prototype.render, O = (f = S.contextType) && s[f.__c], H = f ? O ? O.props.value : f.__ : s, n.__c ? C = (l = e.__c = n.__c).__ = l.__E : (M ? e.__c = l = new S(g, H) : (e.__c = l = new kt(g, H), l.constructor = S, l.render = Na), O && O.sub(l), l.state || (l.state = {}), l.__n = s, p = l.__d = !0, l.__h = [], l._sb = []), M && l.__s == null && (l.__s = l.state), M && S.getDerivedStateFromProps != null && (l.__s == l.state && (l.__s = ye({}, l.__s)), ye(l.__s, S.getDerivedStateFromProps(g, l.__s))), m = l.props, w = l.state, l.__v = e, p) M && S.getDerivedStateFromProps == null && l.componentWillMount != null && l.componentWillMount(), M && l.componentDidMount != null && l.__h.push(l.componentDidMount);
+      if (g = e.props, M = S.prototype && S.prototype.render, O = (f = S.contextType) && s[f.__c], H = f ? O ? O.props.value : f.__ : s, n.__c ? C = (l = e.__c = n.__c).__ = l.__E : (M ? e.__c = l = new S(g, H) : (e.__c = l = new kt(g, H), l.constructor = S, l.render = qa), O && O.sub(l), l.state || (l.state = {}), l.__n = s, p = l.__d = !0, l.__h = [], l._sb = []), M && l.__s == null && (l.__s = l.state), M && S.getDerivedStateFromProps != null && (l.__s == l.state && (l.__s = ye({}, l.__s)), ye(l.__s, S.getDerivedStateFromProps(g, l.__s))), m = l.props, w = l.state, l.__v = e, p) M && S.getDerivedStateFromProps == null && l.componentWillMount != null && l.componentWillMount(), M && l.componentDidMount != null && l.__h.push(l.componentDidMount);
       else {
         if (M && S.getDerivedStateFromProps == null && g !== m && l.componentWillReceiveProps != null && l.componentWillReceiveProps(g, H), e.__v == n.__v || !l.__e && l.shouldComponentUpdate != null && l.shouldComponentUpdate(g, l.__s, H) === !1) {
           e.__v != n.__v && (l.props = g, l.state = l.__s, l.__d = !1), e.__e = n.__e, e.__k = n.__k, e.__k.some(function(z) {
@@ -148,7 +148,7 @@ function Un(t, e, n, s, i, a, r, c, d, A) {
       } else e.__e = n.__e;
       e.__k == null && (e.__k = n.__k || []), z.then || ai(e), j.__e(z, e, n);
     }
-  } else a == null && e.__v == n.__v ? (e.__k = n.__k, e.__e = n.__e) : c = e.__e = qa(n.__e, e, n, s, i, a, r, d, A);
+  } else a == null && e.__v == n.__v ? (e.__k = n.__k, e.__e = n.__e) : c = e.__e = Fa(n.__e, e, n, s, i, a, r, d, A);
   return (f = j.diffed) && f(e), 128 & e.__u ? void 0 : c;
 }
 function ai(t) {
@@ -169,7 +169,7 @@ function ri(t, e, n) {
 function ci(t) {
   return typeof t != "object" || t == null || t.__b > 0 ? t : lt(t) ? t.map(ci) : t.constructor !== void 0 ? null : ye({}, t);
 }
-function qa(t, e, n, s, i, a, r, c, d) {
+function Fa(t, e, n, s, i, a, r, c, d) {
   var A, f, u, l, p, m, w, x = n.props || Tt, C = e.props, g = e.type;
   if (g == "svg" ? i = "http://www.w3.org/2000/svg" : g == "math" ? i = "http://www.w3.org/1998/Math/MathML" : i || (i = "http://www.w3.org/1999/xhtml"), a != null) {
     for (A = 0; A < a.length; A++) if ((p = a[A]) && "setAttribute" in p == !!g && (g ? p.localName == g : p.nodeType == 3)) {
@@ -215,7 +215,7 @@ function li(t, e, n) {
   if (s = t.__k) for (i = 0; i < s.length; i++) s[i] && li(s[i], e, n || typeof t.type != "function");
   n || Vn(t.__e), t.__c = t.__ = t.__e = void 0;
 }
-function Na(t, e, n) {
+function qa(t, e, n) {
   return this.constructor(t, n);
 }
 function co(t, e, n) {
@@ -259,17 +259,17 @@ tn = Ot.slice, j = { __e: function(t, e, n, s) {
   this.__v && (this.__e = !0, t && this.__h.push(t), Sn(this));
 }, kt.prototype.render = ae, ke = [], Ko = typeof Promise == "function" ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, $o = function(t, e) {
   return t.__v.__b - e.__v.__b;
-}, Qt.__r = 0, rn = Math.random().toString(8), _t = "__d" + rn, Ge = "__a" + rn, ei = /(PointerCapture)$|Capture$/i, Rn = 0, Mn = ro(!1), En = ro(!0), ti = 0;
-var Ra = 0;
+}, Qt.__r = 0, rn = Math.random().toString(8), _t = "__d" + rn, Xe = "__a" + rn, ei = /(PointerCapture)$|Capture$/i, Rn = 0, Mn = ro(!1), En = ro(!0), ti = 0;
+var Na = 0;
 function o(t, e, n, s, i, a) {
   e || (e = {});
   var r, c, d = e;
   if ("ref" in d) for (c in d = {}, e) c == "ref" ? r = e[c] : d[c] = e[c];
-  var A = { type: t, props: d, key: n, ref: r, __k: null, __: null, __b: 0, __e: null, __c: null, constructor: void 0, __v: --Ra, __i: -1, __u: 0, __source: i, __self: a };
+  var A = { type: t, props: d, key: n, ref: r, __k: null, __: null, __b: 0, __e: null, __c: null, constructor: void 0, __v: --Na, __i: -1, __u: 0, __source: i, __self: a };
   if (typeof t == "function" && (r = t.defaultProps)) for (c in r) d[c] === void 0 && (d[c] = r[c]);
   return j.vnode && j.vnode(A), A;
 }
-const Va = ':root{--ink: #f5f7fb;--ink-2: rgba(245, 247, 251, .72);--ink-3: rgba(245, 247, 251, .48);--panel: rgba(12, 14, 22, .42);--panel-line: rgba(255, 255, 255, .09);--chip: rgba(255, 255, 255, .1);--chip-line: rgba(255, 255, 255, .14);--warm: #fbbf24;--red: #fb7185;--green: #34d399;--ease: cubic-bezier(.2, .7, .2, 1)}*{box-sizing:border-box;margin:0;padding:0;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}html,body,#app{height:100%}body{background:#000;color:#f5f7fb;overflow:hidden;font-family:Inter,Roboto,-apple-system,Segoe UI,sans-serif;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}button,input,select{font:inherit;color:inherit;border:0;background:none;outline:none}button{cursor:pointer}svg{display:block;flex-shrink:0}.app{position:relative;height:100%;overflow:hidden}.backdrop{position:absolute;inset:0;overflow:hidden}.slide{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transform:scale(1);transition:opacity 2s ease-in-out,transform 20s linear}.slide.active{opacity:1;transform:scale(1.08)}.slide.contain,.slide.contain.active{transform:none;background:#000}.slide-glow{position:absolute;inset:-6%;background-size:cover;background-position:center;opacity:.75}.slide-photo{position:absolute;inset:0;background-size:contain;background-position:center;background-repeat:no-repeat}.q-full .slide-glow{-webkit-filter:blur(28px) saturate(1.3);filter:blur(28px) saturate(1.3)}.aurora{background:radial-gradient(ellipse at 20% 30%,rgba(56,189,248,.35) 0%,transparent 55%),radial-gradient(ellipse at 80% 70%,rgba(168,85,247,.32) 0%,transparent 55%),radial-gradient(ellipse at 60% 10%,rgba(251,191,36,.18) 0%,transparent 50%),#05060c}.soft{position:absolute;inset:-5%;background-size:cover;background-position:center;opacity:0;transition:opacity .6s cubic-bezier(.2,.7,.2,1)}.soft.on{opacity:1}.shade{position:absolute;inset:0;background:linear-gradient(to bottom,#00000040,#0000 30%,#00000026 55%,#000000b3);transition:background-color .6s cubic-bezier(.2,.7,.2,1)}.shade.deep{background-color:#04060c61}.ambient{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:space-between;padding:0 5vw 9vh;transform:translateY(-100%);pointer-events:none}.ambient.visible{transform:none}.clock-link{pointer-events:auto;cursor:pointer}.ambient-clock{text-shadow:0 2px 30px rgba(0,0,0,.35)}.ambient-time{font-size:22vh;font-weight:200;letter-spacing:-.04em;line-height:.9}.ambient-date{margin-top:2vh;font-size:3vh;font-weight:400;color:#f5f7fbb8;letter-spacing:.01em}.glances{display:flex;flex-wrap:wrap;justify-content:flex-end;max-width:50%;margin-bottom:1vh}.glance{pointer-events:auto;cursor:pointer;transition:transform .15s,background .2s;display:flex;align-items:center;margin:6px 0 0 8px;padding:9px 16px 9px 13px;border-radius:999px;background:#00000052;border:1px solid rgba(255,255,255,.14);font-size:15px;font-weight:500;color:#f5f7fb}.glance:active{transform:scale(.94);background:#00000080}.glance svg{margin-right:8px;color:#f5f7fbb8}.glance.lit svg{color:#fbbf24}.glance.alert{background:#e11d488c;border-color:#fb718599}.glance.alert svg,.glance.warn svg{color:#fff}.glance.warn{background:#d9770680}.ambient{transition:transform .5s cubic-bezier(.2,.7,.2,1)}.grabber{position:absolute;left:0;right:0;bottom:10px;bottom:max(10px,env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center}.grabber-text{font-size:13px;color:#f5f7fbb8;letter-spacing:.03em;margin-bottom:10px;opacity:0;transition:opacity 1s;-webkit-animation:nudge 2.4s ease-in-out infinite;animation:nudge 2.4s ease-in-out infinite}.grabber-text.visible{opacity:1}.grabber-bar{width:134px;height:5px;border-radius:3px;background:#ffffffb3;box-shadow:0 0 12px #0000004d}@-webkit-keyframes nudge{0%,60%,to{-webkit-transform:translateY(0)}30%{-webkit-transform:translateY(-6px)}}@keyframes nudge{0%,60%,to{transform:translateY(0)}30%{transform:translateY(-6px)}}.dragging .ambient,.dragging .controls,.dragging .soft{transition:none}.dragging .controls{pointer-events:none}.controls{position:absolute;inset:0;display:flex;flex-direction:column;padding:22px 28px 28px;padding-top:max(22px,env(safe-area-inset-top));padding-left:max(28px,env(safe-area-inset-left));padding-right:max(28px,env(safe-area-inset-right));padding-bottom:max(28px,env(safe-area-inset-bottom));opacity:0;transform:scale(.96);transition:opacity .5s cubic-bezier(.2,.7,.2,1),transform .5s cubic-bezier(.2,.7,.2,1);pointer-events:none}.controls.visible{opacity:1;transform:none;pointer-events:auto}.bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}.bar-time{display:flex;align-items:baseline}.bar-clock{font-size:38px;font-weight:300;letter-spacing:-.03em}.bar-date{margin-left:14px;font-size:15px;color:#f5f7fbb8}.bar-actions{display:flex;align-items:center}.conn{display:flex;align-items:center;margin-right:14px;font-size:13px;color:#f5f7fbb8}.conn i{width:8px;height:8px;border-radius:50%;margin-right:8px;background:#fbbf24}.conn-connected i{background:#34d399;box-shadow:0 0 10px #34d399}.conn-auth_invalid i,.conn-disconnected i{background:#fb7185}.round{width:48px;height:48px;margin-left:10px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#ffffff1a;border:1px solid rgba(255,255,255,.14);transition:transform .15s}.round:active{transform:scale(.92)}.round.accent{background:#7dd3fc;color:#0b0d14;border-color:transparent}.bar{position:relative}.bar-narrow .bar-date{display:none}.bar-narrow .bar-clock{font-size:30px}.home-switch{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);transition:opacity .2s}.home-switch:active{transform:translate(-50%,-50%) scale(.96)}.bar-narrow.menu-open .home-switch{opacity:0;pointer-events:none}.bar-narrow.bar-editing .home-switch{display:none}.burger{position:relative;display:flex;align-items:center}.burger-items{position:absolute;right:58px;top:0;display:flex;align-items:center;opacity:0;pointer-events:none;transform:translate(24px);transition:opacity .22s cubic-bezier(.2,.7,.2,1),transform .22s cubic-bezier(.2,.7,.2,1)}.menu-open .burger-items{opacity:1;pointer-events:auto;transform:none}.burger-btn{position:relative}.burger-dot{position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:#fbbf24}.burger-btn.conn-connected .burger-dot{background:#34d399}.burger-btn.conn-auth_invalid .burger-dot,.burger-btn.conn-disconnected .burger-dot{background:#fb7185}.grid{position:relative;flex:1;min-height:0;margin:-16px;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}.grid::-webkit-scrollbar{display:none}.grid-inner{position:relative}.cell{position:absolute;display:flex;transition:left .22s cubic-bezier(.2,.7,.2,1),top .22s cubic-bezier(.2,.7,.2,1),width .22s cubic-bezier(.2,.7,.2,1),height .22s cubic-bezier(.2,.7,.2,1)}.cell.dragged{z-index:20;transition:none;-webkit-animation:none;animation:none}.cell.dragged .panel{box-shadow:0 30px 60px #0000008c;border-color:#ffffff80}.drop-slot{position:absolute;border-radius:28px;border:2px dashed rgba(255,255,255,.45);background:#ffffff14;transition:left .15s,top .15s,width .15s,height .15s}.grid-dots{position:absolute;inset:0}.grid-dot{position:absolute;border-radius:10px;background:#ffffff09}.grid-note{font-size:12px;color:#f5f7fb7a;padding:8px 16px 0}.hidden-cards{display:flex;flex-wrap:wrap;align-items:center;margin-top:8px}.hidden-cards .muted{display:flex;align-items:center;margin-right:8px}.hidden-cards .muted svg{margin-right:4px}.hidden-cards .chip{display:flex;align-items:center;margin:0 6px 6px 0}.hidden-cards .chip svg{margin-right:4px}.editing .cell{cursor:move}.dragging-card,.dragging-card *{cursor:-webkit-grabbing;cursor:grabbing}.badge-btn{position:absolute;top:-8px;width:28px;height:28px;border-radius:50%;z-index:2;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.25);box-shadow:0 4px 12px #0006}.badge-del{left:-8px;background:#3f3f46;color:#fff}.badge-edit{right:-8px;background:#e5e7eb;color:#111}.resize-handle{position:absolute;right:2px;bottom:2px;width:30px;height:30px;cursor:nwse-resize;z-index:2;border-right:3px solid rgba(255,255,255,.85);border-bottom:3px solid rgba(255,255,255,.85);border-bottom-right-radius:24px}.size-tag{position:absolute;left:50%;bottom:10px;padding:3px 8px;border-radius:8px;z-index:2;transform:translate(-50%);background:#0000008c;font-size:11px;font-weight:600;color:#f5f7fbb8}.cell>.panel{flex:1;min-width:0}.panel-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}.panel-body::-webkit-scrollbar,.lights::-webkit-scrollbar{display:none}.card-empty{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;font-size:13px;color:#f5f7fb7a;padding:0 12px}.panel{display:flex;flex-direction:column;min-height:0;background:#0c0e166b;border:1px solid rgba(255,255,255,.09);border-radius:28px;padding:20px 22px;box-shadow:0 20px 50px #00000040}.panel-head{display:flex;align-items:center;justify-content:space-between;min-height:30px;margin-bottom:14px}.panel-head h2{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:#f5f7fbb8}.home-pane{flex:1;min-height:0;display:flex;flex-direction:column}.screen-tabs{display:flex;align-items:center;overflow-x:auto;white-space:nowrap;margin:-8px 0 12px;padding-bottom:2px;-webkit-overflow-scrolling:touch}.screen-tab{display:inline-flex;flex-shrink:0;align-items:center;height:34px;padding:0 14px;margin-right:8px;border-radius:17px;font-size:14px;font-weight:500;color:#f5f7fb7a;background:#ffffff0f}.screen-tab.on{color:#f5f7fb;background:#ffffff29;font-weight:600}.screen-tab.add svg{margin-right:4px}.screen-tab.editing{padding:0 4px}.screen-tab input{width:auto;min-width:0;height:30px;padding:0 6px;border:0;border-radius:10px;background:transparent;color:#f5f7fb;font:inherit;text-align:center}.screen-tab input:focus{background:#00000040;outline:none}.screen-move,.screen-del{display:flex;align-items:center;justify-content:center;min-width:28px;height:28px;border-radius:14px;color:#f5f7fb7a}.screen-del.sure{padding:0 10px;background:#ef4444d9;color:#fff;font-size:13px}.slide-next{-webkit-animation:in-next .35s cubic-bezier(.2,.7,.2,1);animation:in-next .35s cubic-bezier(.2,.7,.2,1)}.slide-prev{-webkit-animation:in-prev .35s cubic-bezier(.2,.7,.2,1);animation:in-prev .35s cubic-bezier(.2,.7,.2,1)}@-webkit-keyframes in-next{0%{opacity:0;-webkit-transform:translateX(60px)}}@keyframes in-next{0%{opacity:0;transform:translate(60px)}}@-webkit-keyframes in-prev{0%{opacity:0;-webkit-transform:translateX(-60px)}}@keyframes in-prev{0%{opacity:0;transform:translate(-60px)}}.home-switch{display:flex;flex-direction:column;align-items:center;padding:6px 14px;border-radius:14px}.home-switch:active{background:#ffffff14}.home-name{font-size:15px;font-weight:600}.home-dots{display:flex;margin-top:5px}.home-dots i{width:6px;height:6px;border-radius:50%;margin:0 3px;background:#ffffff4d}.home-dots i.on{background:#fff}.editing .cell{-webkit-animation:jiggle .9s ease-in-out infinite;animation:jiggle .9s ease-in-out infinite}.editing div:nth-child(2n)>.cell{-webkit-animation-delay:-.45s;animation-delay:-.45s}.editing .cell .panel{border:1px dashed rgba(255,255,255,.35)}.editing .cell .panel-body{pointer-events:none;opacity:.45}@-webkit-keyframes jiggle{0%,to{-webkit-transform:rotate(-.35deg)}50%{-webkit-transform:rotate(.35deg)}}@keyframes jiggle{0%,to{transform:rotate(-.35deg)}50%{transform:rotate(.35deg)}}.icon-btn.danger{color:#fb7185}.pill-btn{margin-left:10px;display:flex;align-items:center;height:44px;padding:0 18px;border-radius:999px;color:#0b0d14;font-weight:600;background:#7dd3fc}.pill-btn svg{margin-right:6px}.rooms{flex:1;display:flex;flex-direction:column;justify-content:space-around}.rooms.compact .room{padding:4px 0}.rooms.compact .room-temp{font-size:28px}.rooms.compact .room-name{font-size:12px}.room{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.09)}.room:last-child{border-bottom:0}.room-name{font-size:14px;color:#f5f7fbb8}.room-vals{display:flex;align-items:baseline;justify-content:space-between;margin-top:2px}.room-temp{font-size:46px;font-weight:200;letter-spacing:-.03em;line-height:1.05}.room-temp sup{font-size:.5em;font-weight:300;vertical-align:top;position:relative;top:.25em;margin-left:2px;color:#7dd3fc}.room-hum{display:flex;align-items:center;font-size:15px;color:#f5f7fbb8}.room-hum svg{margin-right:4px;color:#7dd3fc}.chip-btn{display:flex;align-items:center;padding:7px 12px;border-radius:999px;background:#ffffff1a;border:1px solid rgba(255,255,255,.14);font-size:13px;font-weight:500}.chip-btn svg{margin-right:6px}.lights{flex:1;min-height:0;display:flex;flex-wrap:wrap;align-content:flex-start;margin:-5px;overflow-y:auto;-webkit-overflow-scrolling:touch}.cols-1 .light{width:calc(100% - 10px)}.cols-2 .light{width:calc(50% - 10px)}.cols-3 .light{width:calc(33.333% - 10px)}.cols-4 .light{width:calc(25% - 10px)}.cols-5 .light{width:calc(20% - 10px)}.cols-6 .light{width:calc(16.666% - 10px)}.lights.compact .light{min-height:70px;padding:10px 12px}.lights.compact .light-icon{width:30px;height:30px;margin-bottom:6px}.lights.list .light{flex-direction:row;align-items:center;justify-content:flex-start;min-height:0;padding:7px 10px;border-radius:14px}.lights.list .light-icon{width:28px;height:28px;margin:0 8px 0 0;flex-shrink:0}.lights.list .light-name{min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lights.list .light-state{display:none}.light{width:calc(50% - 10px);margin:5px;min-height:96px;flex-grow:1;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;padding:14px;border-radius:20px;text-align:left;background:#ffffff0f;border:1px solid rgba(255,255,255,.07);transition:background .25s,border-color .25s,transform .15s,box-shadow .25s}.light:active{transform:scale(.96)}.light-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#ffffff1a;color:#f5f7fbb8;margin-bottom:12px;transition:background .25s,color .25s,box-shadow .25s}.light-name{font-size:15px;font-weight:500;line-height:1.2}.light-state{font-size:12px;color:#f5f7fb7a;margin-top:3px}.light.on{background:#fbbf2429;border-color:#fbbf2480;box-shadow:0 0 30px #fbbf241f}.light.on .light-icon{background:#fbbf24;color:#1a1205;box-shadow:0 0 22px #fbbf248c}.light.on .light-state{color:#f5f7fbb8}.light.na{opacity:.45}.seg{display:flex;background:#00000040;border-radius:999px;padding:3px}.seg button{padding:5px 12px;border-radius:999px;font-size:12px;font-weight:500;color:#f5f7fbb8}.seg .active{background:#ffffff24;color:#f5f7fb}.cam-wrap{flex:1;display:flex;flex-direction:column;min-height:0}.seg-inline{align-self:flex-start;flex-shrink:0;max-width:100%;margin-bottom:10px;overflow-x:auto;-webkit-overflow-scrolling:touch}.seg-inline::-webkit-scrollbar{display:none}.seg-inline button{flex-shrink:0;white-space:nowrap}.seg-full{align-self:stretch}.seg-full button{flex:1 0 auto;text-align:center}.cam{position:relative;flex:1;min-height:120px;border-radius:18px;overflow:hidden;background:#00000073;cursor:pointer}.cam img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}.cam.fit-width img{top:50%;height:auto;transform:translateY(-50%)}.cam.fit-height img{left:50%;width:auto;transform:translate(-50%)}.cam.fit-width,.cam.fit-height{background:#000}.cam-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f5f7fb7a;font-size:13px}.cam-empty svg{margin-bottom:8px}.live{position:absolute;top:10px;left:10px;display:flex;align-items:center;padding:3px 8px;border-radius:6px;background:#00000080;font-size:10px;font-weight:700;letter-spacing:.08em}.live i{width:6px;height:6px;border-radius:50%;background:#fb7185;margin-right:5px;-webkit-animation:pulse 1.6s infinite;animation:pulse 1.6s infinite}@-webkit-keyframes pulse{50%{opacity:.3}}@keyframes pulse{50%{opacity:.3}}.status-row{display:flex;align-items:center;padding:10px 0;color:#f5f7fbb8}.status-row+.status-row{border-top:1px solid rgba(255,255,255,.09)}.status-icon{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#34d39926;color:#34d399;margin-right:12px}.status-text{flex:1;display:flex;flex-direction:column;min-width:0}.status-text b{font-size:14px;font-weight:500;color:#f5f7fb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.status-text small{font-size:12px;color:#f5f7fb7a;margin-top:2px}.status-row.alert .status-icon{background:#fb718533;color:#fb7185}.status-row.alert small{color:#fb7185}.sheet-layer{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:flex-end;padding:0 5vw 9vh;padding-bottom:calc(9vh + 56px);background:linear-gradient(to top,#00000059,#0000 60%);-webkit-animation:fade-in .3s ease;animation:fade-in .3s ease}.sheet{position:relative;width:460px;max-width:100%;max-height:72vh;overflow:hidden;border-radius:30px;border:1px solid rgba(255,255,255,.16);box-shadow:0 30px 80px #00000073;transform-origin:100% 100%;-webkit-animation:sheet-in .42s cubic-bezier(.2,.9,.25,1.1);animation:sheet-in .42s cubic-bezier(.2,.9,.25,1.1)}.sheet-wide{width:640px}.sheet .lights{overflow:visible}.sheet-cameras .cam{height:300px;flex:none}.sheet-glass{position:absolute;inset:0;overflow:hidden;background:#10131c}.glass-layer{position:absolute;background-size:cover;background-position:center}.glass-layer.fresh{-webkit-animation:fade-in 1.2s ease;animation:fade-in 1.2s ease}.sheet-tint{position:absolute;inset:0;background:#0a0c1480}.sheet-inner{position:relative;padding:20px 22px 22px;max-height:72vh;overflow-y:auto;-webkit-overflow-scrolling:touch}.sheet .rooms .room{padding:12px 0}.sheet-actions{display:flex;align-items:center}.sheet-close{width:32px;height:32px;margin-left:8px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#ffffff1f;color:#f5f7fbb8}@-webkit-keyframes fade-in{0%{opacity:0}}@keyframes fade-in{0%{opacity:0}}@-webkit-keyframes sheet-in{0%{opacity:0;-webkit-transform:translateY(24px) scale(.92)}}@keyframes sheet-in{0%{opacity:0;transform:translateY(24px) scale(.92)}}.modal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;background:#0009}.modal-box{width:100%;max-width:560px;max-height:92%;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#141620f7;border:1px solid rgba(255,255,255,.09);border-radius:28px;padding:24px;box-shadow:0 30px 80px #0009}.modal-wide{max-width:960px}.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.modal-head h2{font-size:19px;font-weight:600}.modal-title{display:flex;align-items:center}.modal-title svg{margin-right:10px;color:#7dd3fc}.icon-btn{color:#f5f7fb7a}.cam-full{border-radius:18px;overflow:hidden;background:#000}.cam-full img{display:block;width:100%;max-height:72vh;object-fit:contain}.tabs{display:flex;padding:4px;margin-bottom:18px;border-radius:14px;background:#ffffff0d}.tabs button{flex:1;padding:9px;border-radius:10px;font-size:14px;font-weight:500;color:#f5f7fbb8}.tabs .active{background:#ffffff1a;color:#f5f7fb}.modal-box .hint{position:static;opacity:1;text-align:left;font-size:13px;color:#f5f7fb7a;letter-spacing:0;margin-bottom:14px;line-height:1.45}.modal-box .hint.small{font-size:12px;margin:4px 0 0;text-align:center}.drop-zone{position:relative;display:block;text-align:center;padding:26px 16px;margin-bottom:14px;border:2px dashed rgba(255,255,255,.16);border-radius:20px;background:#ffffff08}.drop-zone svg{margin:0 auto 8px}.drop-zone input{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer}.drop-zone.busy{opacity:.6}.drop-zone.over{border-color:#7dd3fc;background:#7dd3fc14}.upload-error{margin:-6px 0 12px}.drop-title{font-size:14px;font-weight:500}.thumbs{display:flex;flex-wrap:wrap;margin:0 -4px 10px}.thumb{position:relative;width:72px;height:72px;margin:4px;border-radius:12px;background-size:cover;background-position:center}.thumb-del{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#000000a6}.option{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid rgba(255,255,255,.09);font-size:14px;color:#f5f7fbb8}.option select{padding:8px 12px;border-radius:10px;background:#ffffff14;color:#f5f7fb;font-size:13px}.option select option{color:#000}.option-col{display:block}.chip-picker{margin-top:8px}.chip-picker .check{margin:4px 0;color:#f5f7fb}.field{display:block;margin-bottom:14px}.field span{display:block;font-size:12px;color:#f5f7fb7a;margin-bottom:6px}.field input{width:100%;padding:13px 14px;border-radius:12px;font-size:15px;background:#ffffff0f;border:1px solid rgba(255,255,255,.09);-webkit-user-select:text;user-select:text}.field input:focus{border-color:#7dd3fc}.table-wrap{max-height:240px;overflow-y:auto;-webkit-overflow-scrolling:touch;border-radius:12px;background:#0003}.diag{width:100%;border-collapse:collapse;font-size:12px}.diag td{padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.09);word-break:break-all}.mono{font-family:Menlo,Roboto Mono,monospace}.strong{font-weight:600}.muted{color:#f5f7fb7a}.modal-foot{display:flex;justify-content:space-between;align-items:center;margin-top:18px}.btn{display:flex;align-items:center;padding:11px 18px;border-radius:14px;font-size:14px;font-weight:600}.btn svg{margin-right:6px}.btn-accent{background:#7dd3fc;color:#0b0d14}.btn-danger{background:#fb71851f;color:#fb7185}.type-list .type-row{display:flex;align-items:center;width:100%;padding:12px 6px;text-align:left;color:#f5f7fbb8;border-bottom:1px solid rgba(255,255,255,.09)}.type-list .type-row:last-child{border-bottom:0}.seg-wide{align-self:flex-start;display:inline-flex}.seg-wide button{padding:7px 16px;font-size:13px}.swatches{display:flex;flex-wrap:wrap}.swatch{width:34px;height:34px;border-radius:50%;margin:0 8px 6px 0;border:2px solid transparent}.swatch.active{border-color:#fff;box-shadow:0 0 0 2px #00000080 inset}.swatch-auto{background:#ffffff1a;font-size:12px;font-weight:700;color:#f5f7fbb8}.icon-grid{display:flex;flex-wrap:wrap;margin:0 -3px}.icon-grid button{width:40px;height:40px;margin:3px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#ffffff0d;color:#f5f7fbb8}.icon-grid .active{background:#fff3;color:#f5f7fb}.check{display:flex;align-items:center;font-size:14px;color:#f5f7fbb8;margin:6px 0 10px}.check input{margin-right:10px;width:18px;height:18px}.check-row{padding:10px 0;border-top:1px solid rgba(255,255,255,.09);border-bottom:1px solid rgba(255,255,255,.09);margin-bottom:14px}.items{border-radius:14px;background:#0003;padding:4px 8px 8px}.item-block{border-bottom:1px solid rgba(255,255,255,.09)}.item-row{display:flex;align-items:center;padding:8px 0}.item-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:#ffffff14;margin-right:10px;flex-shrink:0}.item-main{flex:1;min-width:0;display:flex;flex-direction:column}.item-main input{padding:6px 8px;margin-left:-8px;border-radius:8px;font-size:14px;-webkit-user-select:text;user-select:text}.item-main input:focus{background:#ffffff0f}.item-main .mono{font-size:11px;color:#f5f7fb7a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.item-row .icon-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center}.na-tag{font-style:normal;color:#fb7185}.link{display:flex;align-items:center;font-size:11px;color:#7dd3fc;margin-top:3px;text-align:left}.link svg{margin-right:4px}.btn-ghost{margin-top:8px;background:#ffffff14;color:#f5f7fb;font-weight:500}.btn[disabled]{opacity:.4}.auth{margin-bottom:16px;padding:14px 16px 2px;border-radius:16px;background:#ffffff0a}.auth-title{font-size:15px;font-weight:600;margin-bottom:12px}.auth-or{display:flex;align-items:center;margin:-2px 0 12px;font-size:12px;color:#f5f7fb7a}.auth-or:before,.auth-or:after{content:"";flex:1;height:1px;background:#ffffff1f}.auth-or span{margin:0 12px}.auth .btn-login{width:100%;justify-content:center;margin:0 0 4px}.auth-session{display:flex;align-items:center;justify-content:space-between;margin:-2px 0 6px;font-size:13px;color:#f5f7fbb8}.auth-session .btn{margin:0 0 0 12px;flex-shrink:0}.ha-storage{margin:0 0 14px}.ha-storage .hint{margin:0}.migration{margin:0 0 14px;padding:12px 14px;border-radius:14px;background:#ffffff14}.migration p{margin:0 0 4px;font-size:14px}.picker{border-radius:14px;background:#00000040;padding:8px}.picker-search{display:flex;align-items:center;padding:4px 6px;border-radius:10px;background:#ffffff12;color:#f5f7fb7a}.picker-search input{flex:1;padding:8px;border:0;background:none;font-size:14px;color:#f5f7fb;-webkit-user-select:text;user-select:text}.picker .check{margin:8px 4px;font-size:13px}.picker-mode{margin-bottom:8px}.picker-list{max-height:260px;overflow-y:auto;-webkit-overflow-scrolling:touch}.picker-row{display:flex;flex-wrap:wrap;align-items:baseline;width:100%;padding:9px 6px;text-align:left;border-bottom:1px solid rgba(255,255,255,.09)}.picker-row:active{background:#ffffff14}.picker-name{flex:1;font-size:14px}.picker-state{font-size:12px;color:#f5f7fb7a;margin-left:8px}.picker-id{width:100%;font-size:11px;color:#f5f7fb7a;margin-top:2px}.picker-empty{padding:16px;text-align:center}.home-row{padding:12px 0;border-bottom:1px solid rgba(255,255,255,.09)}.home-row-head{display:flex;align-items:center;margin-bottom:8px}.home-input{flex:1;min-width:0;padding:8px 10px;border-radius:10px;font-size:15px;font-weight:600;background:#ffffff0f;-webkit-user-select:text;user-select:text}.row-btns{display:flex}.row-btns .btn{margin:0 8px 8px 0}.json{display:block;width:100%;height:120px;padding:10px;border-radius:12px;font:12px Menlo,monospace;color:#f5f7fb;background:#0000004d;border:1px solid rgba(255,255,255,.09);-webkit-user-select:text;user-select:text;resize:vertical}.c-red{color:#fb7185}.small{font-size:12px}.ac-wrap,.media-wrap{flex:1;display:flex;flex-direction:column;min-height:0}.ac{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}.ac-main{display:flex;align-items:center}.ac-step{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#ffffff14;border:1px solid rgba(255,255,255,.14);margin:0 10px}.ac-step:active{background:#ffffff2e}.ac-step[disabled]{opacity:.3}.ac-dial{position:relative}.ac-dial svg{position:absolute;top:0;left:0}.ac-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}.ac-target{font-size:44px;font-weight:200;letter-spacing:-.03em;line-height:1}.ac.compact .ac-target{font-size:34px}.ac-target sup{font-size:.45em;vertical-align:top;position:relative;top:.3em}.ac-mode{font-size:12px;color:#f5f7fbb8;margin-top:4px}.ac-room{font-size:11px;color:#f5f7fb7a;margin-top:2px}.ac-modes{display:flex;flex-wrap:wrap;justify-content:center;margin-top:10px}.ac-mode-btn{width:40px;height:40px;margin:3px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#ffffff0f;border:1px solid transparent;color:#f5f7fbb8}.ac-mode-btn.active{color:#fff;border-color:#fff6}.ac-fan{margin-top:10px;align-self:center}.ac-fan button{padding:6px 10px;font-size:12px}.media-wrap{flex:1 0 auto}.media{flex:1 0 auto;display:flex;flex-direction:column}.media>:first-child{margin-top:auto}.media>:last-child{margin-bottom:auto}.media.short .media-art{width:52px;height:52px;border-radius:12px}.media.short .media-controls{margin:8px 0 2px}.media.short .media-controls button{width:38px;height:38px}.media.short .media-controls .media-play{width:46px;height:46px}.media-top{display:flex;align-items:center}.media-art{width:72px;height:72px;flex-shrink:0;border-radius:14px;background-size:cover;background-position:center;box-shadow:0 8px 24px #00000059}.media.big .media-art{width:112px;height:112px;border-radius:18px}.media-art-empty{display:flex;align-items:center;justify-content:center;background:#ffffff12;color:#f5f7fb7a}.media-art-empty.big{width:96px;height:96px;border-radius:24px;margin-bottom:12px}.media-info{flex:1;min-width:0;margin-left:14px}.media-title{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.media.big .media-title{font-size:19px}.media-sub{font-size:13px;color:#f5f7fbb8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.media-state{display:flex;align-items:center;font-size:11px;color:#f5f7fb7a;margin-top:6px;text-transform:uppercase;letter-spacing:.08em}.media-state.on{color:#34d399}.eq{display:inline-flex;align-items:flex-end;height:10px;margin-right:6px}.eq b{width:2px;margin-right:2px;background:#34d399;-webkit-animation:eq .9s ease-in-out infinite;animation:eq .9s ease-in-out infinite}.eq b:nth-child(2){-webkit-animation-delay:-.3s;animation-delay:-.3s}.eq b:nth-child(3){-webkit-animation-delay:-.6s;animation-delay:-.6s}@-webkit-keyframes eq{0%,to{height:3px}50%{height:10px}}@keyframes eq{0%,to{height:3px}50%{height:10px}}.icon-round{width:36px;height:36px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#ffffff14;color:#f5f7fbb8;margin-left:8px}.media-controls{display:flex;align-items:center;justify-content:center;margin:14px 0 6px}.media-controls button{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:50%;color:#f5f7fb;margin:0 6px}.media-controls button:active{background:#ffffff1a}.media-controls .media-play{width:56px;height:56px;background:#ffffffeb;color:#0b0d14}.media-volume{display:flex;align-items:center;margin-top:8px}.media-volume button{width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#f5f7fbb8}.vol-bar{position:relative;flex:1;height:6px;margin:0 10px;border-radius:3px;background:#ffffff1f;cursor:pointer}.vol-bar:before{content:"";position:absolute;inset:-12px 0}.vol-fill{position:absolute;top:0;left:0;bottom:0;border-radius:3px;background:#f5f7fb}.vol-num{width:28px;text-align:right;font-size:12px;color:#f5f7fb7a}.media-sources{margin:10px -4px 0;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}.media-sources::-webkit-scrollbar{display:none}.media-sources .chip{flex-shrink:0;white-space:nowrap}.media-off{align-items:center;text-align:center}.media-power{margin:14px 0 0}.media-hint{margin-top:10px;max-width:220px}.dot-live{display:inline-block;width:6px;height:6px;border-radius:50%;background:#34d399;margin-right:6px;vertical-align:middle}.weather{flex:1;display:flex;flex-direction:column;min-height:0}.weather-now{display:flex;align-items:center}.weather-temp{font-size:48px;font-weight:200;letter-spacing:-.03em;line-height:1;margin:0 14px 0 10px}.weather-temp sup{font-size:.45em;vertical-align:top;position:relative;top:.3em}.weather-desc{display:flex;flex-direction:column;min-width:0}.weather-desc b{font-size:15px;font-weight:500}.weather-desc span{font-size:12px;color:#f5f7fb7a;margin-top:2px}.weather-facts{display:flex;flex-wrap:wrap;margin-top:12px;font-size:13px;color:#f5f7fbb8}.weather-facts span{display:flex;align-items:center;margin-right:16px}.weather-facts svg{margin-right:5px;color:#f5f7fb7a}.weather-rooms{margin-top:10px;border-top:1px solid rgba(255,255,255,.09)}.wroom{display:flex;align-items:center;height:36px;font-size:14px}.wroom-name{flex:1;min-width:0;color:#f5f7fbb8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wroom-hum{display:flex;align-items:center;font-size:12px;color:#f5f7fb7a;margin-right:12px}.wroom-hum svg{margin-right:3px;color:#7dd3fc}.wroom-temp{font-weight:500;font-size:16px}.room-name svg{display:inline-block;vertical-align:-2px;margin-right:6px;color:#f5f7fbb8}.weather-hours{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:14px -4px 0;padding-bottom:4px}.weather-hours::-webkit-scrollbar{display:none}.hour{flex-shrink:0;width:52px;display:flex;flex-direction:column;align-items:center;font-size:12px}.hour svg{margin:6px 0;color:#f5f7fbb8}.hour b{font-weight:500;font-size:14px}.weather-days{margin-top:12px;border-top:1px solid rgba(255,255,255,.09);padding-top:4px}.day{display:flex;align-items:center;padding:7px 0;font-size:14px}.day-name{width:72px;color:#f5f7fbb8}.day svg{color:#f5f7fbb8;margin-right:10px}.day-lo{width:34px;text-align:right;color:#f5f7fb7a}.day-hi{width:34px}.day-bar{position:relative;flex:1;height:4px;margin:0 10px;border-radius:2px;background:#ffffff14}.day-bar i{position:absolute;top:0;bottom:0;border-radius:2px;background:linear-gradient(to right,#0891b2,#d97706)}.ambient-weather{display:flex;align-items:center;margin-top:2.4vh;font-size:2.8vh;color:#f5f7fb}.ambient-weather svg{width:4.2vh;height:4.2vh}.aw-temp{font-size:4.6vh;font-weight:300;margin:0 1.6vh 0 1.2vh}.aw-desc{display:flex;flex-direction:column;font-size:2.2vh;color:#f5f7fbb8;line-height:1.25}.aw-desc small{font-size:1.9vh;color:#f5f7fb7a}.tappable{cursor:pointer;border-radius:10px;transition:background .15s}.tappable:active{background:#ffffff12}.detail{position:relative;text-align:left}.detail-hero{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:14px}.hero-value{font-size:52px;font-weight:200;letter-spacing:-.03em;line-height:1;margin-bottom:6px}.chips{display:flex;flex-wrap:wrap;margin:0 -4px 12px}.chip{display:flex;align-items:baseline;margin:4px;padding:8px 12px;border-radius:12px;background:#ffffff0f;border:1px solid transparent;font-size:13px;color:#f5f7fbb8}.chip b{margin-left:8px;font-weight:600;color:#f5f7fb}.chip.active{border-color:#ffffff59;background:#ffffff1f;color:#f5f7fb}.detail-tools{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.chip-btn.on{background:#fff3}.chart{position:relative;margin:0 auto}.chart svg{display:block;overflow:visible}.chart-tick{fill:#f5f7fb7a;font-size:11px}.chart-legend{display:flex;justify-content:flex-end;font-size:12px;color:#f5f7fb7a;margin-top:2px}.chart-legend span{display:flex;align-items:center;margin-left:14px}.chart-legend i{width:12px;height:12px;border-radius:3px;margin-right:6px}.chart-legend i.key-line{height:2px;border-radius:1px}.chart-legend i.key-na{border:1px dashed rgba(255,255,255,.35)}.chart-tip{position:absolute;top:0;padding:7px 10px;border-radius:10px;pointer-events:none;white-space:nowrap;transform:translate(-50%);background:#080a10eb;border:1px solid rgba(255,255,255,.09);box-shadow:0 8px 24px #0006;display:flex;flex-direction:column;font-size:12px;color:#f5f7fbb8}.chart-tip b{font-size:15px;color:#f5f7fb}.chart-empty{height:210px;display:flex;align-items:center;justify-content:center;color:#f5f7fb7a;font-size:14px}.stats{display:flex;flex-wrap:wrap;margin:14px -5px 0}.stat{flex:1;min-width:120px;margin:5px;padding:12px 14px;border-radius:14px;background:#ffffff0d}.stat-label{font-size:12px;color:#f5f7fb7a}.stat-value{font-size:22px;font-weight:300;margin-top:4px;white-space:nowrap}.stat-note{font-size:11px;color:#f5f7fb7a;margin-top:2px}.detail-foot{margin-top:10px}.detail .table-wrap{max-height:210px}.root{height:100%}@supports (backdrop-filter: blur(1px)){.q-full .panel,.q-full .glance,.q-full .round,.q-full .chip-btn{backdrop-filter:blur(18px) saturate(140%)}.q-full .panel{background:#0c0e1652}.q-full .modal{backdrop-filter:blur(6px)}.q-full .modal-box{background:#141620d1;backdrop-filter:blur(24px) saturate(150%)}}.q-lite .slide{transform:none!important;transition:opacity .6s linear}.q-lite .soft{display:none}.q-lite .shade.deep{background-color:#04060cd1}.q-lite .sheet-glass .glass-layer{display:none}.q-lite .panel,.q-lite .modal-box,.q-lite .sheet,.q-lite .glance,.q-lite .cell.dragged .panel,.q-lite .light.on,.q-lite .light.on .light-icon,.q-lite .media-art,.q-lite .badge-btn{box-shadow:none!important}.q-lite .ambient-clock,.q-lite .ambient .header{text-shadow:none}.q-lite .eq b,.q-lite .live i,.q-lite .grabber-text,.q-lite .editing .cell,.q-lite .sheet,.q-lite .sheet-layer{-webkit-animation:none!important;animation:none!important}.q-lite .controls,.q-lite .ambient{transition-duration:.2s}.q-lite .cell,.q-lite .light,.q-lite .light-icon,.q-lite .soft{transition:none}@media(max-width:900px),(orientation:portrait){.ambient{display:block;padding-top:0}.ambient-clock{position:absolute;left:6vw;bottom:24vh}.ambient-time{font-size:13vh}.ambient-date{font-size:2.2vh}.glances{position:absolute;left:6vw;right:6vw;bottom:10vh;max-width:none;justify-content:flex-start}.glance{margin:6px 8px 0 0}.controls{padding:16px;padding-top:max(16px,env(safe-area-inset-top))}}@media(max-width:700px){.ambient-clock{left:6vw;right:6vw;text-align:center}.ambient-weather,.glances{justify-content:center}.glance{width:52px;height:52px;padding:0;margin:6px 5px 0;justify-content:center;border-radius:50%}.glance span{display:none}.glance svg{margin:0;width:22px;height:22px}}@media(max-width:900px),(orientation:portrait){.bar-date,.conn{display:none}.sheet-layer{justify-content:center;padding:0 12px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom))}.sheet,.sheet-wide{width:100%}.sheet-cameras .cam{height:220px}.hero-value{font-size:40px}.stat{min-width:40%}.rooms .room-temp{font-size:36px}}.ambient.lock-size-s .ambient-time{font-size:15vh}.ambient.lock-size-l .ambient-time{font-size:28vh}.ambient.lock-center,.ambient.lock-top{flex-direction:column;align-items:center;justify-content:flex-end}.ambient.lock-top{justify-content:flex-start;padding-top:10vh}.ambient.lock-center .ambient-clock,.ambient.lock-top .ambient-clock{position:static;text-align:center}.ambient.lock-center .ambient-weather,.ambient.lock-top .ambient-weather{justify-content:center}.ambient.lock-center .glances,.ambient.lock-top .glances{position:static;max-width:none;justify-content:center;margin-top:3vh}.ambient.lock-center .glance,.ambient.lock-top .glance{margin:6px 5px 0}.ambient.lock-top .ambient-clock{display:flex;flex-direction:column;align-items:center}.ambient.lock-top .ambient-date{order:-1;margin:0 0 1vh}.ambient.lock-corner .ambient-clock{text-align:left}.ambient.lock-corner .ambient-weather{justify-content:flex-start}.ambient.chips-icons .glance{width:52px;height:52px;padding:0;margin:6px 5px 0;justify-content:center;border-radius:50%}.ambient.chips-icons .glance span{display:none}.ambient.chips-icons .glance svg{margin:0;width:22px;height:22px}.ambient.chips-text .glance{width:auto;height:auto;padding:9px 16px 9px 13px;border-radius:999px}.ambient.chips-text .glance span{display:inline}.ambient.chips-text .glance svg{margin-right:8px;width:18px;height:18px}@media(max-width:900px),(orientation:portrait){.ambient.lock-size-s .ambient-time{font-size:10vh}.ambient.lock-size-m .ambient-time{font-size:13vh}.ambient.lock-size-l .ambient-time{font-size:17vh}}@media(max-width:700px){.ambient.lock-size-s .ambient-time{font-size:20vw}.ambient.lock-size-m .ambient-time{font-size:27vw}.ambient.lock-size-l .ambient-time{font-size:34vw}.ambient.lock-corner .ambient-clock{text-align:left}.ambient.lock-corner .glances{justify-content:flex-start}}.ambient.customizing{transform:scale(.9)}.ambient.customizing.panel-up{transform:translateY(-34%) scale(.72)}.ambient.customizing .ambient-clock,.ambient.customizing .glances{pointer-events:auto;cursor:pointer;border-radius:18px;padding:10px 14px;border:1.5px dashed rgba(255,255,255,.55);background:#ffffff0f}.ambient.customizing .glances{min-height:64px;min-width:120px}.ambient.customizing .grabber{display:none}.glance-add{color:#f5f7fbb8}.lock-ui{position:absolute;inset:0;z-index:30;pointer-events:none}.lock-top{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;padding-top:max(16px,env(safe-area-inset-top));pointer-events:auto;font-size:14px;color:#f5f7fbb8;text-shadow:0 1px 8px rgba(0,0,0,.5)}.lock-panel{position:absolute;left:50%;bottom:16px;width:420px;max-width:calc(100% - 24px);max-height:70%;overflow-y:auto;transform:translate(-50%);padding:16px 18px 10px;border-radius:24px;pointer-events:auto;background:#141620eb;border:1px solid rgba(255,255,255,.09);box-shadow:0 20px 60px #00000080}.lock-panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:16px}.lock-fonts{display:flex;margin:0 -4px 12px}.lock-font{flex:1;margin:0 4px;height:64px;border-radius:14px;font-size:34px;background:#ffffff0f;border:1.5px solid transparent}.lock-font.on{border-color:#7dd3fc;background:#7dd3fc1f}.lock-colors{display:flex;margin:0 0 6px}.lock-color{width:34px;height:34px;margin-right:10px;border-radius:50%;border:2px solid rgba(255,255,255,.15)}.lock-color.on{border-color:#fff;box-shadow:0 0 0 3px #ffffff40}.lock-widget{display:flex;align-items:center;border-top:1px solid rgba(255,255,255,.09)}.lock-widget .check{flex:1;margin:10px 0}.lock-widget .check svg{margin-right:8px;color:#f5f7fbb8}.lock-widget .icon-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center}.lock-widget .icon-btn[disabled]{opacity:.25}.option-hint{display:block;margin-top:2px;font-size:12px;color:#f5f7fb7a}.device-parts{margin:0 0 8px 52px}.device-part{display:flex;align-items:center;padding:2px 0}.device-part input[type=checkbox]{width:18px;height:18px;margin:0 8px 0 0;flex-shrink:0}.device-part .part-name{flex:1;min-width:0;padding:6px 10px;border-radius:10px;font-size:13px;background:#ffffff0d;border:1px solid transparent;color:#f5f7fb}.device-part .part-name:focus{border-color:#ffffff17;outline:none}.device-part .icon-btn{width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0}.device-part .icon-btn[disabled]{opacity:.25}.device-part.off .part-name{opacity:.45;text-decoration:line-through}.photos-count{display:flex;align-items:center;justify-content:space-between;margin:12px 0 4px;font-size:13px;color:#f5f7fbb8}.photos-count a{color:#7dd3fc;text-decoration:none}';
+const Ra = ':root{--ink: #f5f7fb;--ink-2: rgba(245, 247, 251, .72);--ink-3: rgba(245, 247, 251, .48);--panel: rgba(12, 14, 22, .42);--panel-line: rgba(255, 255, 255, .09);--chip: rgba(255, 255, 255, .1);--chip-line: rgba(255, 255, 255, .14);--warm: #fbbf24;--red: #fb7185;--green: #34d399;--ease: cubic-bezier(.2, .7, .2, 1)}*{box-sizing:border-box;margin:0;padding:0;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}html,body,#app{height:100%}body{background:#000;color:#f5f7fb;overflow:hidden;font-family:Inter,Roboto,-apple-system,Segoe UI,sans-serif;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}button,input,select{font:inherit;color:inherit;border:0;background:none;outline:none}button{cursor:pointer}svg{display:block;flex-shrink:0}.app{position:relative;height:100%;overflow:hidden}.backdrop{position:absolute;inset:0;overflow:hidden}.slide{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transform:scale(1);transition:opacity 2s ease-in-out,transform 20s linear}.slide.active{opacity:1;transform:scale(1.08)}.slide.contain,.slide.contain.active{transform:none;background:#000}.slide-glow{position:absolute;inset:-6%;background-size:cover;background-position:center;opacity:.75}.slide-photo{position:absolute;inset:0;background-size:contain;background-position:center;background-repeat:no-repeat}.q-full .slide-glow{-webkit-filter:blur(28px) saturate(1.3);filter:blur(28px) saturate(1.3)}.aurora{background:radial-gradient(ellipse at 20% 30%,rgba(56,189,248,.35) 0%,transparent 55%),radial-gradient(ellipse at 80% 70%,rgba(168,85,247,.32) 0%,transparent 55%),radial-gradient(ellipse at 60% 10%,rgba(251,191,36,.18) 0%,transparent 50%),#05060c}.soft{position:absolute;inset:-5%;background-size:cover;background-position:center;opacity:0;transition:opacity .6s cubic-bezier(.2,.7,.2,1)}.soft.on{opacity:1}.shade{position:absolute;inset:0;background:linear-gradient(to bottom,#00000040,#0000 30%,#00000026 55%,#000000b3);transition:background-color .6s cubic-bezier(.2,.7,.2,1)}.shade.deep{background-color:#04060c61}.ambient{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:space-between;padding:0 5vw 9vh;transform:translateY(-100%);pointer-events:none}.ambient.visible{transform:none}.clock-link{pointer-events:auto;cursor:pointer}.ambient-clock{text-shadow:0 2px 30px rgba(0,0,0,.35)}.ambient-time{font-size:22vh;font-weight:200;letter-spacing:-.04em;line-height:.9}.ambient-date{margin-top:2vh;font-size:3vh;font-weight:400;color:#f5f7fbb8;letter-spacing:.01em}.glances{display:flex;flex-wrap:wrap;justify-content:flex-end;max-width:50%;margin-bottom:1vh}.glance{pointer-events:auto;cursor:pointer;transition:transform .15s,background .2s;display:flex;align-items:center;margin:6px 0 0 8px;padding:9px 16px 9px 13px;border-radius:999px;background:#00000052;border:1px solid rgba(255,255,255,.14);font-size:15px;font-weight:500;color:#f5f7fb}.glance:active{transform:scale(.94);background:#00000080}.glance svg{margin-right:8px;color:#f5f7fbb8}.glance.lit svg{color:#fbbf24}.glance.alert{background:#e11d488c;border-color:#fb718599}.glance.alert svg,.glance.warn svg{color:#fff}.glance.warn{background:#d9770680}.ambient{transition:transform .5s cubic-bezier(.2,.7,.2,1)}.grabber{position:absolute;left:0;right:0;bottom:10px;bottom:max(10px,env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center}.grabber-text{font-size:13px;color:#f5f7fbb8;letter-spacing:.03em;margin-bottom:10px;opacity:0;transition:opacity 1s;-webkit-animation:nudge 2.4s ease-in-out infinite;animation:nudge 2.4s ease-in-out infinite}.grabber-text.visible{opacity:1}.grabber-bar{width:134px;height:5px;border-radius:3px;background:#ffffffb3;box-shadow:0 0 12px #0000004d}@-webkit-keyframes nudge{0%,60%,to{-webkit-transform:translateY(0)}30%{-webkit-transform:translateY(-6px)}}@keyframes nudge{0%,60%,to{transform:translateY(0)}30%{transform:translateY(-6px)}}.dragging .ambient,.dragging .controls,.dragging .soft{transition:none}.dragging .controls{pointer-events:none}.controls{position:absolute;inset:0;display:flex;flex-direction:column;padding:22px 28px 28px;padding-top:max(22px,env(safe-area-inset-top));padding-left:max(28px,env(safe-area-inset-left));padding-right:max(28px,env(safe-area-inset-right));padding-bottom:max(28px,env(safe-area-inset-bottom));opacity:0;transform:scale(.96);transition:opacity .5s cubic-bezier(.2,.7,.2,1),transform .5s cubic-bezier(.2,.7,.2,1);pointer-events:none}.controls.visible{opacity:1;transform:none;pointer-events:auto}.bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}.bar-time{display:flex;align-items:baseline}.bar-clock{font-size:38px;font-weight:300;letter-spacing:-.03em}.bar-date{margin-left:14px;font-size:15px;color:#f5f7fbb8}.bar-actions{display:flex;align-items:center}.conn{display:flex;align-items:center;margin-right:14px;font-size:13px;color:#f5f7fbb8}.conn i{width:8px;height:8px;border-radius:50%;margin-right:8px;background:#fbbf24}.conn-connected i{background:#34d399;box-shadow:0 0 10px #34d399}.conn-auth_invalid i,.conn-disconnected i{background:#fb7185}.round{width:48px;height:48px;margin-left:10px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#ffffff1a;border:1px solid rgba(255,255,255,.14);transition:transform .15s}.round:active{transform:scale(.92)}.round.accent{background:#7dd3fc;color:#0b0d14;border-color:transparent}.bar{position:relative}.bar-narrow .bar-date{display:none}.bar-narrow .bar-clock{font-size:30px}.home-switch{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);transition:opacity .2s}.home-switch:active{transform:translate(-50%,-50%) scale(.96)}.bar-narrow.menu-open .home-switch{opacity:0;pointer-events:none}.bar-narrow.bar-editing .home-switch{display:none}.burger{position:relative;display:flex;align-items:center}.burger-items{position:absolute;right:58px;top:0;display:flex;align-items:center;opacity:0;pointer-events:none;transform:translate(24px);transition:opacity .22s cubic-bezier(.2,.7,.2,1),transform .22s cubic-bezier(.2,.7,.2,1)}.menu-open .burger-items{opacity:1;pointer-events:auto;transform:none}.burger-btn{position:relative}.burger-dot{position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:#fbbf24}.burger-btn.conn-connected .burger-dot{background:#34d399}.burger-btn.conn-auth_invalid .burger-dot,.burger-btn.conn-disconnected .burger-dot{background:#fb7185}.grid{position:relative;flex:1;min-height:0;margin:-16px;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}.grid::-webkit-scrollbar{display:none}.grid-inner{position:relative}.cell{position:absolute;display:flex;transition:left .22s cubic-bezier(.2,.7,.2,1),top .22s cubic-bezier(.2,.7,.2,1),width .22s cubic-bezier(.2,.7,.2,1),height .22s cubic-bezier(.2,.7,.2,1)}.cell.dragged{z-index:20;transition:none;-webkit-animation:none;animation:none}.cell.dragged .panel{box-shadow:0 30px 60px #0000008c;border-color:#ffffff80}.drop-slot{position:absolute;border-radius:28px;border:2px dashed rgba(255,255,255,.45);background:#ffffff14;transition:left .15s,top .15s,width .15s,height .15s}.grid-dots{position:absolute;inset:0}.grid-dot{position:absolute;border-radius:10px;background:#ffffff09}.grid-note{font-size:12px;color:#f5f7fb7a;padding:8px 16px 0}.hidden-cards{display:flex;flex-wrap:wrap;align-items:center;margin-top:8px}.hidden-cards .muted{display:flex;align-items:center;margin-right:8px}.hidden-cards .muted svg{margin-right:4px}.hidden-cards .chip{display:flex;align-items:center;margin:0 6px 6px 0}.hidden-cards .chip svg{margin-right:4px}.editing .cell{cursor:move}.dragging-card,.dragging-card *{cursor:-webkit-grabbing;cursor:grabbing}.badge-btn{position:absolute;top:-8px;width:28px;height:28px;border-radius:50%;z-index:2;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.25);box-shadow:0 4px 12px #0006}.badge-del{left:-8px;background:#3f3f46;color:#fff}.badge-edit{right:-8px;background:#e5e7eb;color:#111}.resize-handle{position:absolute;right:2px;bottom:2px;width:30px;height:30px;cursor:nwse-resize;z-index:2;border-right:3px solid rgba(255,255,255,.85);border-bottom:3px solid rgba(255,255,255,.85);border-bottom-right-radius:24px}.size-tag{position:absolute;left:50%;bottom:10px;padding:3px 8px;border-radius:8px;z-index:2;transform:translate(-50%);background:#0000008c;font-size:11px;font-weight:600;color:#f5f7fbb8}.cell>.panel{flex:1;min-width:0}.panel-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}.panel-body::-webkit-scrollbar,.lights::-webkit-scrollbar{display:none}.card-empty{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;font-size:13px;color:#f5f7fb7a;padding:0 12px}.panel{display:flex;flex-direction:column;min-height:0;background:#0c0e166b;border:1px solid rgba(255,255,255,.09);border-radius:28px;padding:20px 22px;box-shadow:0 20px 50px #00000040}.panel-head{display:flex;align-items:center;justify-content:space-between;min-height:30px;margin-bottom:14px}.panel-head h2{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:#f5f7fbb8}.home-pane{flex:1;min-height:0;display:flex;flex-direction:column}.screen-tabs{display:flex;align-items:center;overflow-x:auto;white-space:nowrap;margin:-8px 0 12px;padding-bottom:2px;-webkit-overflow-scrolling:touch}.screen-tab{display:inline-flex;flex-shrink:0;align-items:center;height:34px;padding:0 14px;margin-right:8px;border-radius:17px;font-size:14px;font-weight:500;color:#f5f7fb7a;background:#ffffff0f}.screen-tab.on{color:#f5f7fb;background:#ffffff29;font-weight:600}.screen-tab.add svg{margin-right:4px}.screen-tab.editing{padding:0 4px}.screen-tab input{width:auto;min-width:0;height:30px;padding:0 6px;border:0;border-radius:10px;background:transparent;color:#f5f7fb;font:inherit;text-align:center}.screen-tab input:focus{background:#00000040;outline:none}.screen-move,.screen-del{display:flex;align-items:center;justify-content:center;min-width:28px;height:28px;border-radius:14px;color:#f5f7fb7a}.screen-del.sure{padding:0 10px;background:#ef4444d9;color:#fff;font-size:13px}.slide-next{-webkit-animation:in-next .35s cubic-bezier(.2,.7,.2,1);animation:in-next .35s cubic-bezier(.2,.7,.2,1)}.slide-prev{-webkit-animation:in-prev .35s cubic-bezier(.2,.7,.2,1);animation:in-prev .35s cubic-bezier(.2,.7,.2,1)}@-webkit-keyframes in-next{0%{opacity:0;-webkit-transform:translateX(60px)}}@keyframes in-next{0%{opacity:0;transform:translate(60px)}}@-webkit-keyframes in-prev{0%{opacity:0;-webkit-transform:translateX(-60px)}}@keyframes in-prev{0%{opacity:0;transform:translate(-60px)}}.home-switch{display:flex;flex-direction:column;align-items:center;padding:6px 14px;border-radius:14px}.home-switch:active{background:#ffffff14}.home-name{font-size:15px;font-weight:600}.home-dots{display:flex;margin-top:5px}.home-dots i{width:6px;height:6px;border-radius:50%;margin:0 3px;background:#ffffff4d}.home-dots i.on{background:#fff}.editing .cell{-webkit-animation:jiggle .9s ease-in-out infinite;animation:jiggle .9s ease-in-out infinite}.editing div:nth-child(2n)>.cell{-webkit-animation-delay:-.45s;animation-delay:-.45s}.editing .cell .panel{border:1px dashed rgba(255,255,255,.35)}.editing .cell .panel-body{pointer-events:none;opacity:.45}@-webkit-keyframes jiggle{0%,to{-webkit-transform:rotate(-.35deg)}50%{-webkit-transform:rotate(.35deg)}}@keyframes jiggle{0%,to{transform:rotate(-.35deg)}50%{transform:rotate(.35deg)}}.icon-btn.danger{color:#fb7185}.pill-btn{margin-left:10px;display:flex;align-items:center;height:44px;padding:0 18px;border-radius:999px;color:#0b0d14;font-weight:600;background:#7dd3fc}.pill-btn svg{margin-right:6px}.rooms{flex:1;display:flex;flex-direction:column;justify-content:space-around}.rooms.compact .room{padding:4px 0}.rooms.compact .room-temp{font-size:28px}.rooms.compact .room-name{font-size:12px}.room{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.09)}.room:last-child{border-bottom:0}.room-name{font-size:14px;color:#f5f7fbb8}.room-vals{display:flex;align-items:baseline;justify-content:space-between;margin-top:2px}.room-temp{font-size:46px;font-weight:200;letter-spacing:-.03em;line-height:1.05}.room-temp sup{font-size:.5em;font-weight:300;vertical-align:top;position:relative;top:.25em;margin-left:2px;color:#7dd3fc}.room-hum{display:flex;align-items:center;font-size:15px;color:#f5f7fbb8}.room-hum svg{margin-right:4px;color:#7dd3fc}.chip-btn{display:flex;align-items:center;padding:7px 12px;border-radius:999px;background:#ffffff1a;border:1px solid rgba(255,255,255,.14);font-size:13px;font-weight:500}.chip-btn svg{margin-right:6px}.lights{flex:1;min-height:0;display:flex;flex-wrap:wrap;align-content:flex-start;margin:-5px;overflow-y:auto;-webkit-overflow-scrolling:touch}.cols-1 .light{width:calc(100% - 10px)}.cols-2 .light{width:calc(50% - 10px)}.cols-3 .light{width:calc(33.333% - 10px)}.cols-4 .light{width:calc(25% - 10px)}.cols-5 .light{width:calc(20% - 10px)}.cols-6 .light{width:calc(16.666% - 10px)}.lights.compact .light{min-height:70px;padding:10px 12px}.lights.compact .light-icon{width:30px;height:30px;margin-bottom:6px}.lights.list .light{flex-direction:row;align-items:center;justify-content:flex-start;min-height:0;padding:7px 10px;border-radius:14px}.lights.list .light-icon{width:28px;height:28px;margin:0 8px 0 0;flex-shrink:0}.lights.list .light-name{min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lights.list .light-state{display:none}.light{width:calc(50% - 10px);margin:5px;min-height:96px;flex-grow:1;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;padding:14px;border-radius:20px;text-align:left;background:#ffffff0f;border:1px solid rgba(255,255,255,.07);transition:background .25s,border-color .25s,transform .15s,box-shadow .25s}.light:active{transform:scale(.96)}.light-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#ffffff1a;color:#f5f7fbb8;margin-bottom:12px;transition:background .25s,color .25s,box-shadow .25s}.light-name{font-size:15px;font-weight:500;line-height:1.2}.light-state{font-size:12px;color:#f5f7fb7a;margin-top:3px}.light.on{background:#fbbf2429;border-color:#fbbf2480;box-shadow:0 0 30px #fbbf241f}.light.on .light-icon{background:#fbbf24;color:#1a1205;box-shadow:0 0 22px #fbbf248c}.light.on .light-state{color:#f5f7fbb8}.light.na{opacity:.45}.seg{display:flex;background:#00000040;border-radius:999px;padding:3px}.seg button{padding:5px 12px;border-radius:999px;font-size:12px;font-weight:500;color:#f5f7fbb8}.seg .active{background:#ffffff24;color:#f5f7fb}.cam-wrap{flex:1;display:flex;flex-direction:column;min-height:0}.seg-inline{align-self:flex-start;flex-shrink:0;max-width:100%;margin-bottom:10px;overflow-x:auto;-webkit-overflow-scrolling:touch}.seg-inline::-webkit-scrollbar{display:none}.seg-inline button{flex-shrink:0;white-space:nowrap}.seg-full{align-self:stretch}.seg-full button{flex:1 0 auto;text-align:center}.cam{position:relative;flex:1;min-height:120px;border-radius:18px;overflow:hidden;background:#00000073;cursor:pointer}.cam img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}.cam.fit-width img{top:50%;height:auto;transform:translateY(-50%)}.cam.fit-height img{left:50%;width:auto;transform:translate(-50%)}.cam.fit-width,.cam.fit-height{background:#000}.cam-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f5f7fb7a;font-size:13px}.cam-empty svg{margin-bottom:8px}.live{position:absolute;top:10px;left:10px;display:flex;align-items:center;padding:3px 8px;border-radius:6px;background:#00000080;font-size:10px;font-weight:700;letter-spacing:.08em}.live i{width:6px;height:6px;border-radius:50%;background:#fb7185;margin-right:5px;-webkit-animation:pulse 1.6s infinite;animation:pulse 1.6s infinite}@-webkit-keyframes pulse{50%{opacity:.3}}@keyframes pulse{50%{opacity:.3}}.status-row{display:flex;align-items:center;padding:10px 0;color:#f5f7fbb8}.status-row+.status-row{border-top:1px solid rgba(255,255,255,.09)}.status-icon{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#34d39926;color:#34d399;margin-right:12px}.status-text{flex:1;display:flex;flex-direction:column;min-width:0}.status-text b{font-size:14px;font-weight:500;color:#f5f7fb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.status-text small{font-size:12px;color:#f5f7fb7a;margin-top:2px}.status-row.alert .status-icon{background:#fb718533;color:#fb7185}.status-row.alert small{color:#fb7185}.sheet-layer{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:flex-end;padding:0 5vw 9vh;padding-bottom:calc(9vh + 56px);background:linear-gradient(to top,#00000059,#0000 60%);-webkit-animation:fade-in .3s ease;animation:fade-in .3s ease}.sheet{position:relative;width:460px;max-width:100%;max-height:72vh;overflow:hidden;border-radius:30px;border:1px solid rgba(255,255,255,.16);box-shadow:0 30px 80px #00000073;transform-origin:100% 100%;-webkit-animation:sheet-in .42s cubic-bezier(.2,.9,.25,1.1);animation:sheet-in .42s cubic-bezier(.2,.9,.25,1.1)}.sheet-wide{width:640px}.sheet .lights{overflow:visible}.sheet-cameras .cam{height:300px;flex:none}.sheet-glass{position:absolute;inset:0;overflow:hidden;background:#10131c}.glass-layer{position:absolute;background-size:cover;background-position:center}.glass-layer.fresh{-webkit-animation:fade-in 1.2s ease;animation:fade-in 1.2s ease}.sheet-tint{position:absolute;inset:0;background:#0a0c1480}.sheet-inner{position:relative;padding:20px 22px 22px;max-height:72vh;overflow-y:auto;-webkit-overflow-scrolling:touch}.sheet .rooms .room{padding:12px 0}.sheet-actions{display:flex;align-items:center}.sheet-close{width:32px;height:32px;margin-left:8px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#ffffff1f;color:#f5f7fbb8}@-webkit-keyframes fade-in{0%{opacity:0}}@keyframes fade-in{0%{opacity:0}}@-webkit-keyframes sheet-in{0%{opacity:0;-webkit-transform:translateY(24px) scale(.92)}}@keyframes sheet-in{0%{opacity:0;transform:translateY(24px) scale(.92)}}.modal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;background:#0009}.modal-box{width:100%;max-width:560px;max-height:92%;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#141620f7;border:1px solid rgba(255,255,255,.09);border-radius:28px;padding:24px;box-shadow:0 30px 80px #0009}.modal-wide{max-width:960px}.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.modal-head h2{font-size:19px;font-weight:600}.modal-title{display:flex;align-items:center}.modal-title svg{margin-right:10px;color:#7dd3fc}.icon-btn{color:#f5f7fb7a}.cam-full{border-radius:18px;overflow:hidden;background:#000}.cam-full img{display:block;width:100%;max-height:72vh;object-fit:contain}.tabs{display:flex;padding:4px;margin-bottom:18px;border-radius:14px;background:#ffffff0d}.tabs button{flex:1;padding:9px;border-radius:10px;font-size:14px;font-weight:500;color:#f5f7fbb8}.tabs .active{background:#ffffff1a;color:#f5f7fb}.modal-box .hint{position:static;opacity:1;text-align:left;font-size:13px;color:#f5f7fb7a;letter-spacing:0;margin-bottom:14px;line-height:1.45}.modal-box .hint.small{font-size:12px;margin:4px 0 0;text-align:center}.drop-zone{position:relative;display:block;text-align:center;padding:26px 16px;margin-bottom:14px;border:2px dashed rgba(255,255,255,.16);border-radius:20px;background:#ffffff08}.drop-zone svg{margin:0 auto 8px}.drop-zone input{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer}.drop-zone.busy{opacity:.6}.drop-zone.over{border-color:#7dd3fc;background:#7dd3fc14}.upload-error{margin:-6px 0 12px}.drop-title{font-size:14px;font-weight:500}.thumbs{display:flex;flex-wrap:wrap;margin:0 -4px 10px}.thumb{position:relative;width:72px;height:72px;margin:4px;border-radius:12px;background-size:cover;background-position:center}.thumb-del{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#000000a6}.option{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid rgba(255,255,255,.09);font-size:14px;color:#f5f7fbb8}.option select{padding:8px 12px;border-radius:10px;background:#ffffff14;color:#f5f7fb;font-size:13px}.option select option{color:#000}.option-col{display:block}.chip-picker{margin-top:8px}.chip-picker .check{margin:4px 0;color:#f5f7fb}.field{display:block;margin-bottom:14px}.field span{display:block;font-size:12px;color:#f5f7fb7a;margin-bottom:6px}.field input{width:100%;padding:13px 14px;border-radius:12px;font-size:15px;background:#ffffff0f;border:1px solid rgba(255,255,255,.09);-webkit-user-select:text;user-select:text}.field input:focus{border-color:#7dd3fc}.table-wrap{max-height:240px;overflow-y:auto;-webkit-overflow-scrolling:touch;border-radius:12px;background:#0003}.diag{width:100%;border-collapse:collapse;font-size:12px}.diag td{padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.09);word-break:break-all}.mono{font-family:Menlo,Roboto Mono,monospace}.strong{font-weight:600}.muted{color:#f5f7fb7a}.modal-foot{display:flex;justify-content:space-between;align-items:center;margin-top:18px}.btn{display:flex;align-items:center;padding:11px 18px;border-radius:14px;font-size:14px;font-weight:600}.btn svg{margin-right:6px}.btn-accent{background:#7dd3fc;color:#0b0d14}.btn-danger{background:#fb71851f;color:#fb7185}.type-list .type-row{display:flex;align-items:center;width:100%;padding:12px 6px;text-align:left;color:#f5f7fbb8;border-bottom:1px solid rgba(255,255,255,.09)}.type-list .type-row:last-child{border-bottom:0}.seg-wide{align-self:flex-start;display:inline-flex}.seg-wide button{padding:7px 16px;font-size:13px}.swatches{display:flex;flex-wrap:wrap}.swatch{width:34px;height:34px;border-radius:50%;margin:0 8px 6px 0;border:2px solid transparent}.swatch.active{border-color:#fff;box-shadow:0 0 0 2px #00000080 inset}.swatch-auto{background:#ffffff1a;font-size:12px;font-weight:700;color:#f5f7fbb8}.icon-grid{display:flex;flex-wrap:wrap;margin:0 -3px}.icon-grid button{width:40px;height:40px;margin:3px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#ffffff0d;color:#f5f7fbb8}.icon-grid .active{background:#fff3;color:#f5f7fb}.check{display:flex;align-items:center;font-size:14px;color:#f5f7fbb8;margin:6px 0 10px}.check input{margin-right:10px;width:18px;height:18px}.check-row{padding:10px 0;border-top:1px solid rgba(255,255,255,.09);border-bottom:1px solid rgba(255,255,255,.09);margin-bottom:14px}.items{border-radius:14px;background:#0003;padding:4px 8px 8px}.item-block{border-bottom:1px solid rgba(255,255,255,.09)}.item-row{display:flex;align-items:center;padding:8px 0}.item-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:#ffffff14;margin-right:10px;flex-shrink:0}.item-main{flex:1;min-width:0;display:flex;flex-direction:column}.item-main input{padding:6px 8px;margin-left:-8px;border-radius:8px;font-size:14px;-webkit-user-select:text;user-select:text}.item-main input:focus{background:#ffffff0f}.item-main .mono{font-size:11px;color:#f5f7fb7a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.item-row .icon-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center}.na-tag{font-style:normal;color:#fb7185}.link{display:flex;align-items:center;font-size:11px;color:#7dd3fc;margin-top:3px;text-align:left}.link svg{margin-right:4px}.btn-ghost{margin-top:8px;background:#ffffff14;color:#f5f7fb;font-weight:500}.btn[disabled]{opacity:.4}.auth{margin-bottom:16px;padding:14px 16px 2px;border-radius:16px;background:#ffffff0a}.auth-title{font-size:15px;font-weight:600;margin-bottom:12px}.auth-or{display:flex;align-items:center;margin:-2px 0 12px;font-size:12px;color:#f5f7fb7a}.auth-or:before,.auth-or:after{content:"";flex:1;height:1px;background:#ffffff1f}.auth-or span{margin:0 12px}.auth .btn-login{width:100%;justify-content:center;margin:0 0 4px}.auth-session{display:flex;align-items:center;justify-content:space-between;margin:-2px 0 6px;font-size:13px;color:#f5f7fbb8}.auth-session .btn{margin:0 0 0 12px;flex-shrink:0}.ha-storage{margin:0 0 14px}.ha-storage .hint{margin:0}.migration{margin:0 0 14px;padding:12px 14px;border-radius:14px;background:#ffffff14}.migration p{margin:0 0 4px;font-size:14px}.picker{border-radius:14px;background:#00000040;padding:8px}.picker-search{display:flex;align-items:center;padding:4px 6px;border-radius:10px;background:#ffffff12;color:#f5f7fb7a}.picker-search input{flex:1;padding:8px;border:0;background:none;font-size:14px;color:#f5f7fb;-webkit-user-select:text;user-select:text}.picker .check{margin:8px 4px;font-size:13px}.picker-mode{margin-bottom:8px}.picker-list{max-height:260px;overflow-y:auto;-webkit-overflow-scrolling:touch}.picker-row{display:flex;flex-wrap:wrap;align-items:baseline;width:100%;padding:9px 6px;text-align:left;border-bottom:1px solid rgba(255,255,255,.09)}.picker-row:active{background:#ffffff14}.picker-name{flex:1;font-size:14px}.picker-state{font-size:12px;color:#f5f7fb7a;margin-left:8px}.picker-id{width:100%;font-size:11px;color:#f5f7fb7a;margin-top:2px}.picker-empty{padding:16px;text-align:center}.home-row{padding:12px 0;border-bottom:1px solid rgba(255,255,255,.09)}.home-row-head{display:flex;align-items:center;margin-bottom:8px}.home-input{flex:1;min-width:0;padding:8px 10px;border-radius:10px;font-size:15px;font-weight:600;background:#ffffff0f;-webkit-user-select:text;user-select:text}.row-btns{display:flex}.row-btns .btn{margin:0 8px 8px 0}.json{display:block;width:100%;height:120px;padding:10px;border-radius:12px;font:12px Menlo,monospace;color:#f5f7fb;background:#0000004d;border:1px solid rgba(255,255,255,.09);-webkit-user-select:text;user-select:text;resize:vertical}.c-red{color:#fb7185}.small{font-size:12px}.ac-wrap,.media-wrap{flex:1;display:flex;flex-direction:column;min-height:0}.ac{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}.ac-main{display:flex;align-items:center}.ac-step{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#ffffff14;border:1px solid rgba(255,255,255,.14);margin:0 10px}.ac-step:active{background:#ffffff2e}.ac-step[disabled]{opacity:.3}.ac-dial{position:relative}.ac-dial svg{position:absolute;top:0;left:0}.ac-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}.ac-target{font-size:44px;font-weight:200;letter-spacing:-.03em;line-height:1}.ac.compact .ac-target{font-size:34px}.ac-target sup{font-size:.45em;vertical-align:top;position:relative;top:.3em}.ac-mode{font-size:12px;color:#f5f7fbb8;margin-top:4px}.ac-room{font-size:11px;color:#f5f7fb7a;margin-top:2px}.ac-modes{display:flex;flex-wrap:wrap;justify-content:center;margin-top:10px}.ac-mode-btn{width:40px;height:40px;margin:3px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#ffffff0f;border:1px solid transparent;color:#f5f7fbb8}.ac-mode-btn.active{color:#fff;border-color:#fff6}.ac-fan{margin-top:10px;align-self:center}.ac-fan button{padding:6px 10px;font-size:12px}.media-wrap{flex:1 0 auto}.media{flex:1 0 auto;display:flex;flex-direction:column}.media>:first-child{margin-top:auto}.media>:last-child{margin-bottom:auto}.media.short .media-art{width:52px;height:52px;border-radius:12px}.media.short .media-controls{margin:8px 0 2px}.media.short .media-controls button{width:38px;height:38px}.media.short .media-controls .media-play{width:46px;height:46px}.media-top{display:flex;align-items:center}.media-art{width:72px;height:72px;flex-shrink:0;border-radius:14px;background-size:cover;background-position:center;box-shadow:0 8px 24px #00000059}.media.big .media-art{width:112px;height:112px;border-radius:18px}.media-art-empty{display:flex;align-items:center;justify-content:center;background:#ffffff12;color:#f5f7fb7a}.media-art-empty.big{width:96px;height:96px;border-radius:24px;margin-bottom:12px}.media-info{flex:1;min-width:0;margin-left:14px}.media-title{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.media.big .media-title{font-size:19px}.media-sub{font-size:13px;color:#f5f7fbb8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.media-state{display:flex;align-items:center;font-size:11px;color:#f5f7fb7a;margin-top:6px;text-transform:uppercase;letter-spacing:.08em}.media-state.on{color:#34d399}.eq{display:inline-flex;align-items:flex-end;height:10px;margin-right:6px}.eq b{width:2px;margin-right:2px;background:#34d399;-webkit-animation:eq .9s ease-in-out infinite;animation:eq .9s ease-in-out infinite}.eq b:nth-child(2){-webkit-animation-delay:-.3s;animation-delay:-.3s}.eq b:nth-child(3){-webkit-animation-delay:-.6s;animation-delay:-.6s}@-webkit-keyframes eq{0%,to{height:3px}50%{height:10px}}@keyframes eq{0%,to{height:3px}50%{height:10px}}.icon-round{width:36px;height:36px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#ffffff14;color:#f5f7fbb8;margin-left:8px}.media-controls{display:flex;align-items:center;justify-content:center;margin:14px 0 6px}.media-controls button{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:50%;color:#f5f7fb;margin:0 6px}.media-controls button:active{background:#ffffff1a}.media-controls .media-play{width:56px;height:56px;background:#ffffffeb;color:#0b0d14}.media-volume{display:flex;align-items:center;margin-top:8px}.media-volume button{width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#f5f7fbb8}.vol-bar{position:relative;flex:1;height:6px;margin:0 10px;border-radius:3px;background:#ffffff1f;cursor:pointer}.vol-bar:before{content:"";position:absolute;inset:-12px 0}.vol-fill{position:absolute;top:0;left:0;bottom:0;border-radius:3px;background:#f5f7fb}.vol-num{width:28px;text-align:right;font-size:12px;color:#f5f7fb7a}.media-sources{margin:10px -4px 0;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}.media-sources::-webkit-scrollbar{display:none}.media-sources .chip{flex-shrink:0;white-space:nowrap}.media-off{align-items:center;text-align:center}.media-power{margin:14px 0 0}.media-hint{margin-top:10px;max-width:220px}.dot-live{display:inline-block;width:6px;height:6px;border-radius:50%;background:#34d399;margin-right:6px;vertical-align:middle}.weather{flex:1;display:flex;flex-direction:column;min-height:0}.weather-now{display:flex;align-items:center}.weather-temp{font-size:48px;font-weight:200;letter-spacing:-.03em;line-height:1;margin:0 14px 0 10px}.weather-temp sup{font-size:.45em;vertical-align:top;position:relative;top:.3em}.weather-desc{display:flex;flex-direction:column;min-width:0}.weather-desc b{font-size:15px;font-weight:500}.weather-desc span{font-size:12px;color:#f5f7fb7a;margin-top:2px}.weather-facts{display:flex;flex-wrap:wrap;margin-top:12px;font-size:13px;color:#f5f7fbb8}.weather-facts span{display:flex;align-items:center;margin-right:16px}.weather-facts svg{margin-right:5px;color:#f5f7fb7a}.weather-rooms{margin-top:10px;border-top:1px solid rgba(255,255,255,.09)}.wroom{display:flex;align-items:center;height:36px;font-size:14px}.wroom-name{flex:1;min-width:0;color:#f5f7fbb8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wroom-hum{display:flex;align-items:center;font-size:12px;color:#f5f7fb7a;margin-right:12px}.wroom-hum svg{margin-right:3px;color:#7dd3fc}.wroom-temp{font-weight:500;font-size:16px}.room-name svg{display:inline-block;vertical-align:-2px;margin-right:6px;color:#f5f7fbb8}.weather-hours{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:14px -4px 0;padding-bottom:4px}.weather-hours::-webkit-scrollbar{display:none}.hour{flex-shrink:0;width:52px;display:flex;flex-direction:column;align-items:center;font-size:12px}.hour svg{margin:6px 0;color:#f5f7fbb8}.hour b{font-weight:500;font-size:14px}.weather-days{margin-top:12px;border-top:1px solid rgba(255,255,255,.09);padding-top:4px}.day{display:flex;align-items:center;padding:7px 0;font-size:14px}.day-name{width:72px;color:#f5f7fbb8}.day svg{color:#f5f7fbb8;margin-right:10px}.day-lo{width:34px;text-align:right;color:#f5f7fb7a}.day-hi{width:34px}.day-bar{position:relative;flex:1;height:4px;margin:0 10px;border-radius:2px;background:#ffffff14}.day-bar i{position:absolute;top:0;bottom:0;border-radius:2px;background:linear-gradient(to right,#0891b2,#d97706)}.ambient-weather{display:flex;align-items:center;margin-top:2.4vh;font-size:2.8vh;color:#f5f7fb}.ambient-weather svg{width:4.2vh;height:4.2vh}.aw-temp{font-size:4.6vh;font-weight:300;margin:0 1.6vh 0 1.2vh}.aw-desc{display:flex;flex-direction:column;font-size:2.2vh;color:#f5f7fbb8;line-height:1.25}.aw-desc small{font-size:1.9vh;color:#f5f7fb7a}.tappable{cursor:pointer;border-radius:10px;transition:background .15s}.tappable:active{background:#ffffff12}.detail{position:relative;text-align:left}.detail-hero{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:14px}.hero-value{font-size:52px;font-weight:200;letter-spacing:-.03em;line-height:1;margin-bottom:6px}.chips{display:flex;flex-wrap:wrap;margin:0 -4px 12px}.chip{display:flex;align-items:baseline;margin:4px;padding:8px 12px;border-radius:12px;background:#ffffff0f;border:1px solid transparent;font-size:13px;color:#f5f7fbb8}.chip b{margin-left:8px;font-weight:600;color:#f5f7fb}.chip.active{border-color:#ffffff59;background:#ffffff1f;color:#f5f7fb}.detail-tools{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.chip-btn.on{background:#fff3}.chart{position:relative;margin:0 auto}.chart svg{display:block;overflow:visible}.chart-tick{fill:#f5f7fb7a;font-size:11px}.chart-legend{display:flex;justify-content:flex-end;font-size:12px;color:#f5f7fb7a;margin-top:2px}.chart-legend span{display:flex;align-items:center;margin-left:14px}.chart-legend i{width:12px;height:12px;border-radius:3px;margin-right:6px}.chart-legend i.key-line{height:2px;border-radius:1px}.chart-legend i.key-na{border:1px dashed rgba(255,255,255,.35)}.chart-tip{position:absolute;top:0;padding:7px 10px;border-radius:10px;pointer-events:none;white-space:nowrap;transform:translate(-50%);background:#080a10eb;border:1px solid rgba(255,255,255,.09);box-shadow:0 8px 24px #0006;display:flex;flex-direction:column;font-size:12px;color:#f5f7fbb8}.chart-tip b{font-size:15px;color:#f5f7fb}.chart-empty{height:210px;display:flex;align-items:center;justify-content:center;color:#f5f7fb7a;font-size:14px}.stats{display:flex;flex-wrap:wrap;margin:14px -5px 0}.stat{flex:1;min-width:120px;margin:5px;padding:12px 14px;border-radius:14px;background:#ffffff0d}.stat-label{font-size:12px;color:#f5f7fb7a}.stat-value{font-size:22px;font-weight:300;margin-top:4px;white-space:nowrap}.stat-note{font-size:11px;color:#f5f7fb7a;margin-top:2px}.detail-foot{margin-top:10px}.detail .table-wrap{max-height:210px}.root{height:100%}@supports (backdrop-filter: blur(1px)){.q-full .panel,.q-full .glance,.q-full .round,.q-full .chip-btn{backdrop-filter:blur(18px) saturate(140%)}.q-full .panel{background:#0c0e1652}.q-full .modal{backdrop-filter:blur(6px)}.q-full .modal-box{background:#141620d1;backdrop-filter:blur(24px) saturate(150%)}}.q-lite .slide{transform:none!important;transition:opacity .6s linear}.q-lite .soft{display:none}.q-lite .shade.deep{background-color:#04060cd1}.q-lite .sheet-glass .glass-layer{display:none}.q-lite .panel,.q-lite .modal-box,.q-lite .sheet,.q-lite .glance,.q-lite .cell.dragged .panel,.q-lite .light.on,.q-lite .light.on .light-icon,.q-lite .media-art,.q-lite .badge-btn{box-shadow:none!important}.q-lite .ambient-clock,.q-lite .ambient .header{text-shadow:none}.q-lite .eq b,.q-lite .live i,.q-lite .grabber-text,.q-lite .editing .cell,.q-lite .sheet,.q-lite .sheet-layer{-webkit-animation:none!important;animation:none!important}.q-lite .controls,.q-lite .ambient{transition-duration:.2s}.q-lite .cell,.q-lite .light,.q-lite .light-icon,.q-lite .soft{transition:none}@media(max-width:900px),(orientation:portrait){.ambient{display:block;padding-top:0}.ambient-clock{position:absolute;left:6vw;bottom:24vh}.ambient-time{font-size:13vh}.ambient-date{font-size:2.2vh}.glances{position:absolute;left:6vw;right:6vw;bottom:10vh;max-width:none;justify-content:flex-start}.glance{margin:6px 8px 0 0}.controls{padding:16px;padding-top:max(16px,env(safe-area-inset-top))}}@media(max-width:700px){.ambient-clock{left:6vw;right:6vw;text-align:center}.ambient-weather,.glances{justify-content:center}.glance{width:52px;height:52px;padding:0;margin:6px 5px 0;justify-content:center;border-radius:50%}.glance span{display:none}.glance svg{margin:0;width:22px;height:22px}}@media(max-width:900px),(orientation:portrait){.bar-date,.conn{display:none}.sheet-layer{justify-content:center;padding:0 12px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom))}.sheet,.sheet-wide{width:100%}.sheet-cameras .cam{height:220px}.hero-value{font-size:40px}.stat{min-width:40%}.rooms .room-temp{font-size:36px}}.ambient.lock-size-s .ambient-time{font-size:15vh}.ambient.lock-size-l .ambient-time{font-size:28vh}.ambient.lock-center,.ambient.lock-top{flex-direction:column;align-items:center;justify-content:flex-end}.ambient.lock-top{justify-content:flex-start;padding-top:10vh}.ambient.lock-center .ambient-clock,.ambient.lock-top .ambient-clock{position:static;text-align:center}.ambient.lock-center .ambient-weather,.ambient.lock-top .ambient-weather{justify-content:center}.ambient.lock-center .glances,.ambient.lock-top .glances{position:static;max-width:none;justify-content:center;margin-top:3vh}.ambient.lock-center .glance,.ambient.lock-top .glance{margin:6px 5px 0}.ambient.lock-top .ambient-clock{display:flex;flex-direction:column;align-items:center}.ambient.lock-top .ambient-date{order:-1;margin:0 0 1vh}.ambient.lock-corner .ambient-clock{text-align:left}.ambient.lock-corner .ambient-weather{justify-content:flex-start}.ambient.chips-icons .glance{width:52px;height:52px;padding:0;margin:6px 5px 0;justify-content:center;border-radius:50%}.ambient.chips-icons .glance span{display:none}.ambient.chips-icons .glance svg{margin:0;width:22px;height:22px}.ambient.chips-text .glance{width:auto;height:auto;padding:9px 16px 9px 13px;border-radius:999px}.ambient.chips-text .glance span{display:inline}.ambient.chips-text .glance svg{margin-right:8px;width:18px;height:18px}@media(max-width:900px),(orientation:portrait){.ambient.lock-size-s .ambient-time{font-size:10vh}.ambient.lock-size-m .ambient-time{font-size:13vh}.ambient.lock-size-l .ambient-time{font-size:17vh}}@media(max-width:700px){.ambient.lock-size-s .ambient-time{font-size:20vw}.ambient.lock-size-m .ambient-time{font-size:27vw}.ambient.lock-size-l .ambient-time{font-size:34vw}.ambient.lock-corner .ambient-clock{text-align:left}.ambient.lock-corner .glances{justify-content:flex-start}}.ambient.customizing{transform:scale(.9)}.ambient.customizing.panel-up{transform:translateY(-34%) scale(.72)}.ambient.customizing .ambient-clock,.ambient.customizing .glances{pointer-events:auto;cursor:pointer;border-radius:18px;padding:10px 14px;border:1.5px dashed rgba(255,255,255,.55);background:#ffffff0f}.ambient.customizing .glances{min-height:64px;min-width:120px}.ambient.customizing .grabber{display:none}.glance-add{color:#f5f7fbb8}.lock-ui{position:absolute;inset:0;z-index:30;pointer-events:none}.lock-top{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;padding-top:max(16px,env(safe-area-inset-top));pointer-events:auto;font-size:14px;color:#f5f7fbb8;text-shadow:0 1px 8px rgba(0,0,0,.5)}.lock-panel{position:absolute;left:50%;bottom:16px;width:420px;max-width:calc(100% - 24px);max-height:70%;overflow-y:auto;transform:translate(-50%);padding:16px 18px 10px;border-radius:24px;pointer-events:auto;background:#141620eb;border:1px solid rgba(255,255,255,.09);box-shadow:0 20px 60px #00000080}.lock-panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:16px}.lock-fonts{display:flex;margin:0 -4px 12px}.lock-font{flex:1;margin:0 4px;height:64px;border-radius:14px;font-size:34px;background:#ffffff0f;border:1.5px solid transparent}.lock-font.on{border-color:#7dd3fc;background:#7dd3fc1f}.lock-colors{display:flex;margin:0 0 6px}.lock-color{width:34px;height:34px;margin-right:10px;border-radius:50%;border:2px solid rgba(255,255,255,.15)}.lock-color.on{border-color:#fff;box-shadow:0 0 0 3px #ffffff40}.lock-widget{display:flex;align-items:center;border-top:1px solid rgba(255,255,255,.09)}.lock-widget .check{flex:1;margin:10px 0}.lock-widget .check svg{margin-right:8px;color:#f5f7fbb8}.lock-widget .icon-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center}.lock-widget .icon-btn[disabled]{opacity:.25}.option-hint{display:block;margin-top:2px;font-size:12px;color:#f5f7fb7a}.device-parts{margin:0 0 8px 52px}.device-part{display:flex;align-items:center;padding:2px 0}.device-part input[type=checkbox]{width:18px;height:18px;margin:0 8px 0 0;flex-shrink:0}.device-part .part-name{flex:1;min-width:0;padding:6px 10px;border-radius:10px;font-size:13px;background:#ffffff0d;border:1px solid transparent;color:#f5f7fb}.device-part .part-name:focus{border-color:#ffffff17;outline:none}.device-part .icon-btn{width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0}.device-part .icon-btn[disabled]{opacity:.25}.device-part.off .part-name{opacity:.45;text-decoration:line-through}.photos-count{display:flex;align-items:center;justify-content:space-between;margin:12px 0 4px;font-size:13px;color:#f5f7fbb8}.photos-count a{color:#7dd3fc;text-decoration:none}';
 var Te, R, cn, lo, Pt = 0, di = [], J = j, Ao = J.__b, ho = J.__r, uo = J.diffed, fo = J.__c, po = J.unmount, mo = J.__;
 function dt(t, e) {
   J.__h && J.__h(R, t, Pt || e), Pt = 0;
@@ -277,9 +277,9 @@ function dt(t, e) {
   return t >= n.__.length && n.__.push({}), n.__[t];
 }
 function v(t) {
-  return Pt = 1, Ua(hi, t);
+  return Pt = 1, Va(hi, t);
 }
-function Ua(t, e, n) {
+function Va(t, e, n) {
   var s = dt(Te++, 2);
   if (s.t = t, !s.__c && (s.__ = [hi(void 0, e), function(c) {
     var d = s.__N ? s.__N[0] : s.__[0], A = s.t(d, c);
@@ -333,7 +333,7 @@ function Jn(t) {
   var e = R.context[t.__c], n = dt(Te++, 9);
   return n.c = t, e ? (n.__ == null && (n.__ = !0, e.sub(R)), e.props.value) : t.__;
 }
-function Ya() {
+function Ua() {
   for (var t; t = di.shift(); ) {
     var e = t.__H;
     if (t.__P && e) try {
@@ -356,7 +356,7 @@ J.__b = function(t) {
 }, J.diffed = function(t) {
   uo && uo(t);
   var e = t.__c;
-  e && e.__H && (e.__H.__h.length && (di.push(e) !== 1 && lo === J.requestAnimationFrame || ((lo = J.requestAnimationFrame) || Wa)(Ya)), e.__H.__.some(function(n) {
+  e && e.__H && (e.__H.__h.length && (di.push(e) !== 1 && lo === J.requestAnimationFrame || ((lo = J.requestAnimationFrame) || Ya)(Ua)), e.__H.__.some(function(n) {
     n.u && (n.__H = n.u, n.u = void 0);
   })), cn = R = null;
 }, J.__c = function(t, e) {
@@ -383,7 +383,7 @@ J.__b = function(t) {
   }), n.__H = void 0, e && J.__e(e, n.__v));
 };
 var go = typeof requestAnimationFrame == "function";
-function Wa(t) {
+function Ya(t) {
   var e, n = function() {
     clearTimeout(s), go && cancelAnimationFrame(e), setTimeout(t);
   }, s = setTimeout(n, 35);
@@ -413,7 +413,7 @@ function fi() {
     return "auto";
   }
 }
-function Za(t) {
+function Wa(t) {
   try {
     localStorage.setItem(ui, t);
   } catch {
@@ -424,28 +424,34 @@ function pi() {
   const t = navigator, e = /Android/i.test(navigator.userAgent);
   return typeof t.deviceMemory == "number" ? t.deviceMemory <= 2 ? "lite" : "full" : e && (!navigator.hardwareConcurrency || navigator.hardwareConcurrency <= 4) ? "lite" : "full";
 }
-function $e() {
+function Oe() {
   const t = fi();
   return t === "auto" ? pi() : t;
 }
-function Ja() {
-  const [t, e] = v($e());
+function Za() {
+  const [t, e] = v(Oe());
   return P(() => {
-    const n = () => e($e());
+    const n = () => e(Oe());
     return we.push(n), () => {
       we.splice(we.indexOf(n), 1);
     };
   }, []), t;
 }
-function Ga() {
-  return $e() === "lite" ? 800 : 150;
+function Ja() {
+  return Oe() === "lite" ? 800 : 150;
 }
-const We = {}, ln = [], Xa = 4;
-function mi() {
-  const t = $e() === "lite" ? 1 : Math.min(window.devicePixelRatio || 1, 2), e = Math.max(screen.width, screen.height) * t;
-  return Math.round(Math.min($e() === "lite" ? 1280 : 2560, e));
+const Ze = {}, ln = [], Ga = 4;
+function Xa() {
+  const t = Oe() === "lite" ? 1 : Math.min(window.devicePixelRatio || 1, 2);
+  let e = screen.width * t, n = screen.height * t;
+  const s = Math.min(1, (Oe() === "lite" ? 1280 : 2560) / Math.max(e, n));
+  return e = Math.round(e * s), n = Math.round(n * s), { w: e, h: n };
 }
-function Ka(t, e) {
+function Ka() {
+  const t = Oe() === "lite" ? 1 : Math.min(window.devicePixelRatio || 1, 2), e = Math.max(screen.width, screen.height) * t;
+  return Math.round(Math.min(Oe() === "lite" ? 1280 : 2560, e));
+}
+function $a(t, e) {
   return new Promise((n) => {
     const s = new Image();
     s.onerror = () => n(t), s.onload = () => {
@@ -468,33 +474,33 @@ function Ka(t, e) {
 }
 function bo(t) {
   if (!t || /^(data|blob):/.test(t) || !HTMLCanvasElement.prototype.toBlob || t.indexOf("/api/photoframe/photo/") !== -1) return Promise.resolve(t);
-  const e = mi(), n = t + "@" + e;
-  if (n in We) return We[n];
-  const s = Ka(t, e);
-  for (We[n] = s, ln.push(n); ln.length > Xa; ) {
-    const i = ln.shift(), a = We[i];
-    delete We[i], a.then((r) => {
+  const e = Ka(), n = t + "@" + e;
+  if (n in Ze) return Ze[n];
+  const s = $a(t, e);
+  for (Ze[n] = s, ln.push(n); ln.length > Ga; ) {
+    const i = ln.shift(), a = Ze[i];
+    delete Ze[i], a.then((r) => {
       /^blob:/.test(r) && URL.revokeObjectURL(r);
     });
   }
   return s;
 }
-const gi = "photoframe.fit";
+const mi = "photoframe.fit";
 function Lt() {
   try {
-    return localStorage.getItem(gi) || "auto";
+    return localStorage.getItem(mi) || "auto";
   } catch {
     return "auto";
   }
 }
-function $a(t) {
+function er(t) {
   try {
-    localStorage.setItem(gi, t);
+    localStorage.setItem(mi, t);
   } catch {
   }
   we.forEach((e) => e());
 }
-function er() {
+function tr() {
   const [t, e] = v(Lt());
   return P(() => {
     const n = () => e(Lt());
@@ -503,7 +509,7 @@ function er() {
     };
   }, []), t;
 }
-function tr(t, e) {
+function nr(t, e) {
   const n = Lt();
   return !t || !e || n === "cover" ? !1 : n === "contain" ? !0 : t >= e != window.innerWidth >= window.innerHeight;
 }
@@ -528,7 +534,7 @@ class Xn {
     clearTimeout(this.emitTimer), this.emitTimer = 0, this.listeners.forEach((e) => e());
   }
   emit() {
-    this.emitTimer || (this.emitTimer = window.setTimeout(() => this.emitNow(), Ga()));
+    this.emitTimer || (this.emitTimer = window.setTimeout(() => this.emitNow(), Ja()));
   }
   setStatus(e) {
     this.status = e, this.emitNow();
@@ -657,9 +663,9 @@ class Xn {
     return s ? this.baseUrl.replace(/\/+$/, "") + "/api/camera_proxy_stream/" + e + "?token=" + s : "";
   }
 }
-const bi = Wn(null);
+const gi = Wn(null);
 function Z() {
-  const t = Jn(bi), [, e] = v(0);
+  const t = Jn(gi), [, e] = v(0);
   return P(() => t.subscribe(() => e((n) => n + 1)), [t]), t;
 }
 function nn(t) {
@@ -668,7 +674,7 @@ function nn(t) {
 function et(t) {
   return t === void 0 || t === "unavailable" || t === "unknown";
 }
-function Oe(t, e) {
+function He(t, e) {
   if (t.status !== "connected" || !t.loaded) return !0;
   const n = t.states[e];
   return !!n && n.state !== "unavailable";
@@ -684,13 +690,13 @@ function jt(t, e) {
   const n = t.states[e];
   return n && n.attributes.unit_of_measurement ? " " + n.attributes.unit_of_measurement : "";
 }
-const yi = Wn(() => {
+const bi = Wn(() => {
 });
 function on() {
-  return Jn(yi);
+  return Jn(bi);
 }
-const nr = "English", or = {
-  _language: nr,
+const or = "English", ir = {
+  _language: or,
   "ac.fan.auto": "Auto",
   "ac.fan.diffuse": "Diffuse",
   "ac.fan.focus": "Focus",
@@ -1016,8 +1022,8 @@ const nr = "English", or = {
   "settings.fit_auto": "Auto — whole if orientation differs",
   "settings.fit_contain": "Whole, with glow around",
   "settings.fit_cover": "Fill the screen, crop edges"
-}, ir = "Русский", sr = {
-  _language: ir,
+}, sr = "Русский", ar = {
+  _language: sr,
   "ac.fan.auto": "Авто",
   "ac.fan.diffuse": "Рассеянно",
   "ac.fan.focus": "Направленно",
@@ -1343,15 +1349,15 @@ const nr = "English", or = {
   "settings.fit_auto": "Авто — чужую ориентацию целиком",
   "settings.fit_contain": "Целиком, с подсветкой по краям",
   "settings.fit_cover": "Во весь экран, края обрезаются"
-}, yo = /* @__PURE__ */ Object.assign({ "./locales/en.json": or, "./locales/ru.json": sr }), xe = {};
+}, yo = /* @__PURE__ */ Object.assign({ "./locales/en.json": ir, "./locales/ru.json": ar }), xe = {};
 Object.keys(yo).forEach((t) => {
   const e = t.replace(/^.*\/([^/]+)\.json$/, "$1");
   xe[e] = yo[t];
 });
-const Ft = "en", xi = "photoframe.language";
+const Ft = "en", yi = "photoframe.language";
 let tt = Ft;
 const Mt = [];
-function ar() {
+function rr() {
   return Object.keys(xe).sort().map((t) => ({ code: t, name: xe[t]._language || t }));
 }
 function dn(t) {
@@ -1360,23 +1366,23 @@ function dn(t) {
   const e = t.split(/[-_]/)[0].toLowerCase();
   return xe[e] ? e : null;
 }
-function _i() {
+function xi() {
   try {
-    return localStorage.getItem(xi) || "";
+    return localStorage.getItem(yi) || "";
   } catch {
     return "";
   }
 }
-function rr(t) {
+function cr(t) {
   try {
-    localStorage.setItem(xi, t);
+    localStorage.setItem(yi, t);
   } catch {
   }
 }
 let xo;
 function sn(t) {
   t && (xo = t);
-  const e = dn(_i()) || dn(xo) || dn(navigator.language) || Ft;
+  const e = dn(xi()) || dn(xo) || dn(navigator.language) || Ft;
   e !== tt && (tt = e, Mt.forEach((n) => n()));
 }
 function h(t, e) {
@@ -1385,11 +1391,11 @@ function h(t, e) {
     n = n.split("{" + s + "}").join(String(e[s]));
   }), n;
 }
-function Ve(t) {
+function Ue(t) {
   return h(t).split(",").map((e) => e.trim());
 }
 sn();
-function cr() {
+function lr() {
   const [, t] = v(0);
   return P(() => {
     const e = () => t((n) => n + 1);
@@ -1398,7 +1404,7 @@ function cr() {
     };
   }, []), tt;
 }
-const He = 12, lr = 2, vi = 2, Ne = 4, qt = {
+const Qe = 12, dr = 2, _i = 2, Re = 4, qt = {
   climate: { icon: "thermometer", domains: ["sensor", "weather"] },
   switches: { icon: "lightbulb", domains: ["light", "switch", "fan", "input_boolean"] },
   cameras: { icon: "video", domains: ["camera"] },
@@ -1412,10 +1418,10 @@ const He = 12, lr = 2, vi = 2, Ne = 4, qt = {
 function nt(t) {
   return h("card." + t + ".title");
 }
-function ki(t) {
+function vi(t) {
   return h("card." + t + ".hint");
 }
-const Xe = {
+const Ke = {
   amber: "#fbbf24",
   sky: "#7dd3fc",
   green: "#34d399",
@@ -1423,13 +1429,13 @@ const Xe = {
   violet: "#c4b5fd",
   red: "#fb7185"
 };
-let wi = 0;
-function dr() {
-  return "c" + Date.now().toString(36) + (wi++).toString(36);
+let ki = 0;
+function Ar() {
+  return "c" + Date.now().toString(36) + (ki++).toString(36);
 }
-function Ci() {
+function wi() {
   return {
-    cols: He,
+    cols: Qe,
     cards: [
       { id: "climate", type: "climate", title: "", icon: "thermometer", x: 0, y: 0, w: 3, h: 6, chip: !0, items: [] },
       { id: "lights", type: "switches", title: "", icon: "lightbulb", x: 3, y: 0, w: 6, h: 6, chip: !0, color: "amber", items: [] },
@@ -1444,8 +1450,8 @@ function _o(t, e) {
 function In(t, e) {
   return t.y - e.y || t.x - e.x;
 }
-function ot(t, e = He) {
-  const n = Math.max(lr, Math.min(e, Math.round(t.w))), s = Math.max(vi, Math.round(t.h));
+function ot(t, e = Qe) {
+  const n = Math.max(dr, Math.min(e, Math.round(t.w))), s = Math.max(_i, Math.round(t.h));
   return { ...t, w: n, h: s, x: Math.max(0, Math.min(e - n, Math.round(t.x))), y: Math.max(0, Math.round(t.y)) };
 }
 function Ie(t, e) {
@@ -1470,17 +1476,17 @@ function Bn(t) {
   return t.reduce((e, n) => Math.max(e, n.y + n.h), 0);
 }
 function be(t, e) {
-  const n = t, i = (n && Array.isArray(n.screens) ? n.screens : n && Array.isArray(n.cards) ? [n] : []).filter((a) => a && Array.isArray(a.cards)).map((a, r) => ({ ...hr(a), id: String(a.id || (r ? "s" + r : "main")), name: String(a.name || "") }));
-  return i.length ? i : [{ ...e ? e() : { cols: He, cards: [] }, id: "main", name: "" }];
+  const n = t, i = (n && Array.isArray(n.screens) ? n.screens : n && Array.isArray(n.cards) ? [n] : []).filter((a) => a && Array.isArray(a.cards)).map((a, r) => ({ ...ur(a), id: String(a.id || (r ? "s" + r : "main")), name: String(a.name || "") }));
+  return i.length ? i : [{ ...e ? e() : { cols: Qe, cards: [] }, id: "main", name: "" }];
 }
-function Ar() {
-  return "s" + Date.now().toString(36) + (wi++).toString(36);
+function hr() {
+  return "s" + Date.now().toString(36) + (ki++).toString(36);
 }
 function Et(t, e) {
   return t.name || h("screen.default", { n: e + 1 });
 }
-function hr(t) {
-  if (t.cols === He) return vo(t);
+function ur(t) {
+  if (t.cols === Qe) return vo(t);
   const e = [], n = (i, a, r, c) => {
     for (let d = a; d < a + c; d++) for (let A = i; A < i + r; A++) if (e[d] && e[d][A]) return !1;
     return !0;
@@ -1496,7 +1502,7 @@ function hr(t) {
           return { ...i, x: d * 3, y: c * 3, w: a * 3, h: r * 3 };
         }
   });
-  return vo({ ...t, cols: He, cards: s });
+  return vo({ ...t, cols: Qe, cards: s });
 }
 function vo(t) {
   const e = (i) => typeof i == "number" && isFinite(i);
@@ -1507,13 +1513,13 @@ function vo(t) {
     const c = ot({ ...i, x: 0, y: n, w: a, h: r });
     return n += c.h, c;
   });
-  return { ...t, cols: He, cards: Ie(s) };
+  return { ...t, cols: Qe, cards: Ie(s) };
 }
-function ur(t) {
-  const e = t.slice().sort(In), n = e.filter((a) => a.m && !a.m.hide).map((a) => ot({ ...a, x: a.m.x, y: a.m.y, w: a.m.w, h: a.m.h }, Ne));
+function fr(t) {
+  const e = t.slice().sort(In), n = e.filter((a) => a.m && !a.m.hide).map((a) => ot({ ...a, x: a.m.x, y: a.m.y, w: a.m.w, h: a.m.h }, Re));
   let s = Bn(n);
   const i = e.filter((a) => !a.m).map((a) => {
-    const r = Math.max(vi, Math.min(Ne, Math.round(a.h * 2 / 3))), c = { ...a, x: 0, y: s, w: Ne, h: r };
+    const r = Math.max(_i, Math.min(Re, Math.round(a.h * 2 / 3))), c = { ...a, x: 0, y: s, w: Re, h: r };
     return s += r, c;
   });
   return Ie(n.concat(i));
@@ -1524,21 +1530,21 @@ function An(t, e) {
     return s ? { ...n, m: { x: s.x, y: s.y, w: s.w, h: s.h } } : n;
   });
 }
-const fr = "photoframe", it = "photos", pr = 1920;
-function Mi() {
+const pr = "photoframe", it = "photos", mr = 1920;
+function Ci() {
   return new Promise((t, e) => {
-    const n = indexedDB.open(fr, 1);
+    const n = indexedDB.open(pr, 1);
     n.onupgradeneeded = () => n.result.createObjectStore(it, { keyPath: "id", autoIncrement: !0 }), n.onsuccess = () => t(n.result), n.onerror = () => e(n.error);
   });
 }
 function Kn(t, e) {
-  return Mi().then((n) => new Promise((s, i) => {
+  return Ci().then((n) => new Promise((s, i) => {
     const a = e(n.transaction(it, t).objectStore(it));
     a.onsuccess = () => s(a.result), a.onerror = () => i(a.error);
   }));
 }
 function hn() {
-  return Mi().then((t) => new Promise((e, n) => {
+  return Ci().then((t) => new Promise((e, n) => {
     const s = [], i = t.transaction(it, "readonly").objectStore(it).openCursor();
     i.onsuccess = () => {
       const a = i.result;
@@ -1546,19 +1552,19 @@ function hn() {
     }, i.onerror = () => n(i.error);
   }));
 }
-function mr(t) {
+function gr(t) {
   return Kn("readwrite", (e) => e.delete(t));
 }
 function ko() {
   return Kn("readwrite", (t) => t.clear());
 }
-function Ei(t) {
+function Mi(t) {
   return new Promise((e, n) => {
     const s = new FileReader();
     s.onerror = () => n(s.error), s.onload = () => {
       const i = new Image();
       i.onerror = () => n(new Error(h("errors.decode", { name: t.name }))), i.onload = () => {
-        const a = Math.min(1, pr / Math.max(i.width, i.height)), r = document.createElement("canvas");
+        const a = Math.min(1, mr / Math.max(i.width, i.height)), r = document.createElement("canvas");
         r.width = Math.round(i.width * a), r.height = Math.round(i.height * a), r.getContext("2d").drawImage(i, 0, 0, r.width, r.height);
         const c = r.toDataURL("image/jpeg", 0.85);
         r.width = r.height = 0, e(c);
@@ -1566,8 +1572,8 @@ function Ei(t) {
     }, s.readAsDataURL(t);
   });
 }
-function gr(t) {
-  return Ei(t).then((e) => Kn("readwrite", (n) => n.add({ data: e }))).then(() => {
+function br(t) {
+  return Mi(t).then((e) => Kn("readwrite", (n) => n.add({ data: e }))).then(() => {
   });
 }
 const st = "custom:photoframe-card";
@@ -1583,14 +1589,14 @@ function $n(t) {
       }
   return null;
 }
-function br() {
+function yr() {
   const t = location.pathname.split("/")[1] || "lovelace";
   return t === "lovelace" ? null : t;
 }
-function Si(t) {
+function Ei(t) {
   return t.call({ type: "photoframe/config" }).then((e) => ({ ...e, type: st }), () => null);
 }
-function yr(t, e) {
+function xr(t, e) {
   return t.call({ type: "lovelace/config", url_path: e }).then(
     (n) => $n(n),
     (n) => {
@@ -1649,7 +1655,7 @@ class Nt {
           c in e && (r[c] = e[c]);
         }), this.config = { ...this.config, ...e }, this.client.call(r);
       }
-      const a = this.dashboard !== void 0 ? this.dashboard : br();
+      const a = this.dashboard !== void 0 ? this.dashboard : yr();
       return this.client.call({ type: "lovelace/config", url_path: a }).then((r) => {
         const c = $n(r);
         if (!c) throw new Error(h("errors.card_not_found", { type: st }));
@@ -1664,13 +1670,15 @@ class Nt {
     }), s;
   }
   // Только id фото в папке (без подписанных ссылок) — дёшево проверить, не поменялся ли набор.
-  // С интеграцией фото готовит сервер: список альбома со ссылками на кадры под ширину этого экрана.
+  // С интеграцией фото готовит сервер: список альбома со ссылками на кадры под размер этого экрана.
   integrationPhotos() {
+    const e = Xa();
     return this.client.call({
       type: "photoframe/photos",
       album: this.album || "all",
-      width: mi()
-    }).then((e) => e.photos.map((n) => ({ id: n.id, url: this.client.resolveUrl(n.url) })));
+      width: e.w,
+      height: e.h
+    }).then((n) => n.photos.map((s) => ({ id: s.id, url: this.client.resolveUrl(s.url) })));
   }
   listPhotoIds() {
     return this.integration ? this.integrationPhotos().then((e) => e.map((n) => String(n.id))) : this.folderId().then((e) => this.client.call({
@@ -1703,7 +1711,7 @@ class Nt {
           throw i.status === 401 || i.status === 403 ? new Error(h("errors.upload_admin")) : i.status === 415 ? new Error(h("errors.decode", { name: e.name })) : new Error(h("errors.upload", { status: i.status }));
       });
     }
-    return Ei(e).then((s) => this.addPhotoData(s, e.name.replace(/\.[^.]+$/, "") + ".jpg"));
+    return Mi(e).then((s) => this.addPhotoData(s, e.name.replace(/\.[^.]+$/, "") + ".jpg"));
   }
   // Уже уменьшенный кадр (dataURL JPEG) — так же лежат фото, загруженные в браузер до перехода на HA.
   addPhotoData(e, n) {
@@ -1721,7 +1729,7 @@ class Nt {
     return this.client.call({ type: "media_source/local_source/remove", media_content_id: e });
   }
 }
-function zi() {
+function Si() {
   try {
     if (window.parent === window) return null;
     const t = window.parent.document.querySelector("home-assistant");
@@ -1730,7 +1738,7 @@ function zi() {
     return null;
   }
 }
-const Rt = "photoframe.haAuth", xr = "hassTokens";
+const Rt = "photoframe.haAuth", _r = "hassTokens";
 function Dn(t) {
   try {
     const e = localStorage.getItem(t), n = e ? JSON.parse(e) : null;
@@ -1748,24 +1756,24 @@ function Tn(t) {
 function Vt(t) {
   return t.replace(/\/+$/, "");
 }
-function _r() {
+function vr() {
   return location.protocol + "//" + location.host + "/";
 }
-function vr() {
+function kr() {
   return location.protocol + "//" + location.host + location.pathname;
 }
 function Ut() {
-  if (zi())
+  if (Si())
     return { hassUrl: location.protocol + "//" + location.host, clientId: "", access_token: "", refresh_token: "", expires: 0, embedded: !0 };
   const t = Dn(Rt);
   if (t) return t;
-  const e = Dn(xr);
+  const e = Dn(_r);
   return e && Vt(e.hassUrl) === Vt(location.protocol + "//" + location.host) ? e : null;
 }
-function kr() {
+function wr() {
   Tn(null);
 }
-function wr(t, e) {
+function Cr(t, e) {
   return new Promise((n, s) => {
     const i = new XMLHttpRequest();
     i.open("POST", Vt(t) + "/auth/token"), i.setRequestHeader("Content-Type", "application/x-www-form-urlencoded"), i.timeout = 15e3, i.onload = () => {
@@ -1779,11 +1787,11 @@ function wr(t, e) {
     }, i.onerror = i.ontimeout = () => s(new Error("network")), i.send(Object.keys(e).map((a) => a + "=" + encodeURIComponent(e[a])).join("&"));
   });
 }
-function Cr() {
-  const t = zi();
+function Mr() {
+  const t = Si();
   if (t) return (t.expired ? t.refreshAccessToken() : Promise.resolve()).then(() => t.accessToken);
   const e = Ut();
-  return e ? e.expires > Date.now() + 6e4 ? Promise.resolve(e.access_token) : wr(e.hassUrl, { grant_type: "refresh_token", refresh_token: e.refresh_token, client_id: e.clientId }).then(
+  return e ? e.expires > Date.now() + 6e4 ? Promise.resolve(e.access_token) : Cr(e.hassUrl, { grant_type: "refresh_token", refresh_token: e.refresh_token, client_id: e.clientId }).then(
     (n) => {
       const s = { ...e, access_token: n.access_token, expires: Date.now() + n.expires_in * 1e3 };
       return Tn(s), s.access_token;
@@ -1795,12 +1803,12 @@ function Cr() {
     }
   ) : Promise.resolve("");
 }
-function Mr(t) {
-  const e = Vt(t || location.protocol + "//" + location.host);
-  location.href = e + "/auth/authorize?response_type=code&client_id=" + encodeURIComponent(_r()) + "&redirect_uri=" + encodeURIComponent(vr()) + "&state=" + encodeURIComponent(e);
-}
-const Ii = "photoframe.setup", Be = "photo-frame";
 function Er(t) {
+  const e = Vt(t || location.protocol + "//" + location.host);
+  location.href = e + "/auth/authorize?response_type=code&client_id=" + encodeURIComponent(vr()) + "&redirect_uri=" + encodeURIComponent(kr()) + "&state=" + encodeURIComponent(e);
+}
+const zi = "photoframe.setup", Be = "photo-frame";
+function Sr(t) {
   const e = Date.now();
   return new Promise((n) => {
     const s = () => {
@@ -1814,14 +1822,14 @@ function Er(t) {
 }
 function On(t) {
   try {
-    localStorage.setItem(Ii, t);
+    localStorage.setItem(zi, t);
   } catch {
   }
 }
-function Sr(t) {
+function zr(t) {
   history.pushState(null, "", t), window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: !1 } }));
 }
-function Bi(t) {
+function Ii(t) {
   const e = h("setup.dashboard_title");
   return t({
     type: "lovelace/dashboards/create",
@@ -1837,7 +1845,7 @@ function Bi(t) {
     config: { title: e, views: [{ title: e, path: "frame", type: "panel", cards: [{ type: st, media_folder: "photoframe" }] }] }
   })).then(() => "/" + Be + "/frame");
 }
-function zr(t) {
+function Ir(t) {
   const e = document.createElement("div");
   e.setAttribute("style", [
     "position:fixed",
@@ -1866,91 +1874,91 @@ function zr(t) {
   e.appendChild(n), e.appendChild(s), e.appendChild(i), document.body.appendChild(e), r.onclick = () => {
     On("dismissed"), e.remove();
   }, c.onclick = () => {
-    c.disabled = !0, c.textContent = h("common.loading"), Bi((d) => t.callWS(d)).then((d) => {
-      On("done"), e.remove(), Sr(d);
+    c.disabled = !0, c.textContent = h("common.loading"), Ii((d) => t.callWS(d)).then((d) => {
+      On("done"), e.remove(), zr(d);
     }, (d) => {
       c.disabled = !1, c.textContent = h("setup.create"), s.textContent = h("setup.failed", { error: d && d.message || String(d) });
     });
   };
 }
-function Ir() {
+function Br() {
   try {
-    if (localStorage.getItem(Ii)) return;
+    if (localStorage.getItem(zi)) return;
   } catch {
     return;
   }
-  Er(3e4).then((t) => {
+  Sr(3e4).then((t) => {
     if (!(!t || !t.user || !t.user.is_admin))
       return sn(t.language), t.callWS({ type: "lovelace/dashboards/list" }).then((e) => {
         if (e.some((n) => n.url_path === Be)) {
           On("done");
           return;
         }
-        zr(t);
+        Ir(t);
       });
   }).catch(() => {
   });
 }
-const wo = "photoframe.frameId", Di = "photoframe.frameName";
-function Ti(t) {
+const wo = "photoframe.frameId", Bi = "photoframe.frameName";
+function Di(t) {
   try {
     return localStorage.getItem(t) || "";
   } catch {
     return "";
   }
 }
-function Oi(t, e) {
+function Ti(t, e) {
   try {
     localStorage.setItem(t, e);
   } catch {
   }
 }
-function Hi() {
-  let t = Ti(wo);
+function Oi() {
+  let t = Di(wo);
   if (!t) {
     for (t = ""; t.length < 16; ) t += Math.floor(Math.random() * 16).toString(16);
-    Oi(wo, t);
+    Ti(wo, t);
   }
   return t;
 }
 function Yt() {
-  return Ti(Di);
+  return Di(Bi);
 }
 function Co(t) {
-  Oi(Di, t);
+  Ti(Bi, t);
 }
-function Br() {
+function Dr() {
   const t = navigator.userAgent;
   return /SmartFrame\//.test(t) ? "Android (APK)" : /iPad|iPhone|iPod/.test(t) ? "iOS" : /Android/.test(t) ? "Android" : "Browser";
 }
-function Dr(t, e) {
-  const n = { type: "photoframe/frame/connect", frame_id: Hi(), model: Br(), version: "0.3.1" };
+function Tr(t, e) {
+  const n = { type: "photoframe/frame/connect", frame_id: Oi(), model: Dr(), version: "0.3.1" };
   return Yt() && (n.name = Yt()), t.subscribeMessage(n, e);
 }
 function Mo(t, e) {
-  t.call({ type: "photoframe/frame/report", frame_id: Hi(), ...e }).catch(() => {
+  t.call({ type: "photoframe/frame/report", frame_id: Oi(), ...e }).catch(() => {
   });
 }
-const ce = "main", Qi = "photoframe.cache", Pi = "photoframe.mainHome", Li = "photoframe.startScreen";
+const ce = "main", Hi = "photoframe.cache", Qi = "photoframe.mainHome", Pi = "photoframe.startScreen";
 function Wt() {
   try {
-    return localStorage.getItem(Pi) || ce;
+    return localStorage.getItem(Qi) || ce;
   } catch {
     return ce;
   }
 }
 function Zt() {
   try {
-    return localStorage.getItem(Li) || "";
+    return localStorage.getItem(Pi) || "";
   } catch {
     return "";
   }
 }
-const Jt = () => be(null, Ci), mt = "photoframe.localBackup", un = "photoframe.migrated";
+const Jt = () => be(null, wi), mt = "photoframe.localBackup", un = "photoframe.migrated";
 function fn(t) {
   return { screens: t.map((e) => ({ id: e.id, name: e.name, cols: e.cols, cards: e.cards })) };
 }
-function Tr() {
+function Or() {
   return {
     settings: {
       haUrl: "",
@@ -1966,10 +1974,10 @@ function Tr() {
     sync: "connecting"
   };
 }
-function Or() {
-  const t = Tr();
+function Hr() {
+  const t = Or();
   try {
-    const e = localStorage.getItem(Qi);
+    const e = localStorage.getItem(Hi);
     if (e) {
       const n = JSON.parse(e), s = {};
       if (n.screens) Object.keys(n.screens).forEach((c) => {
@@ -1991,9 +1999,9 @@ function Or() {
   }
   return t;
 }
-class Hr {
+class Qr {
   constructor() {
-    this.state = Or(), this.listeners = [], this.card = null, this.ui = { controls: !1, editing: !1 }, this.photoTimer = 0, this.bundled = [], this.photoError = "", this.cardError = "", this.haClient = null, this.haLink = "none", this.migration = null, this.frameOff = null, this.frameClient = null, this.commandListeners = [];
+    this.state = Hr(), this.listeners = [], this.card = null, this.ui = { controls: !1, editing: !1 }, this.photoTimer = 0, this.bundled = [], this.photoError = "", this.cardError = "", this.haClient = null, this.haLink = "none", this.migration = null, this.frameOff = null, this.frameClient = null, this.commandListeners = [];
   }
   subscribe(e) {
     return this.listeners.push(e), () => {
@@ -2007,7 +2015,7 @@ class Hr {
     if (n.screen = i.id, n.layout = i, this.state = n, e.settings || e.screens || e.homes || e.photos)
       try {
         const { settings: a, homes: r, screens: c, photos: d } = this.state;
-        localStorage.setItem(Qi, JSON.stringify({
+        localStorage.setItem(Hi, JSON.stringify({
           settings: a,
           homes: r,
           screens: c,
@@ -2035,7 +2043,7 @@ class Hr {
   // Стартовый экран этого устройства — сюда рамка возвращается, когда её оставили в покое.
   setStart(e, n) {
     try {
-      localStorage.setItem(Pi, e), localStorage.setItem(Li, n);
+      localStorage.setItem(Qi, e), localStorage.setItem(Pi, n);
     } catch {
     }
     this.listeners.forEach((s) => s());
@@ -2097,11 +2105,11 @@ class Hr {
   connectHa() {
     const e = Ut();
     if (!e || this.haClient) return;
-    const n = new Xn(e.hassUrl, Cr);
+    const n = new Xn(e.hassUrl, Mr);
     this.haClient = n, this.haLink = "connecting";
     let s = "";
     n.subscribe(() => {
-      n.status !== s && (s = n.status, n.status === "connected" ? Si(n).then((i) => {
+      n.status !== s && (s = n.status, n.status === "connected" ? Ei(n).then((i) => {
         if (i) {
           this.useIntegration(n, i);
           return;
@@ -2118,7 +2126,7 @@ class Hr {
   }
   connectThisFrame() {
     const e = this.frameClient;
-    e && (this.frameOff && this.frameOff(), this.frameOff = Dr(e, (n) => n.type === "state" ? this.applyFrameState(n) : this.commandListeners.forEach((s) => s(n))));
+    e && (this.frameOff && this.frameOff(), this.frameOff = Tr(e, (n) => n.type === "state" ? this.applyFrameState(n) : this.commandListeners.forEach((s) => s(n))));
   }
   // Команды из HA (кнопки устройства, службы): следующее фото, показать камеру… Выполняет App.
   onCommand(e) {
@@ -2140,7 +2148,7 @@ class Hr {
   }
   loadHaCard() {
     const e = this.haClient;
-    e && (this.card && this.card.busy || yr(e, Be).then((n) => {
+    e && (this.card && this.card.busy || xr(e, Be).then((n) => {
       if (!n) {
         this.haLink = "missing", this.notify();
         return;
@@ -2157,7 +2165,7 @@ class Hr {
   // Создать в HA дашборд «Фоторамка» с карточкой (нужен администратор HA).
   createHaDashboard() {
     const e = this.haClient;
-    return e ? Bi((n) => e.call(n)).then(() => this.loadHaCard()) : Promise.reject(new Error("not connected"));
+    return e ? Ii((n) => e.call(n)).then(() => this.loadHaCard()) : Promise.reject(new Error("not connected"));
   }
   // Первый переход на HA: запоминаем свои экраны (если их меняли) и считаем фото в браузере.
   offerMigration() {
@@ -2267,7 +2275,7 @@ class Hr {
   }
   // Новый пустой экран в конце списка показанного дома — сразу на него и переходим.
   addScreen(e) {
-    const n = { id: Ar(), name: e, cols: 12, cards: [] };
+    const n = { id: hr(), name: e, cols: 12, cards: [] };
     this.saveScreens(this.state.active, this.screensOf().concat(n), n.id);
   }
   renameScreen(e, n) {
@@ -2290,7 +2298,7 @@ class Hr {
   // Пачка фото — строго по одному, чтобы не держать в памяти все исходники разом.
   // Ошибка одного файла не останавливает остальные; в конце сообщаем, сколько не загрузилось.
   addPhotos(e, n, s) {
-    const i = this.card, a = i ? (A) => i.addPhoto(A, s) : (A) => gr(A), r = () => i ? this.reloadCardPhotos() : this.reloadLocalPhotos(), c = [];
+    const i = this.card, a = i ? (A) => i.addPhoto(A, s) : (A) => br(A), r = () => i ? this.reloadCardPhotos() : this.reloadLocalPhotos(), c = [];
     let d = 0;
     return e.reduce(
       (A, f) => A.then(() => a(f)).catch((u) => {
@@ -2305,26 +2313,26 @@ class Hr {
     });
   }
   deletePhoto(e) {
-    return this.card ? this.card.deletePhoto(String(e)).then(() => this.reloadCardPhotos()) : mr(Number(e)).then(() => this.reloadLocalPhotos());
+    return this.card ? this.card.deletePhoto(String(e)).then(() => this.reloadCardPhotos()) : gr(Number(e)).then(() => this.reloadLocalPhotos());
   }
   clearPhotos() {
     return this.card ? this.state.photos.reduce((e, n) => e.then(() => this.card.deletePhoto(String(n.id))), Promise.resolve()).then(() => this.reloadCardPhotos()) : ko().then(() => this.reloadLocalPhotos());
   }
 }
-const K = new Hr();
-function Ye() {
+const K = new Qr();
+function We() {
   const [, t] = v(0);
   return P(() => K.subscribe(() => t((e) => e + 1)), []), K;
 }
-const Ze = {};
-function Qr(t, e, n) {
+const Je = {};
+function Pr(t, e, n) {
   t /= 255, e /= 255, n /= 255;
   const s = Math.max(t, e, n), i = Math.min(t, e, n), a = (s + i) / 2;
   if (s === i) return [0, 0, a];
   const r = s - i, c = a > 0.5 ? r / (2 - s - i) : r / (s + i);
   return [(s === t ? (e - n) / r + (e < n ? 6 : 0) : s === e ? (n - t) / r + 2 : (t - e) / r + 4) * 60, c, a];
 }
-function Pr(t) {
+function Lr(t) {
   return new Promise((e) => {
     const n = new Image();
     n.onload = () => {
@@ -2337,7 +2345,7 @@ function Pr(t) {
         let c = 0, d = 0, A = 0, f = 0;
         for (let m = 0; m < r.length; m += 4)
           c += r[m], d += r[m + 1], A += r[m + 2], f++;
-        const u = Qr(c / f, d / f, A / f), l = Math.round(u[0]), p = Math.round(Math.min(Math.max(u[1], 0.45), 0.85) * 100);
+        const u = Pr(c / f, d / f, A / f), l = Math.round(u[0]), p = Math.round(Math.min(Math.max(u[1], 0.45), 0.85) * 100);
         e({
           thumb: i.toDataURL("image/jpeg", 0.7),
           accent: "hsl(" + l + "," + p + "%,68%)",
@@ -2349,23 +2357,23 @@ function Pr(t) {
     }, n.onerror = () => e(null), n.src = t;
   });
 }
-function Lr(t) {
-  const [e, n] = v(t && Ze[t] || null);
+function jr(t) {
+  const [e, n] = v(t && Je[t] || null);
   return P(() => {
     if (!t) return;
-    if (t in Ze) {
-      Ze[t] && n(Ze[t]);
+    if (t in Je) {
+      Je[t] && n(Je[t]);
       return;
     }
     let s = !0;
-    return Pr(t).then((i) => {
-      Ze[t] = i, s && i && n(i);
+    return Lr(t).then((i) => {
+      Je[t] = i, s && i && n(i);
     }), () => {
       s = !1;
     };
   }, [t]), e;
 }
-const jr = 0.18, Fr = 0.5, qr = 600, Eo = 10;
+const Fr = 0.18, qr = 0.5, Nr = 600, Eo = 10;
 function pn(t, e) {
   for (; t && t.nodeType === 1; t = t.parentElement)
     if ((t.matches || t.webkitMatchesSelector).call(t, e)) return t;
@@ -2374,7 +2382,7 @@ function pn(t, e) {
 function So(t) {
   return "touches" in t ? (t.touches[0] || t.changedTouches[0]).clientY : t.clientY;
 }
-function Nr(t, e, n, s, i) {
+function Rr(t, e, n, s, i) {
   P(() => {
     const a = t.root.current;
     if (!a || !s) return;
@@ -2390,7 +2398,7 @@ function Nr(t, e, n, s, i) {
       const C = x.target;
       e && (!pn(C, ".bar") || pn(C, "button")) || (r = So(x), c = Date.now(), d = 0, A = !0, a.classList.add("dragging"), clearTimeout(f), !e && i && !pn(C, "button") && (f = window.setTimeout(() => {
         !A || Math.abs(d) > Eo || (A = !1, a.classList.remove("dragging"), l(), i());
-      }, qr)));
+      }, Nr)));
     }, m = (x) => {
       if (!A) return;
       d = So(x) - r, Math.abs(d) > Eo && clearTimeout(f);
@@ -2399,7 +2407,7 @@ function Nr(t, e, n, s, i) {
     }, w = () => {
       if (clearTimeout(f), !A) return;
       A = !1, a.classList.remove("dragging");
-      const x = a.clientHeight, C = Math.abs(d) / Math.max(1, Date.now() - c), g = Math.abs(d) > x * jr || C > Fr && Math.abs(d) > 30;
+      const x = a.clientHeight, C = Math.abs(d) / Math.max(1, Date.now() - c), g = Math.abs(d) > x * Fr || C > qr && Math.abs(d) > 30;
       l(), !e && d < 0 && g && n(!0), e && d > 0 && g && n(!1);
     };
     return a.addEventListener("touchstart", p), a.addEventListener("touchmove", m), a.addEventListener("touchend", w), a.addEventListener("touchcancel", w), a.addEventListener("mousedown", p), window.addEventListener("mousemove", m), window.addEventListener("mouseup", w), () => {
@@ -2407,7 +2415,7 @@ function Nr(t, e, n, s, i) {
     };
   }, [e, s]);
 }
-function Rr(t) {
+function Vr(t) {
   return new Promise((e) => {
     const n = new Image();
     n.onerror = () => e({ w: 0, h: 0, glow: "" }), n.onload = () => {
@@ -2421,8 +2429,8 @@ function Rr(t) {
     }, n.src = t;
   });
 }
-function Vr({ urls: t, index: e, tone: n, soft: s, softRef: i, onShow: a }) {
-  er();
+function Ur({ urls: t, index: e, tone: n, soft: s, softRef: i, onShow: a }) {
+  tr();
   const [r, c] = v([]), d = ne(0), A = t.length, f = A ? t[e % A] : "";
   return P(() => {
     if (!f) {
@@ -2430,7 +2438,7 @@ function Vr({ urls: t, index: e, tone: n, soft: s, softRef: i, onShow: a }) {
       return;
     }
     let u = !0;
-    return bo(f).then((l) => Rr(l).then((p) => ({ url: l, m: p }))).then(({ url: l, m: p }) => {
+    return bo(f).then((l) => Vr(l).then((p) => ({ url: l, m: p }))).then(({ url: l, m: p }) => {
       if (!u) return;
       const m = ++d.current;
       c((w) => w.slice(-1).map((x) => ({ ...x, on: !1 })).concat({ id: m, url: l, on: !1, w: p.w, h: p.h, glow: p.glow })), requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -2441,7 +2449,7 @@ function Vr({ urls: t, index: e, tone: n, soft: s, softRef: i, onShow: a }) {
     };
   }, [f]), /* @__PURE__ */ o("div", { class: "backdrop", children: [
     A === 0 && /* @__PURE__ */ o("div", { class: "slide active aurora" }),
-    r.map((u) => tr(u.w, u.h) ? /* @__PURE__ */ o("div", { class: "slide contain" + (u.on ? " active" : ""), children: [
+    r.map((u) => nr(u.w, u.h) ? /* @__PURE__ */ o("div", { class: "slide contain" + (u.on ? " active" : ""), children: [
       u.glow && /* @__PURE__ */ o("div", { class: "slide-glow", style: { backgroundImage: "url(" + u.glow + ")" } }),
       /* @__PURE__ */ o("div", { class: "slide-photo", style: { backgroundImage: "url(" + u.url + ")" } })
     ] }, u.id) : /* @__PURE__ */ o("div", { class: "slide" + (u.on ? " active" : ""), style: { backgroundImage: "url(" + u.url + ")" } }, u.id)),
@@ -2450,10 +2458,10 @@ function Vr({ urls: t, index: e, tone: n, soft: s, softRef: i, onShow: a }) {
   ] });
 }
 const Gt = (...t) => t.filter((e, n, s) => !!e && e.trim() !== "" && s.indexOf(e) === n).join(" ").trim();
-function Ur(t, e, n = []) {
+function Yr(t, e, n = []) {
   throw new Error("[lucide]: iconNode is required when icon name is used");
 }
-const Yr = (t) => {
+const Wr = (t) => {
   let e = "", n = !1;
   for (const s of t) {
     if (s === "-" || s === "_" || s <= " ") {
@@ -2464,8 +2472,8 @@ const Yr = (t) => {
   }
   return e;
 };
-const Wr = (t) => {
-  const e = Yr(t);
+const Zr = (t) => {
+  const e = Wr(t);
   return e.charAt(0).toUpperCase() + e.slice(1);
 };
 const Se = {
@@ -2482,7 +2490,7 @@ const Se = {
 function mn(t) {
   return t != null;
 }
-function Zr(t, e = {}) {
+function Jr(t, e = {}) {
   const n = e.attributeNames ?? {}, s = (l) => n[l] ?? l, i = t.size ?? t.width ?? Se.width, a = t.size ?? t.height ?? Se.height, r = t.aliases?.filter((l) => typeof l == "string" && l.trim() !== "").map((l) => `lucide-${l}`) ?? [], c = [...t.name ? [`lucide-${t.name}`] : [], ...r], d = e.className?.split(" ").filter(Boolean) ?? [], A = e.includeDefaultClasses === !1 ? Gt(...d) : Gt("lucide", ...c, ...d), f = e.absoluteStrokeWidth ? Number(e.strokeWidth ?? Se["stroke-width"]) * Number(t.size ?? t.width ?? Se.width) / Number(e.size ?? e.width ?? Se.width) : e.strokeWidth ?? Se["stroke-width"];
   return [
     "svg",
@@ -2517,21 +2525,21 @@ function Zr(t, e = {}) {
     })
   ];
 }
-const Jr = (t) => {
+const Gr = (t) => {
   for (const e in t)
     if (e.startsWith("aria-") || e === "role" || e === "title")
       return !0;
   return !1;
 };
-const Gr = Wn({
+const Xr = Wn({
   size: 24,
   color: "currentColor",
   strokeWidth: 2,
   absoluteStrokeWidth: !1,
   nonScalingStroke: !1,
   class: ""
-}), Xr = () => Jn(Gr);
-const Kr = ({
+}), Kr = () => Jn(Xr);
+const $r = ({
   color: t,
   size: e,
   width: n,
@@ -2556,7 +2564,7 @@ const Kr = ({
     nonScalingStroke: w = !1,
     color: x = "currentColor",
     class: C = ""
-  } = Xr() ?? {}, [g, M, O = []] = Zr(A, {
+  } = Kr() ?? {}, [g, M, O = []] = Jr(A, {
     color: t ?? x,
     width: n ?? e ?? l,
     height: s ?? e ?? l,
@@ -2564,7 +2572,7 @@ const Kr = ({
     absoluteStrokeWidth: a ?? m,
     nonScalingStroke: r ?? w,
     className: Gt(C, f),
-    hasA11yProp: !!c || Jr(u),
+    hasA11yProp: !!c || Gr(u),
     attributes: u
   });
   return Ht(g, { ...M }, [
@@ -2573,8 +2581,8 @@ const Kr = ({
   ]);
 };
 function k(t, e, n = []) {
-  const s = typeof t == "string" ? Ur(t, e, n) : t, i = ({ class: a = "", className: r = "", children: c, ...d }) => Ht(
-    Kr,
+  const s = typeof t == "string" ? Yr(t, e, n) : t, i = ({ class: a = "", className: r = "", children: c, ...d }) => Ht(
+    $r,
     {
       ...d,
       icon: s,
@@ -2582,9 +2590,9 @@ function k(t, e, n = []) {
     },
     c
   );
-  return s.name && (i.displayName = Wr(s.name)), i;
+  return s.name && (i.displayName = Zr(s.name)), i;
 }
-const ji = {
+const Li = {
   name: "activity",
   size: 24,
   node: [
@@ -2597,9 +2605,9 @@ const ji = {
     ]
   ]
 };
-ji.node;
-const $r = k(ji);
-const Fi = {
+Li.node;
+const ec = k(Li);
+const ji = {
   name: "air-vent",
   size: 24,
   node: [
@@ -2615,9 +2623,9 @@ const Fi = {
     ["path", { d: "M6.6 15.572A2 2 0 1 0 10 17v-5", key: "1x1kqn" }]
   ]
 };
-Fi.node;
-const qi = k(Fi);
-const Ni = {
+ji.node;
+const Fi = k(ji);
+const qi = {
   name: "arrow-down",
   size: 24,
   node: [
@@ -2625,9 +2633,9 @@ const Ni = {
     ["path", { d: "m19 12-7 7-7-7", key: "1idqje" }]
   ]
 };
-Ni.node;
-const Ri = k(Ni);
-const Vi = {
+qi.node;
+const Ni = k(qi);
+const Ri = {
   name: "arrow-up",
   size: 24,
   node: [
@@ -2635,9 +2643,9 @@ const Vi = {
     ["path", { d: "M12 19V5", key: "x0mq9r" }]
   ]
 };
-Vi.node;
-const Ui = k(Vi);
-const Yi = {
+Ri.node;
+const Vi = k(Ri);
+const Ui = {
   name: "baby",
   size: 24,
   node: [
@@ -2653,9 +2661,9 @@ const Yi = {
     ["path", { d: "M9 12h.01", key: "157uk2" }]
   ]
 };
-Yi.node;
-const ec = k(Yi);
-const Wi = {
+Ui.node;
+const tc = k(Ui);
+const Yi = {
   name: "bed",
   size: 24,
   node: [
@@ -2665,9 +2673,9 @@ const Wi = {
     ["path", { d: "M6 8v9", key: "1yriud" }]
   ]
 };
-Wi.node;
-const tc = k(Wi);
-const Zi = {
+Yi.node;
+const nc = k(Yi);
+const Wi = {
   name: "blinds",
   size: 24,
   node: [
@@ -2680,44 +2688,44 @@ const Zi = {
     ["circle", { cx: "4", cy: "19", r: "2", key: "p3m9r0" }]
   ]
 };
-Zi.node;
-const nc = k(Zi);
-const Ji = {
+Wi.node;
+const oc = k(Wi);
+const Zi = {
   name: "check",
   size: 24,
   node: [["path", { d: "M20 6 9 17l-5-5", key: "1gmf2c" }]]
 };
-Ji.node;
-const oc = k(Ji);
-const Gi = {
+Zi.node;
+const ic = k(Zi);
+const Ji = {
   name: "chevron-down",
   size: 24,
   node: [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]]
 };
-Gi.node;
-const ic = k(Gi);
-const Xi = {
+Ji.node;
+const sc = k(Ji);
+const Gi = {
   name: "chevron-left",
   size: 24,
   node: [["path", { d: "m15 18-6-6 6-6", key: "1wnfg3" }]]
 };
-Xi.node;
-const sc = k(Xi);
-const Ki = {
+Gi.node;
+const ac = k(Gi);
+const Xi = {
   name: "chevron-right",
   size: 24,
   node: [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]]
 };
-Ki.node;
-const ac = k(Ki);
-const $i = {
+Xi.node;
+const rc = k(Xi);
+const Ki = {
   name: "chevron-up",
   size: 24,
   node: [["path", { d: "m18 15-6-6-6 6", key: "153udz" }]]
 };
-$i.node;
-const rc = k($i);
-const es = {
+Ki.node;
+const cc = k(Ki);
+const $i = {
   name: "cloud-drizzle",
   size: 24,
   node: [
@@ -2730,9 +2738,9 @@ const es = {
     ["path", { d: "M12 16v1", key: "1mx6rx" }]
   ]
 };
-es.node;
-const cc = k(es);
-const ts = {
+$i.node;
+const lc = k($i);
+const es = {
   name: "cloud-fog",
   size: 24,
   node: [
@@ -2741,9 +2749,9 @@ const ts = {
     ["path", { d: "M17 21H9", key: "1u2q02" }]
   ]
 };
-ts.node;
-const lc = k(ts);
-const ns = {
+es.node;
+const dc = k(es);
+const ts = {
   name: "cloud-lightning",
   size: 24,
   node: [
@@ -2751,9 +2759,9 @@ const ns = {
     ["path", { d: "m13 12-3 5h4l-3 5", key: "1t22er" }]
   ]
 };
-ns.node;
-const gn = k(ns);
-const os = {
+ts.node;
+const gn = k(ts);
+const ns = {
   name: "cloud-snow",
   size: 24,
   node: [
@@ -2766,9 +2774,9 @@ const os = {
     ["path", { d: "M16 19h.01", key: "1vcnzz" }]
   ]
 };
-os.node;
-const zo = k(os);
-const is = {
+ns.node;
+const zo = k(ns);
+const os = {
   name: "cloud-rain",
   size: 24,
   node: [
@@ -2778,9 +2786,9 @@ const is = {
     ["path", { d: "M12 16v6", key: "c8a4gj" }]
   ]
 };
-is.node;
-const dc = k(is);
-const ss = {
+os.node;
+const Ac = k(os);
+const is = {
   name: "cloud-sun",
   size: 24,
   node: [
@@ -2792,9 +2800,9 @@ const ss = {
     ["path", { d: "M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z", key: "s09mg5" }]
   ]
 };
-ss.node;
-const as = k(ss);
-const rs = {
+is.node;
+const ss = k(is);
+const as = {
   name: "cloud-upload",
   size: 24,
   node: [
@@ -2804,16 +2812,16 @@ const rs = {
   ],
   aliases: ["upload-cloud"]
 };
-rs.node;
-const Ac = k(rs);
-const cs = {
+as.node;
+const hc = k(as);
+const rs = {
   name: "cloud",
   size: 24,
   node: [["path", { d: "M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z", key: "p7xjir" }]]
 };
-cs.node;
-const ls = k(cs);
-const ds = {
+rs.node;
+const cs = k(rs);
+const ls = {
   name: "cooking-pot",
   size: 24,
   node: [
@@ -2829,9 +2837,9 @@ const ds = {
     ]
   ]
 };
-ds.node;
-const hc = k(ds);
-const As = {
+ls.node;
+const uc = k(ls);
+const ds = {
   name: "copy",
   size: 24,
   node: [
@@ -2839,9 +2847,9 @@ const As = {
     ["path", { d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2", key: "zix9uf" }]
   ]
 };
-As.node;
-const uc = k(As);
-const hs = {
+ds.node;
+const fc = k(ds);
+const As = {
   name: "door-open",
   size: 24,
   node: [
@@ -2858,9 +2866,9 @@ const hs = {
     ["path", { d: "M22 21h-3", key: "1ec3tr" }]
   ]
 };
-hs.node;
-const fc = k(hs);
-const us = {
+As.node;
+const pc = k(As);
+const hs = {
   name: "droplets",
   size: 24,
   node: [
@@ -2880,9 +2888,9 @@ const us = {
     ]
   ]
 };
-us.node;
-const Qe = k(us);
-const fs = {
+hs.node;
+const Pe = k(hs);
+const us = {
   name: "eighth-notes",
   size: 24,
   node: [
@@ -2892,9 +2900,9 @@ const fs = {
   ],
   aliases: ["music"]
 };
-fs.node;
-const pc = k(fs);
-const ps = {
+us.node;
+const mc = k(us);
+const fs = {
   name: "eye-off",
   size: 24,
   node: [
@@ -2916,9 +2924,9 @@ const ps = {
     ["path", { d: "m2 2 20 20", key: "1ooewy" }]
   ]
 };
-ps.node;
-const ms = k(ps);
-const gs = {
+fs.node;
+const ps = k(fs);
+const ms = {
   name: "fan",
   size: 24,
   node: [
@@ -2932,9 +2940,9 @@ const gs = {
     ["path", { d: "M12 12v.01", key: "u5ubse" }]
   ]
 };
-gs.node;
-const bs = k(gs);
-const ys = {
+ms.node;
+const gs = k(ms);
+const bs = {
   name: "flame",
   size: 24,
   node: [
@@ -2947,9 +2955,9 @@ const ys = {
     ]
   ]
 };
-ys.node;
-const xs = k(ys);
-const _s = {
+bs.node;
+const ys = k(bs);
+const xs = {
   name: "gauge",
   size: 24,
   node: [
@@ -2957,9 +2965,9 @@ const _s = {
     ["path", { d: "M3.34 19a10 10 0 1 1 17.32 0", key: "19p75a" }]
   ]
 };
-_s.node;
-const vs = k(_s);
-const ks = {
+xs.node;
+const _s = k(xs);
+const vs = {
   name: "house",
   size: 24,
   node: [
@@ -2974,9 +2982,9 @@ const ks = {
   ],
   aliases: ["home"]
 };
-ks.node;
-const mc = k(ks);
-const ws = {
+vs.node;
+const gc = k(vs);
+const ks = {
   name: "image-plus",
   size: 24,
   node: [
@@ -2987,9 +2995,9 @@ const ws = {
     ["circle", { cx: "9", cy: "9", r: "2", key: "af1f0g" }]
   ]
 };
-ws.node;
-const gc = k(ws);
-const Cs = {
+ks.node;
+const bc = k(ks);
+const ws = {
   name: "image",
   size: 24,
   node: [
@@ -2998,9 +3006,9 @@ const Cs = {
     ["path", { d: "m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21", key: "1xmnt7" }]
   ]
 };
-Cs.node;
-const bc = k(Cs);
-const Ms = {
+ws.node;
+const yc = k(ws);
+const Cs = {
   name: "lamp-ceiling",
   size: 24,
   node: [
@@ -3015,9 +3023,9 @@ const Ms = {
     ]
   ]
 };
-Ms.node;
-const yc = k(Ms);
-const Es = {
+Cs.node;
+const xc = k(Cs);
+const Ms = {
   name: "lamp-desk",
   size: 24,
   node: [
@@ -3036,9 +3044,9 @@ const Es = {
     ["path", { d: "m9.086 6.5-4.793 4.793a1 1 0 0 0-.18 1.17L7 18", key: "43s6cu" }]
   ]
 };
-Es.node;
-const xc = k(Es);
-const Ss = {
+Ms.node;
+const _c = k(Ms);
+const Es = {
   name: "lamp",
   size: 24,
   node: [
@@ -3056,9 +3064,9 @@ const Ss = {
     ]
   ]
 };
-Ss.node;
-const _c = k(Ss);
-const zs = {
+Es.node;
+const vc = k(Es);
+const Ss = {
   name: "lightbulb",
   size: 24,
   node: [
@@ -3073,9 +3081,9 @@ const zs = {
     ["path", { d: "M10 22h4", key: "ceow96" }]
   ]
 };
-zs.node;
-const vc = k(zs);
-const Is = {
+Ss.node;
+const kc = k(Ss);
+const zs = {
   name: "lock",
   size: 24,
   node: [
@@ -3083,9 +3091,9 @@ const Is = {
     ["path", { d: "M7 11V7a5 5 0 0 1 10 0v4", key: "fwvmzm" }]
   ]
 };
-Is.node;
-const kc = k(Is);
-const Bs = {
+zs.node;
+const wc = k(zs);
+const Is = {
   name: "log-in",
   size: 24,
   node: [
@@ -3094,9 +3102,9 @@ const Bs = {
     ["path", { d: "M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4", key: "u53s6r" }]
   ]
 };
-Bs.node;
-const wc = k(Bs);
-const Ds = {
+Is.node;
+const Cc = k(Is);
+const Bs = {
   name: "log-out",
   size: 24,
   node: [
@@ -3105,9 +3113,9 @@ const Ds = {
     ["path", { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", key: "1uf3rs" }]
   ]
 };
-Ds.node;
-const Cc = k(Ds);
-const Ts = {
+Bs.node;
+const Mc = k(Bs);
+const Ds = {
   name: "menu",
   size: 24,
   node: [
@@ -3116,16 +3124,16 @@ const Ts = {
     ["path", { d: "M4 19h16", key: "1djgab" }]
   ]
 };
-Ts.node;
-const Mc = k(Ts);
-const Os = {
+Ds.node;
+const Ec = k(Ds);
+const Ts = {
   name: "minus",
   size: 24,
   node: [["path", { d: "M5 12h14", key: "1ays0h" }]]
 };
-Os.node;
-const Ec = k(Os);
-const Hs = {
+Ts.node;
+const Sc = k(Ts);
+const Os = {
   name: "moon",
   size: 24,
   node: [
@@ -3138,9 +3146,9 @@ const Hs = {
     ]
   ]
 };
-Hs.node;
-const Qs = k(Hs);
-const Ps = {
+Os.node;
+const Hs = k(Os);
+const Qs = {
   name: "pause",
   size: 24,
   node: [
@@ -3148,9 +3156,9 @@ const Ps = {
     ["rect", { x: "5", y: "3", width: "5", height: "18", rx: "1", key: "1wsw3u" }]
   ]
 };
-Ps.node;
-const Sc = k(Ps);
-const Ls = {
+Qs.node;
+const zc = k(Qs);
+const Ps = {
   name: "pencil",
   size: 24,
   node: [
@@ -3164,9 +3172,9 @@ const Ls = {
     ["path", { d: "m15 5 4 4", key: "1mk7zo" }]
   ]
 };
-Ls.node;
-const js = k(Ls);
-const Fs = {
+Ps.node;
+const Ls = k(Ps);
+const js = {
   name: "play",
   size: 24,
   node: [
@@ -3179,9 +3187,9 @@ const Fs = {
     ]
   ]
 };
-Fs.node;
-const zc = k(Fs);
-const qs = {
+js.node;
+const Ic = k(js);
+const Fs = {
   name: "plus",
   size: 24,
   node: [
@@ -3189,9 +3197,9 @@ const qs = {
     ["path", { d: "M12 5v14", key: "s699le" }]
   ]
 };
-qs.node;
-const Le = k(qs);
-const Ns = {
+Fs.node;
+const je = k(Fs);
+const qs = {
   name: "plug",
   size: 24,
   node: [
@@ -3204,9 +3212,9 @@ const Ns = {
     ["path", { d: "M9 8V2", key: "14iosj" }]
   ]
 };
-Ns.node;
-const Ic = k(Ns);
-const Rs = {
+qs.node;
+const Bc = k(qs);
+const Ns = {
   name: "power",
   size: 24,
   node: [
@@ -3214,9 +3222,9 @@ const Rs = {
     ["path", { d: "M18.4 6.6a9 9 0 1 1-12.77.04", key: "obofu9" }]
   ]
 };
-Rs.node;
-const at = k(Rs);
-const Vs = {
+Ns.node;
+const at = k(Ns);
+const Rs = {
   name: "rotate-ccw",
   size: 24,
   node: [
@@ -3224,9 +3232,9 @@ const Vs = {
     ["path", { d: "M3 3v5h5", key: "1xhq8a" }]
   ]
 };
-Vs.node;
-const Bc = k(Vs);
-const Us = {
+Rs.node;
+const Dc = k(Rs);
+const Vs = {
   name: "search",
   size: 24,
   node: [
@@ -3234,9 +3242,9 @@ const Us = {
     ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
   ]
 };
-Us.node;
-const Dc = k(Us);
-const Ys = {
+Vs.node;
+const Tc = k(Vs);
+const Us = {
   name: "settings",
   size: 24,
   node: [
@@ -3250,9 +3258,9 @@ const Ys = {
     ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
   ]
 };
-Ys.node;
-const Tc = k(Ys);
-const Ws = {
+Us.node;
+const Oc = k(Us);
+const Ys = {
   name: "shield",
   size: 24,
   node: [
@@ -3265,9 +3273,9 @@ const Ws = {
     ]
   ]
 };
-Ws.node;
-const Oc = k(Ws);
-const Zs = {
+Ys.node;
+const Hc = k(Ys);
+const Ws = {
   name: "skip-back",
   size: 24,
   node: [
@@ -3281,9 +3289,9 @@ const Zs = {
     ["path", { d: "M3 20V4", key: "1ptbpl" }]
   ]
 };
-Zs.node;
-const Hc = k(Zs);
-const Js = {
+Ws.node;
+const Qc = k(Ws);
+const Zs = {
   name: "skip-forward",
   size: 24,
   node: [
@@ -3297,9 +3305,9 @@ const Js = {
     ]
   ]
 };
-Js.node;
-const Qc = k(Js);
-const Gs = {
+Zs.node;
+const Pc = k(Zs);
+const Js = {
   name: "snowflake",
   size: 24,
   node: [
@@ -3317,9 +3325,9 @@ const Gs = {
     ["path", { d: "m7 3 3 6h4", key: "1otusx" }]
   ]
 };
-Gs.node;
-const eo = k(Gs);
-const Xs = {
+Js.node;
+const eo = k(Js);
+const Gs = {
   name: "sofa",
   size: 24,
   node: [
@@ -3336,9 +3344,9 @@ const Xs = {
     ["path", { d: "M12 4v9", key: "oqhhn3" }]
   ]
 };
-Xs.node;
-const Pc = k(Xs);
-const Ks = {
+Gs.node;
+const Lc = k(Gs);
+const Xs = {
   name: "sparkles",
   size: 24,
   node: [
@@ -3355,9 +3363,9 @@ const Ks = {
   ],
   aliases: ["stars"]
 };
-Ks.node;
-const Hn = k(Ks);
-const $s = {
+Xs.node;
+const Hn = k(Xs);
+const Ks = {
   name: "speaker",
   size: 24,
   node: [
@@ -3367,9 +3375,9 @@ const $s = {
     ["path", { d: "M12 14h.01", key: "1etili" }]
   ]
 };
-$s.node;
-const ea = k($s);
-const ta = {
+Ks.node;
+const $s = k(Ks);
+const ea = {
   name: "sun",
   size: 24,
   node: [
@@ -3384,9 +3392,9 @@ const ta = {
     ["path", { d: "m19.07 4.93-1.41 1.41", key: "1shlcs" }]
   ]
 };
-ta.node;
-const na = k(ta);
-const oa = {
+ea.node;
+const ta = k(ea);
+const na = {
   name: "table-2",
   size: 24,
   node: [
@@ -3395,16 +3403,16 @@ const oa = {
     ["rect", { x: "3", y: "3", width: "18", height: "18", rx: "2", key: "h1oib" }]
   ]
 };
-oa.node;
-const Lc = k(oa);
-const ia = {
+na.node;
+const jc = k(na);
+const oa = {
   name: "thermometer",
   size: 24,
   node: [["path", { d: "M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z", key: "17jzev" }]]
 };
-ia.node;
-const sa = k(ia);
-const aa = {
+oa.node;
+const ia = k(oa);
+const sa = {
   name: "trash",
   size: 24,
   node: [
@@ -3416,9 +3424,9 @@ const aa = {
   ],
   aliases: ["trash-2"]
 };
-aa.node;
-const rt = k(aa);
-const ra = {
+sa.node;
+const rt = k(sa);
+const aa = {
   name: "tv",
   size: 24,
   node: [
@@ -3426,9 +3434,9 @@ const ra = {
     ["rect", { width: "20", height: "15", x: "2", y: "7", rx: "2", key: "1e6viu" }]
   ]
 };
-ra.node;
-const Qn = k(ra);
-const ca = {
+aa.node;
+const Qn = k(aa);
+const ra = {
   name: "video-off",
   size: 24,
   node: [
@@ -3440,9 +3448,9 @@ const ca = {
     ["path", { d: "m2 2 20 20", key: "1ooewy" }]
   ]
 };
-ca.node;
-const jc = k(ca);
-const la = {
+ra.node;
+const Fc = k(ra);
+const ca = {
   name: "video",
   size: 24,
   node: [
@@ -3456,9 +3464,9 @@ const la = {
     ["rect", { x: "2", y: "6", width: "14", height: "12", rx: "2", key: "158x01" }]
   ]
 };
-la.node;
-const Fc = k(la);
-const da = {
+ca.node;
+const qc = k(ca);
+const la = {
   name: "volume-2",
   size: 24,
   node: [
@@ -3473,9 +3481,9 @@ const da = {
     ["path", { d: "M19.364 18.364a9 9 0 0 0 0-12.728", key: "ijwkga" }]
   ]
 };
-da.node;
-const qc = k(da);
-const Aa = {
+la.node;
+const Nc = k(la);
+const da = {
   name: "volume-x",
   size: 24,
   node: [
@@ -3490,9 +3498,9 @@ const Aa = {
     ["path", { d: "m16.5 9.5 5 5", key: "1akey5" }]
   ]
 };
-Aa.node;
-const Nc = k(Aa);
-const ha = {
+da.node;
+const Rc = k(da);
+const Aa = {
   name: "washing-machine",
   size: 24,
   node: [
@@ -3503,9 +3511,9 @@ const ha = {
     ["path", { d: "M12 18a2.5 2.5 0 0 0 0-5 2.5 2.5 0 0 1 0-5", key: "17lach" }]
   ]
 };
-ha.node;
-const Rc = k(ha);
-const ua = {
+Aa.node;
+const Vc = k(Aa);
+const ha = {
   name: "wifi-off",
   size: 24,
   node: [
@@ -3518,9 +3526,9 @@ const ua = {
     ["path", { d: "m2 2 20 20", key: "1ooewy" }]
   ]
 };
-ua.node;
-const Vc = k(ua);
-const fa = {
+ha.node;
+const Uc = k(ha);
+const ua = {
   name: "wind",
   size: 24,
   node: [
@@ -3529,9 +3537,9 @@ const fa = {
     ["path", { d: "M9.8 4.4A2 2 0 1 1 11 8H2", key: "75valh" }]
   ]
 };
-fa.node;
-const Xt = k(fa);
-const pa = {
+ua.node;
+const Xt = k(ua);
+const fa = {
   name: "x",
   size: 24,
   node: [
@@ -3539,9 +3547,9 @@ const pa = {
     ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
   ]
 };
-pa.node;
-const je = k(pa);
-const ma = {
+fa.node;
+const Fe = k(fa);
+const pa = {
   name: "zap",
   size: 24,
   node: [
@@ -3554,49 +3562,49 @@ const ma = {
     ]
   ]
 };
-ma.node;
-const Uc = k(ma), Kt = {
-  lightbulb: vc,
-  lamp: _c,
-  "lamp-ceiling": yc,
-  "lamp-desk": xc,
-  plug: Ic,
-  fan: bs,
+pa.node;
+const Yc = k(pa), Kt = {
+  lightbulb: kc,
+  lamp: vc,
+  "lamp-ceiling": xc,
+  "lamp-desk": _c,
+  plug: Bc,
+  fan: gs,
   tv: Qn,
-  speaker: ea,
-  thermometer: sa,
-  droplets: Qe,
+  speaker: $s,
+  thermometer: ia,
+  droplets: Pe,
   snowflake: eo,
-  flame: xs,
+  flame: ys,
   wind: Xt,
-  sun: na,
-  moon: Qs,
-  shield: Oc,
-  door: fc,
-  lock: kc,
-  blinds: nc,
-  video: Fc,
-  "washing-machine": Rc,
-  zap: Uc,
-  gauge: vs,
-  activity: $r,
-  "air-vent": qi,
-  "cloud-sun": as,
+  sun: ta,
+  moon: Hs,
+  shield: Hc,
+  door: pc,
+  lock: wc,
+  blinds: oc,
+  video: qc,
+  "washing-machine": Vc,
+  zap: Yc,
+  gauge: _s,
+  activity: ec,
+  "air-vent": Fi,
+  "cloud-sun": ss,
   sparkles: Hn,
-  house: mc,
-  sofa: Pc,
-  bed: tc,
-  "cooking-pot": hc,
-  baby: ec
+  house: gc,
+  sofa: Lc,
+  bed: nc,
+  "cooking-pot": uc,
+  baby: tc
 };
-function Fe(t, e = "house") {
+function qe(t, e = "house") {
   return Kt[t] || Kt[e];
 }
 function to(t, e) {
   const n = t.split(".")[0];
   return n === "light" ? "lamp-ceiling" : n === "switch" ? "lamp" : n === "fan" ? "fan" : n === "camera" ? "video" : n === "climate" ? "air-vent" : n === "weather" ? "cloud-sun" : n === "media_player" ? e === "tv" ? "tv" : "speaker" : n === "lock" ? "lock" : n === "cover" ? "blinds" : n === "scene" || n === "script" || n === "automation" ? "sparkles" : e === "temperature" ? "thermometer" : e === "humidity" || e === "moisture" ? "droplets" : e === "door" || e === "window" || e === "opening" ? "door" : e === "power" || e === "voltage" || e === "energy" || e === "current" ? "zap" : e === "motion" || e === "occupancy" ? "activity" : "gauge";
 }
-function ga(t = 1e3) {
+function ma(t = 1e3) {
   const [e, n] = v(/* @__PURE__ */ new Date());
   return P(() => {
     const s = setInterval(() => n(/* @__PURE__ */ new Date()), t);
@@ -3606,28 +3614,28 @@ function ga(t = 1e3) {
 function bn(t) {
   return t < 10 ? "0" + t : String(t);
 }
-function ba(t, e = !1) {
+function ga(t, e = !1) {
   return bn(t.getHours()) + ":" + bn(t.getMinutes()) + (e ? ":" + bn(t.getSeconds()) : "");
 }
-function ya(t) {
-  return h("date.full", { weekday: Ve("date.weekdays")[t.getDay()], day: t.getDate(), month: Ve("date.months")[t.getMonth()] });
+function ba(t) {
+  return h("date.full", { weekday: Ue("date.weekdays")[t.getDay()], day: t.getDate(), month: Ue("date.months")[t.getMonth()] });
 }
-const xa = { thin: 200, light: 300, regular: 500, bold: 700 }, _a = {
+const ya = { thin: 200, light: 300, regular: 500, bold: 700 }, xa = {
   white: "#ffffff",
   accent: "",
   warm: "#fcd34d",
   mint: "#6ee7b7",
   sky: "#7dd3fc",
   rose: "#fda4af"
-}, va = "photoframe.lockscreen", ka = "photoframe.hiddenChips", St = [];
+}, _a = "photoframe.lockscreen", va = "photoframe.hiddenChips", St = [];
 function gt() {
   return { font: "thin", color: "white", size: "m", layout: "auto", date: !0, weather: !0, chipStyle: "auto", hidden: [], order: [] };
 }
-function wa() {
+function ka() {
   try {
-    const t = localStorage.getItem(va);
+    const t = localStorage.getItem(_a);
     if (t) return { ...gt(), ...JSON.parse(t) };
-    const e = localStorage.getItem(ka);
+    const e = localStorage.getItem(va);
     return e ? { ...gt(), hidden: JSON.parse(e) } : gt();
   } catch {
     return gt();
@@ -3635,66 +3643,66 @@ function wa() {
 }
 function me(t) {
   try {
-    localStorage.setItem(va, JSON.stringify({ ...wa(), ...t })), localStorage.removeItem(ka);
+    localStorage.setItem(_a, JSON.stringify({ ...ka(), ...t })), localStorage.removeItem(va);
   } catch {
   }
   St.forEach((e) => e());
 }
-function Ca() {
+function wa() {
   const [, t] = v(0);
   return P(() => {
     const e = () => t((n) => n + 1);
     return St.push(e), () => {
       St.splice(St.indexOf(e), 1);
     };
-  }, []), wa();
+  }, []), ka();
 }
-function Yc(t, e) {
+function Wc(t, e) {
   const n = (s) => {
     const i = e.order.indexOf(s);
     return i === -1 ? 1e6 : i;
   };
   return t.map((s, i) => ({ c: s, i })).sort((s, i) => n(s.c.id) - n(i.c.id) || s.i - i.i).map((s) => s.c);
 }
-const ge = "#0891b2", Pn = "#d97706", Io = "rgba(255,255,255,0.13)", Wc = "rgba(255,255,255,0.04)", Bo = "rgba(255,255,255,0.08)", Do = "#141620", qe = 210, se = { l: 46, r: 14, t: 14, b: 26 };
+const ge = "#0891b2", Pn = "#d97706", Io = "rgba(255,255,255,0.13)", Zc = "rgba(255,255,255,0.04)", Bo = "rgba(255,255,255,0.08)", Do = "#141620", Ne = 210, se = { l: 46, r: 14, t: 14, b: 26 };
 function $t(t) {
   return t < 10 ? "0" + t : String(t);
 }
-function Pe(t) {
+function Le(t) {
   const e = new Date(t);
   return $t(e.getHours()) + ":" + $t(e.getMinutes());
 }
 function ct(t) {
   const e = new Date(t);
-  return h("date.day_month", { day: e.getDate(), month: Ve("date.months_short")[e.getMonth()] });
+  return h("date.day_month", { day: e.getDate(), month: Ue("date.months_short")[e.getMonth()] });
 }
 function Ce(t, e) {
-  return e === "24h" ? Pe(t) : ct(t) + ", " + Pe(t);
+  return e === "24h" ? Le(t) : ct(t) + ", " + Le(t);
 }
 function ee(t) {
   const e = Math.abs(t), n = e >= 100 ? t.toFixed(0) : e >= 10 ? t.toFixed(1) : e >= 1 ? t.toFixed(2) : t.toFixed(3);
   return n.indexOf(".") === -1 ? n : n.replace(/\.?0+$/, "");
 }
-function Zc(t, e, n) {
+function Jc(t, e, n) {
   t === e && (t -= 1, e += 1);
   const s = (e - t) / n, i = Math.pow(10, Math.floor(Math.log(s) / Math.LN10)), a = [1, 2, 5, 10].map((c) => c * i).filter((c) => c >= s)[0], r = [];
   for (let c = Math.floor(t / a) * a; c <= e + a * 1e-3; c += a) r.push(+c.toFixed(10));
   return r[r.length - 1] < e && r.push(r[r.length - 1] + a), r;
 }
-function Jc(t, e, n) {
+function Gc(t, e, n) {
   const s = [], i = new Date(t);
   if (n === "24h")
-    for (i.setMinutes(0, 0, 0), i.setHours(Math.ceil(i.getHours() / 6) * 6); i.getTime() <= e; i.setHours(i.getHours() + 6)) s.push({ t: i.getTime(), label: Pe(i.getTime()) });
+    for (i.setMinutes(0, 0, 0), i.setHours(Math.ceil(i.getHours() / 6) * 6); i.getTime() <= e; i.setHours(i.getHours() + 6)) s.push({ t: i.getTime(), label: Le(i.getTime()) });
   else {
     i.setHours(0, 0, 0, 0), i.setDate(i.getDate() + 1);
     const a = n === "7d" ? 1 : 5;
     for (; i.getTime() <= e; i.setDate(i.getDate() + a))
-      s.push({ t: i.getTime(), label: n === "7d" ? Ve("date.weekdays_short")[i.getDay()] : i.getDate() + "." + $t(i.getMonth() + 1) });
+      s.push({ t: i.getTime(), label: n === "7d" ? Ue("date.weekdays_short")[i.getDay()] : i.getDate() + "." + $t(i.getMonth() + 1) });
   }
   return s;
 }
-function Gc({ series: t, unit: e, range: n, width: s }) {
-  const [i, a] = v(null), r = ne(null), c = Math.max(200, s), d = c - se.l - se.r, A = qe - se.t - se.b, { from: f, to: u } = t, l = (y) => se.l + (y - f) / (u - f) * d;
+function Xc({ series: t, unit: e, range: n, width: s }) {
+  const [i, a] = v(null), r = ne(null), c = Math.max(200, s), d = c - se.l - se.r, A = Ne - se.t - se.b, { from: f, to: u } = t, l = (y) => se.l + (y - f) / (u - f) * d;
   if (t.kind === "timeline" ? !t.segments.length : !t.points.length) return /* @__PURE__ */ o("div", { class: "chart-empty", children: h("chart.no_data") });
   const m = (y) => {
     const Q = r.current;
@@ -3717,14 +3725,14 @@ function Gc({ series: t, unit: e, range: n, width: s }) {
     onMouseLeave: () => a(null),
     onTouchStart: (y) => m(y.touches[0].clientX),
     onTouchMove: (y) => m(y.touches[0].clientX)
-  }, C = Jc(f, u, n).map((y) => /* @__PURE__ */ o("text", { x: l(y.t), y: qe - 6, class: "chart-tick", "text-anchor": "middle", children: y.label }, y.t));
+  }, C = Gc(f, u, n).map((y) => /* @__PURE__ */ o("text", { x: l(y.t), y: Ne - 6, class: "chart-tick", "text-anchor": "middle", children: y.label }, y.t));
   if (t.kind === "timeline") {
     const y = se.t + A / 2 - 16, Q = i != null ? t.segments[i] : null;
     return /* @__PURE__ */ o("div", { class: "chart", style: { width: c }, children: [
-      /* @__PURE__ */ o("svg", { ref: r, width: c, height: qe, ...w, children: [
+      /* @__PURE__ */ o("svg", { ref: r, width: c, height: Ne, ...w, children: [
         t.segments.map((V, W) => {
           const F = l(V.from), U = l(V.to), q = Math.max(1, U - F - (U - F > 3 ? 2 : 0));
-          return /* @__PURE__ */ o("rect", { x: F, y, width: q, height: 32, rx: 3, fill: V.on ? Pn : V.on === null ? Wc : Io, stroke: V.on === null ? "rgba(255,255,255,0.25)" : "none", "stroke-dasharray": "3 3", opacity: i == null || i === W ? 1 : 0.55 }, W);
+          return /* @__PURE__ */ o("rect", { x: F, y, width: q, height: 32, rx: 3, fill: V.on ? Pn : V.on === null ? Zc : Io, stroke: V.on === null ? "rgba(255,255,255,0.25)" : "none", "stroke-dasharray": "3 3", opacity: i == null || i === W ? 1 : 0.55 }, W);
         }),
         /* @__PURE__ */ o("line", { x1: se.l, x2: c - se.r, y1: y + 44, y2: y + 44, stroke: Bo }),
         C
@@ -3758,17 +3766,17 @@ function Gc({ series: t, unit: e, range: n, width: s }) {
   g.forEach((y) => {
     O = Math.min(O, y.min != null ? y.min : y.v), H = Math.max(H, y.max != null ? y.max : y.v);
   }), t.kind === "bars" && (O = Math.min(0, O));
-  const I = Zc(O, H, 4), b = I[0], B = I[I.length - 1], T = (y) => se.t + A - (y - b) / (B - b) * A, S = I.map((y) => /* @__PURE__ */ o("g", { children: [
+  const I = Jc(O, H, 4), b = I[0], B = I[I.length - 1], T = (y) => se.t + A - (y - b) / (B - b) * A, S = I.map((y) => /* @__PURE__ */ o("g", { children: [
     /* @__PURE__ */ o("line", { x1: se.l, x2: c - se.r, y1: T(y), y2: T(y), stroke: Bo }),
     /* @__PURE__ */ o("text", { x: se.l - 8, y: T(y) + 4, class: "chart-tick", "text-anchor": "end", children: ee(y) })
   ] }, y)), z = i != null ? g[i] : null;
   if (t.kind === "bars") {
     const y = t.bucketMs / (u - f) * d, Q = Math.max(2, Math.min(24, y - 2)), V = t.bucketMs >= 864e5, W = V && g.map((F, U) => {
       const q = new Date(F.t);
-      return n === "30d" && (g.length - 1 - U) % 5 ? null : /* @__PURE__ */ o("text", { x: l(F.t) + y / 2, y: qe - 6, class: "chart-tick", "text-anchor": "middle", children: n === "7d" ? Ve("date.weekdays_short")[q.getDay()] : q.getDate() + "." + $t(q.getMonth() + 1) }, F.t);
+      return n === "30d" && (g.length - 1 - U) % 5 ? null : /* @__PURE__ */ o("text", { x: l(F.t) + y / 2, y: Ne - 6, class: "chart-tick", "text-anchor": "middle", children: n === "7d" ? Ue("date.weekdays_short")[q.getDay()] : q.getDate() + "." + $t(q.getMonth() + 1) }, F.t);
     });
     return /* @__PURE__ */ o("div", { class: "chart", style: { width: c }, children: [
-      /* @__PURE__ */ o("svg", { ref: r, width: c, height: qe, ...w, children: [
+      /* @__PURE__ */ o("svg", { ref: r, width: c, height: Ne, ...w, children: [
         S,
         g.map((F, U) => {
           const q = l(F.t) + (y - Q) / 2, N = T(Math.max(0, F.v)), G = T(0), ie = Math.max(0, G - N), $ = Math.min(4, Q / 2, ie), Me = "M" + q + "," + G + "V" + (N + $) + "Q" + q + "," + N + " " + (q + $) + "," + N + "H" + (q + Q - $) + "Q" + (q + Q) + "," + N + " " + (q + Q) + "," + (N + $) + "V" + G + "Z";
@@ -3782,13 +3790,13 @@ function Gc({ series: t, unit: e, range: n, width: s }) {
           " ",
           e
         ] }),
-        /* @__PURE__ */ o("span", { children: t.bucketMs >= 864e5 ? ct(z.t) : ct(z.t) + ", " + Pe(z.t) + "–" + Pe(z.t + t.bucketMs) })
+        /* @__PURE__ */ o("span", { children: t.bucketMs >= 864e5 ? ct(z.t) : ct(z.t) + ", " + Le(z.t) + "–" + Le(z.t + t.bucketMs) })
       ] })
     ] });
   }
   const oe = M ? g : g.concat({ t: u, v: g[g.length - 1].v }), re = oe.map((y, Q) => (Q ? "L" : "M") + l(Math.max(y.t, f)).toFixed(1) + "," + T(y.v).toFixed(1)).join(""), D = re + "L" + l(oe[oe.length - 1].t).toFixed(1) + "," + T(b) + "L" + l(Math.max(oe[0].t, f)).toFixed(1) + "," + T(b) + "Z", X = M ? g.map((y, Q) => (Q ? "L" : "M") + l(y.t).toFixed(1) + "," + T(y.max).toFixed(1)).join("") + g.slice().reverse().map((y) => "L" + l(y.t).toFixed(1) + "," + T(y.min).toFixed(1)).join("") + "Z" : "", te = g[g.length - 1];
   return /* @__PURE__ */ o("div", { class: "chart", style: { width: c }, children: [
-    /* @__PURE__ */ o("svg", { ref: r, width: c, height: qe, ...w, children: [
+    /* @__PURE__ */ o("svg", { ref: r, width: c, height: Ne, ...w, children: [
       S,
       M ? /* @__PURE__ */ o("path", { d: X, fill: ge, opacity: 0.22 }) : /* @__PURE__ */ o("path", { d: D, fill: ge, opacity: 0.1 }),
       /* @__PURE__ */ o("path", { d: re, fill: "none", stroke: ge, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }),
@@ -3832,18 +3840,18 @@ function yn(t) {
 }
 const zt = {
   cool: { Icon: eo, color: ge },
-  heat: { Icon: xs, color: Pn },
+  heat: { Icon: ys, color: Pn },
   heat_cool: { Icon: Hn, color: "#a3a3a3" },
   auto: { Icon: Hn, color: "#a3a3a3" },
-  dry: { Icon: Qe, color: "#a3a3a3" },
-  fan_only: { Icon: bs, color: "#a3a3a3" },
+  dry: { Icon: Pe, color: "#a3a3a3" },
+  fan_only: { Icon: gs, color: "#a3a3a3" },
   off: { Icon: at, color: "rgba(255,255,255,0.25)" }
-}, Xc = ["auto", "low", "medium", "middle", "high", "quiet", "turbo", "diffuse", "focus"], Kc = (t) => Xc.indexOf(t) !== -1 ? h("ac.fan." + t) : t, To = (t) => zt[t] ? h("ac.mode." + t) : t;
+}, Kc = ["auto", "low", "medium", "middle", "high", "quiet", "turbo", "diffuse", "focus"], $c = (t) => Kc.indexOf(t) !== -1 ? h("ac.fan." + t) : t, To = (t) => zt[t] ? h("ac.mode." + t) : t;
 function Oo(t, e, n, s, i) {
   const a = (135 + s * 270) * Math.PI / 180, r = (135 + i * 270) * Math.PI / 180, c = (i - s) * 270 > 180 ? 1 : 0;
   return "M" + (t + n * Math.cos(a)).toFixed(1) + "," + (e + n * Math.sin(a)).toFixed(1) + "A" + n + "," + n + " 0 " + c + " 1 " + (t + n * Math.cos(r)).toFixed(1) + "," + (e + n * Math.sin(r)).toFixed(1);
 }
-function $c({ it: t, size: e }) {
+function el({ it: t, size: e }) {
   const n = Z(), s = n.states[t.entity], i = s ? s.attributes : {}, a = s ? s.state : "off", r = a === "off", c = i.target_temp_step || 0.5, d = i.min_temp != null ? i.min_temp : 16, A = i.max_temp != null ? i.max_temp : 31, [f, u] = v(null), l = ne(0), p = f ?? i.temperature;
   P(() => {
     u(null);
@@ -3854,7 +3862,7 @@ function $c({ it: t, size: e }) {
   }, w = i.current_temperature != null ? String(i.current_temperature) : t.temp ? _e(n, t.temp) : void 0, x = zt[a] || zt.auto, C = e.h < 260 || e.w < 260, g = C ? 132 : 176, M = p != null ? (p - d) / (A - d) : 0, O = i.hvac_modes || [], H = i.fan_modes || [];
   return /* @__PURE__ */ o("div", { class: "ac" + (C ? " compact" : ""), children: [
     /* @__PURE__ */ o("div", { class: "ac-main", children: [
-      /* @__PURE__ */ o("button", { class: "ac-step", disabled: r, onClick: () => m(-1), children: /* @__PURE__ */ o(Ec, { size: 22 }) }),
+      /* @__PURE__ */ o("button", { class: "ac-step", disabled: r, onClick: () => m(-1), children: /* @__PURE__ */ o(Sc, { size: 22 }) }),
       /* @__PURE__ */ o("div", { class: "ac-dial", style: { width: g, height: g }, children: [
         /* @__PURE__ */ o("svg", { width: g, height: g, children: [
           /* @__PURE__ */ o("path", { d: Oo(g / 2, g / 2, g / 2 - 8, 0, 1), stroke: "rgba(255,255,255,0.1)", "stroke-width": 8, fill: "none", "stroke-linecap": "round" }),
@@ -3869,10 +3877,10 @@ function $c({ it: t, size: e }) {
           w != null && !et(w) && /* @__PURE__ */ o("div", { class: "ac-room", children: h("ac.room", { t: ee(Number(w)) }) })
         ] })
       ] }),
-      /* @__PURE__ */ o("button", { class: "ac-step", disabled: r, onClick: () => m(1), children: /* @__PURE__ */ o(Le, { size: 22 }) })
+      /* @__PURE__ */ o("button", { class: "ac-step", disabled: r, onClick: () => m(1), children: /* @__PURE__ */ o(je, { size: 22 }) })
     ] }),
     /* @__PURE__ */ o("div", { class: "ac-modes", children: O.map((I) => {
-      const b = zt[I] || { Icon: qi, color: "#a3a3a3" };
+      const b = zt[I] || { Icon: Fi, color: "#a3a3a3" };
       return /* @__PURE__ */ o(
         "button",
         {
@@ -3885,14 +3893,14 @@ function $c({ it: t, size: e }) {
         I
       );
     }) }),
-    !C && H.length > 0 && !r && /* @__PURE__ */ o("div", { class: "seg seg-wide ac-fan", children: H.map((I) => /* @__PURE__ */ o("button", { class: i.fan_mode === I ? "active" : "", onClick: () => n.callService(t.entity, "set_fan_mode", { fan_mode: I }), children: Kc(I) }, I)) })
+    !C && H.length > 0 && !r && /* @__PURE__ */ o("div", { class: "seg seg-wide ac-fan", children: H.map((I) => /* @__PURE__ */ o("button", { class: i.fan_mode === I ? "active" : "", onClick: () => n.callService(t.entity, "set_fan_mode", { fan_mode: I }), children: $c(I) }, I)) })
   ] });
 }
-function el({ card: t, size: e }) {
+function tl({ card: t, size: e }) {
   const n = Z(), [s, i] = v(0), a = t.items[Math.min(s, t.items.length - 1)];
   return /* @__PURE__ */ o("div", { class: "ac-wrap", children: [
     t.items.length > 1 && /* @__PURE__ */ o("div", { class: "seg seg-inline", children: t.items.map((r, c) => /* @__PURE__ */ o("button", { class: c === s ? "active" : "", onClick: () => i(c), children: he(n, r) }, r.entity)) }),
-    /* @__PURE__ */ o($c, { it: a, size: e }, a.entity)
+    /* @__PURE__ */ o(el, { it: a, size: e }, a.entity)
   ] });
 }
 const ue = {
@@ -3905,8 +3913,8 @@ const ue = {
   TURN_OFF: 256,
   SELECT_SOURCE: 2048,
   PLAY: 16384
-}, tl = ["playing", "paused", "idle", "on", "off", "standby", "buffering"], bt = (t) => tl.indexOf(t) !== -1 ? h("media.state." + t) : t;
-function nl({ it: t, tv: e, sources: n, size: s }) {
+}, nl = ["playing", "paused", "idle", "on", "off", "standby", "buffering"], bt = (t) => nl.indexOf(t) !== -1 ? h("media.state." + t) : t;
+function ol({ it: t, tv: e, sources: n, size: s }) {
   const i = Z(), a = i.states[t.entity], r = a ? a.attributes : {}, c = Number(r.supported_features) || 0, d = (S) => (c & S) === S, A = a ? a.state : "off", f = A === "off" || A === "standby", u = A === "playing", l = (S, z) => i.callService(t.entity, S, z), [p, m] = v(null), w = p ?? (typeof r.volume_level == "number" ? r.volume_level : null);
   P(() => {
     m(null);
@@ -3919,7 +3927,7 @@ function nl({ it: t, tv: e, sources: n, size: s }) {
     if (!z) return;
     const oe = z.getBoundingClientRect();
     C((S - oe.left) / oe.width);
-  }, O = i.pictureUrl(r.entity_picture_local || r.entity_picture), H = r.media_title || r.app_name || r.source || bt(A), I = r.media_artist || r.media_album_name || (r.media_title ? bt(A) : "") || "", b = s.h >= 300 && s.w >= 300, B = s.h < 250, T = e ? Qn : f ? ea : pc;
+  }, O = i.pictureUrl(r.entity_picture_local || r.entity_picture), H = r.media_title || r.app_name || r.source || bt(A), I = r.media_artist || r.media_album_name || (r.media_title ? bt(A) : "") || "", b = s.h >= 300 && s.w >= 300, B = s.h < 250, T = e ? Qn : f ? $s : mc;
   return f && e ? /* @__PURE__ */ o("div", { class: "media media-off", children: [
     /* @__PURE__ */ o("div", { class: "media-art-empty big", children: /* @__PURE__ */ o(Qn, { size: 40 }) }),
     /* @__PURE__ */ o("div", { class: "media-title", children: he(i, t) }),
@@ -3946,12 +3954,12 @@ function nl({ it: t, tv: e, sources: n, size: s }) {
       (d(ue.TURN_OFF) || d(ue.TURN_ON)) && /* @__PURE__ */ o("button", { class: "icon-round", title: h(f ? "common.turn_on" : "common.turn_off"), onClick: () => l(f ? "turn_on" : "turn_off"), children: /* @__PURE__ */ o(at, { size: 16 }) })
     ] }),
     (d(ue.PAUSE) || d(ue.PLAY) || d(ue.NEXT)) && /* @__PURE__ */ o("div", { class: "media-controls", children: [
-      d(ue.PREVIOUS) && /* @__PURE__ */ o("button", { onClick: () => l("media_previous_track"), children: /* @__PURE__ */ o(Hc, { size: 22 }) }),
-      /* @__PURE__ */ o("button", { class: "media-play", onClick: () => l("media_play_pause"), children: u ? /* @__PURE__ */ o(Sc, { size: 24 }) : /* @__PURE__ */ o(zc, { size: 24 }) }),
-      d(ue.NEXT) && /* @__PURE__ */ o("button", { onClick: () => l("media_next_track"), children: /* @__PURE__ */ o(Qc, { size: 22 }) })
+      d(ue.PREVIOUS) && /* @__PURE__ */ o("button", { onClick: () => l("media_previous_track"), children: /* @__PURE__ */ o(Qc, { size: 22 }) }),
+      /* @__PURE__ */ o("button", { class: "media-play", onClick: () => l("media_play_pause"), children: u ? /* @__PURE__ */ o(zc, { size: 24 }) : /* @__PURE__ */ o(Ic, { size: 24 }) }),
+      d(ue.NEXT) && /* @__PURE__ */ o("button", { onClick: () => l("media_next_track"), children: /* @__PURE__ */ o(Pc, { size: 22 }) })
     ] }),
     w != null && d(ue.VOLUME_SET) && /* @__PURE__ */ o("div", { class: "media-volume", children: [
-      d(ue.VOLUME_MUTE) && /* @__PURE__ */ o("button", { onClick: () => l("volume_mute", { is_volume_muted: !r.is_volume_muted }), children: r.is_volume_muted ? /* @__PURE__ */ o(Nc, { size: 18 }) : /* @__PURE__ */ o(qc, { size: 18 }) }),
+      d(ue.VOLUME_MUTE) && /* @__PURE__ */ o("button", { onClick: () => l("volume_mute", { is_volume_muted: !r.is_volume_muted }), children: r.is_volume_muted ? /* @__PURE__ */ o(Rc, { size: 18 }) : /* @__PURE__ */ o(Nc, { size: 18 }) }),
       /* @__PURE__ */ o(
         "div",
         {
@@ -3967,7 +3975,7 @@ function nl({ it: t, tv: e, sources: n, size: s }) {
     n && d(ue.SELECT_SOURCE) && r.source_list && /* @__PURE__ */ o("div", { class: "chips media-sources", children: r.source_list.map((S) => /* @__PURE__ */ o("button", { class: "chip" + (r.source === S ? " active" : ""), onClick: () => l("select_source", { source: S }), children: S }, S)) })
   ] });
 }
-function ol({ card: t, size: e }) {
+function il({ card: t, size: e }) {
   const n = Z(), s = t.items.findIndex((d) => n.states[d.entity] && n.states[d.entity].state === "playing"), [i, a] = v(s >= 0 ? s : 0), r = t.items[Math.min(i, t.items.length - 1)], c = t.type === "tv" || !!n.states[r.entity] && n.states[r.entity].attributes.device_class === "tv";
   return /* @__PURE__ */ o("div", { class: "media-wrap", children: [
     t.items.length > 1 && /* @__PURE__ */ o("div", { class: "seg seg-inline seg-full", children: t.items.map((d, A) => {
@@ -3977,31 +3985,31 @@ function ol({ card: t, size: e }) {
         he(n, d)
       ] }, d.entity);
     }) }),
-    Oe(n, r.entity) && /* @__PURE__ */ o(nl, { it: r, tv: c, sources: t.type === "tv", size: e }, r.entity)
+    He(n, r.entity) && /* @__PURE__ */ o(ol, { it: r, tv: c, sources: t.type === "tv", size: e }, r.entity)
   ] });
 }
-const il = {
-  "clear-night": { Icon: Qs },
-  cloudy: { Icon: ls },
+const sl = {
+  "clear-night": { Icon: Hs },
+  cloudy: { Icon: cs },
   exceptional: { Icon: gn },
-  fog: { Icon: lc },
+  fog: { Icon: dc },
   hail: { Icon: zo },
   lightning: { Icon: gn },
   "lightning-rainy": { Icon: gn },
-  partlycloudy: { Icon: as },
-  pouring: { Icon: dc },
-  rainy: { Icon: cc },
+  partlycloudy: { Icon: ss },
+  pouring: { Icon: Ac },
+  rainy: { Icon: lc },
   snowy: { Icon: eo },
   "snowy-rainy": { Icon: zo },
-  sunny: { Icon: na },
+  sunny: { Icon: ta },
   windy: { Icon: Xt },
   "windy-variant": { Icon: Xt }
 };
-function Re(t) {
-  const e = il[t || ""];
-  return { label: e ? h("weather." + t) : t || "—", Icon: e ? e.Icon : ls };
+function Ve(t) {
+  const e = sl[t || ""];
+  return { label: e ? h("weather." + t) : t || "—", Icon: e ? e.Icon : cs };
 }
-function Ma(t, e) {
+function Ca(t, e) {
   const [n, s] = v([]), [i, a] = v([]), r = e ? t.states[e] : void 0, c = r && Number(r.attributes.supported_features) || 0;
   return P(() => {
     if (!e || t.status !== "connected" || !c) return;
@@ -4013,11 +4021,11 @@ function Ma(t, e) {
     const A = c & 1 ? "daily" : c & 4 ? "twice_daily" : "";
     return A && d.push(t.subscribeMessage(
       { type: "weather/subscribe_forecast", entity_id: e, forecast_type: A },
-      (f) => a(sl(f.forecast || [], A === "twice_daily"))
+      (f) => a(al(f.forecast || [], A === "twice_daily"))
     )), () => d.forEach((f) => f());
   }, [e, t.status, c]), { hourly: n, days: i };
 }
-function sl(t, e) {
+function al(t, e) {
   if (!e) return t.map((i) => ({ t: Date.parse(i.datetime), hi: i.temperature, lo: i.templow, condition: i.condition }));
   const n = {}, s = [];
   return t.forEach((i) => {
@@ -4029,12 +4037,12 @@ function sl(t, e) {
     }), (i.is_daytime !== !1 || !c.condition) && (c.condition = i.condition);
   }), s.map((i) => n[i]);
 }
-function al(t, e) {
+function rl(t, e) {
   const n = Number(t);
   if (!isNaN(n))
     return e === "m/s" ? n : e === "mph" ? n * 0.447 : n / 3.6;
 }
-function rl(t, e) {
+function cl(t, e) {
   const n = Number(t);
   if (!isNaN(n))
     return e === "mmHg" ? n : e === "inHg" ? n * 25.4 : n * 0.750062;
@@ -4043,15 +4051,15 @@ function Ae(t) {
   const e = Number(t);
   return isNaN(e) ? "—" : String(Math.round(e));
 }
-const cl = 64, ll = 32, Ho = 36, Qo = 84, dl = 33;
-function Ea({ card: t, size: e }) {
-  const n = Z(), s = on(), i = t.items.filter((b) => b.entity.indexOf("weather.") === 0)[0], a = t.items.filter((b) => b !== i), r = i && i.entity, c = r ? n.states[r] : void 0, { hourly: d, days: A } = Ma(n, r);
-  let f = e.h - (c ? cl + ll : 0);
+const ll = 64, dl = 32, Ho = 36, Qo = 84, Al = 33;
+function Ma({ card: t, size: e }) {
+  const n = Z(), s = on(), i = t.items.filter((b) => b.entity.indexOf("weather.") === 0)[0], a = t.items.filter((b) => b !== i), r = i && i.entity, c = r ? n.states[r] : void 0, { hourly: d, days: A } = Ca(n, r);
+  let f = e.h - (c ? ll + dl : 0);
   const u = Math.max(0, Math.min(a.length, Math.floor(f / Ho)));
   f -= u * Ho + (u ? 10 : 0);
   const l = !!c && d.length > 0 && f >= Qo;
   l && (f -= Qo + 12);
-  const p = c ? Math.max(0, Math.min(A.length, 7, Math.floor((f - 10) / dl))) : 0, m = A.slice(0, p), w = Math.min.apply(null, m.map((b) => b.lo != null ? b.lo : 99)), x = Math.max.apply(null, m.map((b) => b.hi != null ? b.hi : -99)), C = (b) => (b - w) / Math.max(1, x - w) * 100, g = Date.now(), M = c ? c.attributes : {}, O = Re(c && c.state), H = al(M.wind_speed, M.wind_speed_unit), I = rl(M.pressure, M.pressure_unit);
+  const p = c ? Math.max(0, Math.min(A.length, 7, Math.floor((f - 10) / Al))) : 0, m = A.slice(0, p), w = Math.min.apply(null, m.map((b) => b.lo != null ? b.lo : 99)), x = Math.max.apply(null, m.map((b) => b.hi != null ? b.hi : -99)), C = (b) => (b - w) / Math.max(1, x - w) * 100, g = Date.now(), M = c ? c.attributes : {}, O = Ve(c && c.state), H = rl(M.wind_speed, M.wind_speed_unit), I = cl(M.pressure, M.pressure_unit);
   return /* @__PURE__ */ o("div", { class: "weather", children: [
     c && /* @__PURE__ */ o("div", { class: "weather-now", children: [
       /* @__PURE__ */ o(O.Icon, { size: e.w > 360 ? 54 : 40 }),
@@ -4076,12 +4084,12 @@ function Ea({ card: t, size: e }) {
         h("weather.wind", { v: H.toFixed(1) })
       ] }),
       M.humidity != null && /* @__PURE__ */ o("span", { children: [
-        /* @__PURE__ */ o(Qe, { size: 14 }),
+        /* @__PURE__ */ o(Pe, { size: 14 }),
         Ae(M.humidity),
         "%"
       ] }),
       I != null && /* @__PURE__ */ o("span", { children: [
-        /* @__PURE__ */ o(vs, { size: 14 }),
+        /* @__PURE__ */ o(_s, { size: 14 }),
         h("weather.pressure", { v: Math.round(I) })
       ] })
     ] }),
@@ -4090,20 +4098,20 @@ function Ea({ card: t, size: e }) {
       return /* @__PURE__ */ o("div", { class: "wroom tappable", onClick: () => s(b.hum ? [b.entity, b.hum] : [b.entity]), children: [
         /* @__PURE__ */ o("span", { class: "wroom-name", children: he(n, b) }),
         z != null && /* @__PURE__ */ o("span", { class: "wroom-hum", children: [
-          /* @__PURE__ */ o(Qe, { size: 12 }),
+          /* @__PURE__ */ o(Pe, { size: 12 }),
           Ae(z),
           "%"
         ] }),
         /* @__PURE__ */ o("b", { class: "wroom-temp", children: [
-          Al(S),
+          hl(S),
           "°"
         ] })
       ] }, b.entity);
     }) }),
     l && /* @__PURE__ */ o("div", { class: "weather-hours", children: d.filter((b) => Date.parse(b.datetime) > g - 36e5).slice(0, 12).map((b) => {
-      const B = Re(b.condition);
+      const B = Ve(b.condition);
       return /* @__PURE__ */ o("div", { class: "hour", children: [
-        /* @__PURE__ */ o("span", { class: "muted", children: Pe(Date.parse(b.datetime)) }),
+        /* @__PURE__ */ o("span", { class: "muted", children: Le(Date.parse(b.datetime)) }),
         /* @__PURE__ */ o(B.Icon, { size: 18 }),
         /* @__PURE__ */ o("b", { children: [
           Ae(b.temperature),
@@ -4112,9 +4120,9 @@ function Ea({ card: t, size: e }) {
       ] }, b.datetime);
     }) }),
     m.length > 0 && /* @__PURE__ */ o("div", { class: "weather-days", children: m.map((b, B) => {
-      const T = Re(b.condition);
+      const T = Ve(b.condition);
       return /* @__PURE__ */ o("div", { class: "day", children: [
-        /* @__PURE__ */ o("span", { class: "day-name", children: B === 0 ? h("weather.today") : Ve("date.weekdays_short")[new Date(b.t).getDay()] }),
+        /* @__PURE__ */ o("span", { class: "day-name", children: B === 0 ? h("weather.today") : Ue("date.weekdays_short")[new Date(b.t).getDay()] }),
         /* @__PURE__ */ o(T.Icon, { size: 18 }),
         /* @__PURE__ */ o("span", { class: "day-lo", children: [
           Ae(b.lo),
@@ -4129,14 +4137,14 @@ function Ea({ card: t, size: e }) {
     }) })
   ] });
 }
-function Al(t) {
+function hl(t) {
   const e = Number(t);
   return isNaN(e) ? "—" : (Math.round(e * 10) / 10).toFixed(1);
 }
-function hl({ entity: t }) {
-  const e = Z(), n = e.states[t], { days: s } = Ma(e, t);
+function ul({ entity: t }) {
+  const e = Z(), n = e.states[t], { days: s } = Ca(e, t);
   if (!n || n.state === "unavailable") return null;
-  const i = Re(n.state), a = s[0];
+  const i = Ve(n.state), a = s[0];
   return /* @__PURE__ */ o("div", { class: "ambient-weather", children: [
     /* @__PURE__ */ o(i.Icon, { size: 30 }),
     /* @__PURE__ */ o("span", { class: "aw-temp", children: [
@@ -4162,7 +4170,7 @@ function no(t, e) {
 function Po(t, e, n) {
   return e.filter((s) => t.states[s] && t.states[s].entity_id.indexOf("sensor.") === 0 && t.states[s].attributes.device_class === n)[0];
 }
-function Sa(t, e, n) {
+function Ea(t, e, n) {
   if (!n.device) return [n];
   const s = t.devices[n.device];
   if (!s) return n.entity ? [{ entity: n.entity, name: n.name }] : [];
@@ -4172,26 +4180,26 @@ function Sa(t, e, n) {
   }, d = i.filter((l) => no(e, t.states[l]) && a.indexOf(l) === -1).map((l, p) => ({ id: l, i: p })).sort((l, p) => c(l.id) - c(p.id) || l.i - p.i).map((l) => l.id), A = d.length === 1, f = n.names || {}, u = (l) => f[l] || (A ? n.name || s.name : t.registry[l].en || s.name || void 0);
   return e === "climate" ? d.map((l) => ({ entity: l, hum: Po(t, i, "humidity"), name: u(l) })) : e === "ac" ? d.map((l) => ({ entity: l, temp: n.temp || Po(t, i, "temperature"), name: u(l) })) : d.map((l) => ({ entity: l, name: u(l), icon: void 0 }));
 }
-function ul(t, e) {
+function fl(t, e) {
   if (!e.items.some((i) => i.device)) return e;
   const n = {}, s = [];
-  return e.items.forEach((i) => Sa(t, e.type, i).forEach((a) => {
+  return e.items.forEach((i) => Ea(t, e.type, i).forEach((a) => {
     n[a.entity] || (n[a.entity] = !0, s.push(a));
   })), { ...e, items: s };
 }
 function an(t, e) {
-  const n = ul(t, e.title ? e : { ...e, title: nt(e.type) }), s = n.items.filter((i) => Oe(t, i.entity));
+  const n = fl(t, e.title ? e : { ...e, title: nt(e.type) }), s = n.items.filter((i) => He(t, i.entity));
   return s.length === n.items.length ? n : { ...n, items: s };
 }
 function he(t, e) {
   const n = t.states[e.entity];
   return e.name || n && n.attributes.friendly_name || e.entity;
 }
-function fl(t, e) {
+function pl(t, e) {
   const n = t.states[e];
   return n ? n.attributes.device_class : void 0;
 }
-const pl = [
+const ml = [
   "door",
   "window",
   "opening",
@@ -4207,34 +4215,34 @@ const pl = [
   "connectivity",
   "power",
   "plug"
-], ml = ["door", "window", "opening", "garage_door", "moisture", "smoke", "gas", "problem", "safety"];
+], gl = ["door", "window", "opening", "garage_door", "moisture", "smoke", "gas", "problem", "safety"];
 function Ln(t, e) {
   const n = t.states[e];
   if (!n || et(n.state)) return { text: h("sensor.no_data"), alert: !1, on: !1 };
   const s = e.split(".")[0], i = n.attributes.device_class;
   if (s === "binary_sensor") {
-    const r = n.state === "on", c = pl.indexOf(i) !== -1 ? "sensor." + i + "." : "sensor.";
-    return { text: h(c + (r ? "on" : "off")), alert: r && ml.indexOf(i) !== -1, on: r };
+    const r = n.state === "on", c = ml.indexOf(i) !== -1 ? "sensor." + i + "." : "sensor.";
+    return { text: h(c + (r ? "on" : "off")), alert: r && gl.indexOf(i) !== -1, on: r };
   }
   if (s === "lock") return { text: n.state === "locked" ? h("sensor.locked") : h("sensor.unlocked"), alert: n.state !== "locked", on: n.state !== "locked" };
   if (s === "cover") return { text: n.state === "open" ? h("sensor.open") : n.state === "closed" ? h("sensor.closed") : n.state, alert: !1, on: n.state === "open" };
   const a = parseFloat(n.state);
   return { text: (isNaN(a) ? n.state : String(Math.round(a * 10) / 10)) + jt(t, e), alert: !1, on: !1 };
 }
-function gl(t) {
+function bl(t) {
   return Math.max(1, Math.min(5, Math.floor(t.w / 150)));
 }
-function za(t, e) {
+function Sa(t, e) {
   const s = (r) => (e.h + 10) / Math.ceil(t / r) - 10;
-  let i = gl(e);
+  let i = bl(e);
   for (; i < Math.min(t, 6) && s(i) < 96 && e.w / (i + 1) >= 120; ) i++;
   const a = s(i);
   return "lights cols-" + i + (a >= 96 ? "" : a >= 70 ? " compact" : " list");
 }
-function bl({ card: t, size: e }) {
+function yl({ card: t, size: e }) {
   const n = Z(), s = on(), i = e.h / Math.max(1, t.items.length) < 95;
   return /* @__PURE__ */ o("div", { class: "rooms" + (i ? " compact" : ""), children: t.items.map((a) => {
-    const r = a.entity.indexOf("weather.") === 0 ? n.states[a.entity] : void 0, c = r ? Re(r.state).Icon : null;
+    const r = a.entity.indexOf("weather.") === 0 ? n.states[a.entity] : void 0, c = r ? Ve(r.state).Icon : null;
     return /* @__PURE__ */ o("div", { class: "room tappable" + (r ? " room-outside" : ""), onClick: () => s(a.hum ? [a.entity, a.hum] : [a.entity]), children: [
       /* @__PURE__ */ o("div", { class: "room-name", children: [
         c && /* @__PURE__ */ o(c, { size: 14 }),
@@ -4246,12 +4254,12 @@ function bl({ card: t, size: e }) {
           /* @__PURE__ */ o("sup", { children: "°" })
         ] }),
         r && r.attributes.humidity != null && /* @__PURE__ */ o("span", { class: "room-hum", children: [
-          /* @__PURE__ */ o(Qe, { size: 14 }),
+          /* @__PURE__ */ o(Pe, { size: 14 }),
           Math.round(r.attributes.humidity),
           "%"
         ] }),
-        !r && a.hum && Oe(n, a.hum) && /* @__PURE__ */ o("span", { class: "room-hum", children: [
-          /* @__PURE__ */ o(Qe, { size: 14 }),
+        !r && a.hum && He(n, a.hum) && /* @__PURE__ */ o("span", { class: "room-hum", children: [
+          /* @__PURE__ */ o(Pe, { size: 14 }),
           Ct(_e(n, a.hum), 0),
           "%"
         ] })
@@ -4259,7 +4267,7 @@ function bl({ card: t, size: e }) {
     ] }, a.entity);
   }) });
 }
-function yl(t, e) {
+function xl(t, e) {
   const n = ne(0), s = ne(!1), i = () => {
     s.current = !1, clearTimeout(n.current), n.current = window.setTimeout(() => {
       s.current = !0, t();
@@ -4278,24 +4286,24 @@ function yl(t, e) {
     }
   };
 }
-function xl({ it: t }) {
-  const e = Z(), n = on(), s = yl(() => n([t.entity]), () => e.toggle(t.entity)), i = _e(e, t.entity), a = nn(i), r = Fe(t.icon || to(t.entity));
+function _l({ it: t }) {
+  const e = Z(), n = on(), s = xl(() => n([t.entity]), () => e.toggle(t.entity)), i = _e(e, t.entity), a = nn(i), r = qe(t.icon || to(t.entity));
   return /* @__PURE__ */ o("button", { class: "light" + (a ? " on" : "") + (i === void 0 ? " na" : ""), ...s, children: [
     /* @__PURE__ */ o("span", { class: "light-icon", children: /* @__PURE__ */ o(r, { size: 22 }) }),
     /* @__PURE__ */ o("span", { class: "light-name", children: he(e, t) }),
     /* @__PURE__ */ o("span", { class: "light-state", children: h(i === void 0 ? "switch.unavailable" : a ? "switch.on" : "switch.off") })
   ] });
 }
-function _l({ card: t, size: e }) {
-  return /* @__PURE__ */ o("div", { class: za(t.items.length, e), children: t.items.map((n) => /* @__PURE__ */ o(xl, { it: n }, n.entity)) });
+function vl({ card: t, size: e }) {
+  return /* @__PURE__ */ o("div", { class: Sa(t.items.length, e), children: t.items.map((n) => /* @__PURE__ */ o(_l, { it: n }, n.entity)) });
 }
-function vl({ card: t, onCamera: e }) {
+function kl({ card: t, onCamera: e }) {
   const n = Z(), [s, i] = v(0), a = t.items[Math.min(s, t.items.length - 1)], r = a ? n.cameraStreamUrl(a.entity) : "";
   return /* @__PURE__ */ o("div", { class: "cam-wrap", children: [
     t.items.length > 1 && /* @__PURE__ */ o("div", { class: "seg seg-inline", children: t.items.map((c, d) => /* @__PURE__ */ o("button", { class: d === s ? "active" : "", onClick: () => i(d), children: he(n, c) }, c.entity + d)) }),
     /* @__PURE__ */ o("div", { class: "cam fit-" + (t.fit || "cover"), onClick: () => r && e(r), children: [
       r ? /* @__PURE__ */ o("img", { src: r, alt: "" }) : /* @__PURE__ */ o("div", { class: "cam-empty", children: [
-        /* @__PURE__ */ o(jc, { size: 26 }),
+        /* @__PURE__ */ o(Fc, { size: 26 }),
         /* @__PURE__ */ o("span", { children: h("camera.no_stream") })
       ] }),
       r && /* @__PURE__ */ o("span", { class: "live", children: [
@@ -4305,10 +4313,10 @@ function vl({ card: t, onCamera: e }) {
     ] })
   ] });
 }
-function kl({ card: t }) {
+function wl({ card: t }) {
   const e = Z(), n = on();
   return /* @__PURE__ */ o("div", { class: "sensors", children: t.items.map((s) => {
-    const i = Ln(e, s.entity), a = Fe(s.icon || to(s.entity, fl(e, s.entity)));
+    const i = Ln(e, s.entity), a = qe(s.icon || to(s.entity, pl(e, s.entity)));
     return /* @__PURE__ */ o("div", { class: "status-row tappable" + (i.alert ? " alert" : ""), onClick: () => n([s.entity]), children: [
       /* @__PURE__ */ o("span", { class: "status-icon", children: /* @__PURE__ */ o(a, { size: 20 }) }),
       /* @__PURE__ */ o("span", { class: "status-text", children: [
@@ -4318,13 +4326,13 @@ function kl({ card: t }) {
     ] }, s.entity);
   }) });
 }
-function wl({ card: t, size: e }) {
+function Cl({ card: t, size: e }) {
   const n = Z(), [s, i] = v(""), a = (r) => {
     const c = r.split(".")[0];
     n.callService(r, c === "automation" ? "trigger" : "turn_on"), i(r), setTimeout(() => i(""), 1200);
   };
-  return /* @__PURE__ */ o("div", { class: za(t.items.length, e), children: t.items.map((r) => {
-    const c = Fe(r.icon || "sparkles");
+  return /* @__PURE__ */ o("div", { class: Sa(t.items.length, e), children: t.items.map((r) => {
+    const c = qe(r.icon || "sparkles");
     return /* @__PURE__ */ o("button", { class: "light scene" + (s === r.entity ? " on" : ""), onClick: () => a(r.entity), children: [
       /* @__PURE__ */ o("span", { class: "light-icon", children: /* @__PURE__ */ o(c, { size: 22 }) }),
       /* @__PURE__ */ o("span", { class: "light-name", children: he(n, r) }),
@@ -4332,32 +4340,32 @@ function wl({ card: t, size: e }) {
     ] }, r.entity);
   }) });
 }
-function Ia(t) {
+function za(t) {
   const e = Z(), { size: n, onCamera: s } = t;
   if (!t.card.items.length) return /* @__PURE__ */ o("div", { class: "card-empty", children: h("card.empty") });
   const i = an(e, t.card);
   if (!i.items.length) return /* @__PURE__ */ o("div", { class: "card-empty", children: h("card.all_unavailable") });
   switch (i.type) {
     case "climate":
-      return /* @__PURE__ */ o(bl, { card: i, size: n });
+      return /* @__PURE__ */ o(yl, { card: i, size: n });
     case "switches":
-      return /* @__PURE__ */ o(_l, { card: i, size: n });
+      return /* @__PURE__ */ o(vl, { card: i, size: n });
     case "cameras":
-      return /* @__PURE__ */ o(vl, { card: i, onCamera: s });
+      return /* @__PURE__ */ o(kl, { card: i, onCamera: s });
     case "sensors":
-      return /* @__PURE__ */ o(kl, { card: i });
+      return /* @__PURE__ */ o(wl, { card: i });
     case "scenes":
-      return /* @__PURE__ */ o(wl, { card: i, size: n });
+      return /* @__PURE__ */ o(Cl, { card: i, size: n });
     case "ac":
-      return /* @__PURE__ */ o(el, { card: i, size: n });
+      return /* @__PURE__ */ o(tl, { card: i, size: n });
     case "speakers":
     case "tv":
-      return /* @__PURE__ */ o(ol, { card: i, size: n });
+      return /* @__PURE__ */ o(il, { card: i, size: n });
     case "weather":
-      return /* @__PURE__ */ o(Ea, { card: i, size: n });
+      return /* @__PURE__ */ o(Ma, { card: i, size: n });
   }
 }
-function Ba(t) {
+function Ia(t) {
   const e = Z(), n = an(e, t.card);
   if (n.type !== "switches") return null;
   const s = n.items.filter((i) => nn(_e(e, i.entity)));
@@ -4401,11 +4409,11 @@ function Lo(t, e) {
   }
   if (n.type === "weather" && s) {
     const i = t.states[s.entity];
-    return { text: i ? Math.round(i.attributes.temperature) + "° " + Re(i.state).label.toLowerCase() : n.title, lit: !1, alert: !1 };
+    return { text: i ? Math.round(i.attributes.temperature) + "° " + Ve(i.state).label.toLowerCase() : n.title, lit: !1, alert: !1 };
   }
   return { text: n.title, lit: !1, alert: !1 };
 }
-function Cl(t) {
+function Ml(t) {
   return /* @__PURE__ */ o("section", { class: "panel " + (t.class || ""), children: [
     /* @__PURE__ */ o("div", { class: "panel-head", children: [
       /* @__PURE__ */ o("h2", { children: t.title }),
@@ -4414,34 +4422,34 @@ function Cl(t) {
     t.children
   ] });
 }
-function Ml({ prefs: t }) {
-  const e = ga(5e3), n = _a[t.color];
+function El({ prefs: t }) {
+  const e = ma(5e3), n = xa[t.color];
   return /* @__PURE__ */ o(ae, { children: [
-    /* @__PURE__ */ o("div", { class: "ambient-time" + (t.color === "accent" ? " accent-text" : ""), style: { fontWeight: xa[t.font], color: n || void 0 }, children: ba(e) }),
-    t.date && /* @__PURE__ */ o("div", { class: "ambient-date", children: ya(e) })
+    /* @__PURE__ */ o("div", { class: "ambient-time" + (t.color === "accent" ? " accent-text" : ""), style: { fontWeight: ya[t.font], color: n || void 0 }, children: ga(e) }),
+    t.date && /* @__PURE__ */ o("div", { class: "ambient-date", children: ba(e) })
   ] });
 }
-function El(t) {
-  const e = Z(), n = Ye(), s = Ca(), [i, a] = v(""), r = n.homeCards().filter((m) => m.chip), c = r.filter((m) => m.type === "weather" && m.items.length)[0], d = Yc(r.filter((m) => m.type !== "weather"), s), A = d.filter((m) => s.hidden.indexOf(m.id) === -1), f = A.filter((m) => Lo(e, m).alert), u = t.customizing, l = () => {
+function Sl(t) {
+  const e = Z(), n = We(), s = wa(), [i, a] = v(""), r = n.homeCards().filter((m) => m.chip), c = r.filter((m) => m.type === "weather" && m.items.length)[0], d = Wc(r.filter((m) => m.type !== "weather"), s), A = d.filter((m) => s.hidden.indexOf(m.id) === -1), f = A.filter((m) => Lo(e, m).alert), u = t.customizing, l = () => {
     a(""), t.onDone();
   }, p = "ambient" + (t.visible ? " visible" : "") + " lock-" + s.layout + " lock-size-" + s.size + " chips-" + s.chipStyle + (u ? " customizing" : "") + (u && i ? " panel-up" : "");
   return /* @__PURE__ */ o(ae, { children: [
     /* @__PURE__ */ o("div", { ref: t.innerRef, class: p, children: [
       /* @__PURE__ */ o("div", { class: "ambient-clock", onClick: u ? () => a("clock") : void 0, children: [
-        /* @__PURE__ */ o(Ml, { prefs: s }),
-        s.weather && c && /* @__PURE__ */ o(hl, { entity: c.items[0].entity })
+        /* @__PURE__ */ o(El, { prefs: s }),
+        s.weather && c && /* @__PURE__ */ o(ul, { entity: c.items[0].entity })
       ] }),
       /* @__PURE__ */ o("div", { class: "glances", onClick: u ? () => a("widgets") : void 0, children: [
         e.status !== "connected" && e.status !== "connecting" && !u && /* @__PURE__ */ o("button", { class: "glance warn", onClick: t.onConnection, children: [
-          /* @__PURE__ */ o(Vc, { size: 18 }),
+          /* @__PURE__ */ o(Uc, { size: 18 }),
           /* @__PURE__ */ o("span", { children: h("ambient.offline") })
         ] }),
         u && !A.length && /* @__PURE__ */ o("span", { class: "glance glance-add", children: [
-          /* @__PURE__ */ o(Le, { size: 18 }),
+          /* @__PURE__ */ o(je, { size: 18 }),
           /* @__PURE__ */ o("span", { children: h("lock.add_widgets") })
         ] }),
         f.concat(A.filter((m) => f.indexOf(m) === -1)).map((m) => {
-          const w = Lo(e, m), x = Fe(m.icon);
+          const w = Lo(e, m), x = qe(m.icon);
           return /* @__PURE__ */ o(
             "button",
             {
@@ -4467,13 +4475,13 @@ function El(t) {
         /* @__PURE__ */ o("span", { children: h("lock.hint") }),
         /* @__PURE__ */ o("button", { class: "pill-btn accent-bg", onClick: l, children: h("common.done") })
       ] }),
-      i && /* @__PURE__ */ o(Tl, { kind: i, widgets: d, hasWeather: !!c, onClose: () => a("") })
+      i && /* @__PURE__ */ o(Ol, { kind: i, widgets: d, hasWeather: !!c, onClose: () => a("") })
     ] })
   ] });
 }
-const Sl = ["thin", "light", "regular", "bold"], zl = ["white", "accent", "warm", "mint", "sky", "rose"], Il = ["s", "m", "l"], Bl = ["auto", "corner", "center", "top"], Dl = ["auto", "text", "icons"];
-function Tl(t) {
-  const e = Ca(), n = (i, a) => {
+const zl = ["thin", "light", "regular", "bold"], Il = ["white", "accent", "warm", "mint", "sky", "rose"], Bl = ["s", "m", "l"], Dl = ["auto", "corner", "center", "top"], Tl = ["auto", "text", "icons"];
+function Ol(t) {
+  const e = wa(), n = (i, a) => {
     const r = t.widgets.map((A) => A.id), c = i + a, d = r[i];
     r[i] = r[c], r[c] = d, me({ order: r });
   }, s = (i, a) => {
@@ -4483,27 +4491,27 @@ function Tl(t) {
   return /* @__PURE__ */ o("div", { class: "lock-panel", onClick: (i) => i.stopPropagation(), children: [
     /* @__PURE__ */ o("div", { class: "lock-panel-head", children: [
       /* @__PURE__ */ o("b", { children: t.kind === "clock" ? h("lock.clock") : h("lock.widgets") }),
-      /* @__PURE__ */ o("button", { class: "icon-btn", onClick: t.onClose, children: /* @__PURE__ */ o(je, { size: 20 }) })
+      /* @__PURE__ */ o("button", { class: "icon-btn", onClick: t.onClose, children: /* @__PURE__ */ o(Fe, { size: 20 }) })
     ] }),
     t.kind === "clock" ? /* @__PURE__ */ o(ae, { children: [
-      /* @__PURE__ */ o("div", { class: "lock-fonts", children: Sl.map((i) => /* @__PURE__ */ o("button", { class: "lock-font" + (e.font === i ? " on" : ""), style: { fontWeight: xa[i] }, onClick: () => me({ font: i }), children: "12" }, i)) }),
-      /* @__PURE__ */ o("div", { class: "lock-colors", children: zl.map((i) => /* @__PURE__ */ o(
+      /* @__PURE__ */ o("div", { class: "lock-fonts", children: zl.map((i) => /* @__PURE__ */ o("button", { class: "lock-font" + (e.font === i ? " on" : ""), style: { fontWeight: ya[i] }, onClick: () => me({ font: i }), children: "12" }, i)) }),
+      /* @__PURE__ */ o("div", { class: "lock-colors", children: Il.map((i) => /* @__PURE__ */ o(
         "button",
         {
           title: h("lock.color." + i),
           class: "lock-color" + (e.color === i ? " on" : "") + (i === "accent" ? " accent-bg" : ""),
-          style: i === "accent" ? void 0 : { background: _a[i] },
+          style: i === "accent" ? void 0 : { background: xa[i] },
           onClick: () => me({ color: i })
         },
         i
       )) }),
       /* @__PURE__ */ o("div", { class: "option", children: [
         /* @__PURE__ */ o("label", { children: h("lock.size") }),
-        /* @__PURE__ */ o("div", { class: "seg", children: Il.map((i) => /* @__PURE__ */ o("button", { class: e.size === i ? "active" : "", onClick: () => me({ size: i }), children: h("lock.size." + i) }, i)) })
+        /* @__PURE__ */ o("div", { class: "seg", children: Bl.map((i) => /* @__PURE__ */ o("button", { class: e.size === i ? "active" : "", onClick: () => me({ size: i }), children: h("lock.size." + i) }, i)) })
       ] }),
       /* @__PURE__ */ o("div", { class: "option", children: [
         /* @__PURE__ */ o("label", { children: h("lock.layout") }),
-        /* @__PURE__ */ o("select", { value: e.layout, onChange: (i) => me({ layout: i.currentTarget.value }), children: Bl.map((i) => /* @__PURE__ */ o("option", { value: i, children: h("lock.layout." + i) }, i)) })
+        /* @__PURE__ */ o("select", { value: e.layout, onChange: (i) => me({ layout: i.currentTarget.value }), children: Dl.map((i) => /* @__PURE__ */ o("option", { value: i, children: h("lock.layout." + i) }, i)) })
       ] }),
       /* @__PURE__ */ o("label", { class: "check", children: [
         /* @__PURE__ */ o("input", { type: "checkbox", checked: e.date, onChange: (i) => me({ date: i.currentTarget.checked }) }),
@@ -4516,19 +4524,19 @@ function Tl(t) {
     ] }) : /* @__PURE__ */ o(ae, { children: [
       /* @__PURE__ */ o("div", { class: "option", children: [
         /* @__PURE__ */ o("label", { children: h("lock.chip_style") }),
-        /* @__PURE__ */ o("select", { value: e.chipStyle, onChange: (i) => me({ chipStyle: i.currentTarget.value }), children: Dl.map((i) => /* @__PURE__ */ o("option", { value: i, children: h("lock.chip_style." + i) }, i)) })
+        /* @__PURE__ */ o("select", { value: e.chipStyle, onChange: (i) => me({ chipStyle: i.currentTarget.value }), children: Tl.map((i) => /* @__PURE__ */ o("option", { value: i, children: h("lock.chip_style." + i) }, i)) })
       ] }),
       !t.widgets.length && /* @__PURE__ */ o("p", { class: "hint", children: h("lock.no_widgets") }),
       t.widgets.map((i, a) => {
-        const r = Fe(i.icon);
+        const r = qe(i.icon);
         return /* @__PURE__ */ o("div", { class: "lock-widget", children: [
           /* @__PURE__ */ o("label", { class: "check", children: [
             /* @__PURE__ */ o("input", { type: "checkbox", checked: e.hidden.indexOf(i.id) === -1, onChange: (c) => s(i.id, c.currentTarget.checked) }),
             /* @__PURE__ */ o(r, { size: 16 }),
             /* @__PURE__ */ o("span", { children: i.title || nt(i.type) })
           ] }),
-          /* @__PURE__ */ o("button", { class: "icon-btn", disabled: a === 0, onClick: () => n(a, -1), children: /* @__PURE__ */ o(rc, { size: 18 }) }),
-          /* @__PURE__ */ o("button", { class: "icon-btn", disabled: a === t.widgets.length - 1, onClick: () => n(a, 1), children: /* @__PURE__ */ o(ic, { size: 18 }) })
+          /* @__PURE__ */ o("button", { class: "icon-btn", disabled: a === 0, onClick: () => n(a, -1), children: /* @__PURE__ */ o(cc, { size: 18 }) }),
+          /* @__PURE__ */ o("button", { class: "icon-btn", disabled: a === t.widgets.length - 1, onClick: () => n(a, 1), children: /* @__PURE__ */ o(sc, { size: 18 }) })
         ] }, i.id);
       })
     ] })
@@ -4552,13 +4560,13 @@ function io(t) {
     return window.addEventListener("resize", i), () => window.removeEventListener("resize", i);
   }, []), e;
 }
-const ze = 12, yt = 16, Ol = 700, jo = 6, Hl = 44, Ql = 84;
+const ze = 12, yt = 16, Hl = 700, jo = 6, Ql = 44, Pl = 84;
 function Fo(t) {
   const e = "touches" in t ? t.touches[0] || t.changedTouches[0] : t;
   return { x: e.clientX, y: e.clientY };
 }
-function Pl({ editing: t, onCamera: e, onEdit: n }) {
-  const s = Z(), i = Ye(), a = ne(null), r = io(a), [c, d] = v(null), A = ne(null), f = i.state.layout.cards, u = r.w - yt * 2, l = r.h - yt * 2, p = r.w > 0 && u < Ol, m = p ? Ne : He, w = p ? ur(f) : f, x = p ? f.filter((D) => D.m && D.m.hide) : [], C = (u - ze * (m - 1)) / m, g = C + ze, M = Math.max(1, Math.floor((l + ze) / g)), O = Math.max(0, (l - (M * g - ze)) / 2), H = (D) => ({ left: D.x * g, top: D.y * g, width: D.w * g - ze, height: D.h * g - ze }), I = (D, X, te) => {
+function Ll({ editing: t, onCamera: e, onEdit: n }) {
+  const s = Z(), i = We(), a = ne(null), r = io(a), [c, d] = v(null), A = ne(null), f = i.state.layout.cards, u = r.w - yt * 2, l = r.h - yt * 2, p = r.w > 0 && u < Hl, m = p ? Re : Qe, w = p ? fr(f) : f, x = p ? f.filter((D) => D.m && D.m.hide) : [], C = (u - ze * (m - 1)) / m, g = C + ze, M = Math.max(1, Math.floor((l + ze) / g)), O = Math.max(0, (l - (M * g - ze)) / 2), H = (D) => ({ left: D.x * g, top: D.y * g, width: D.w * g - ze, height: D.h * g - ze }), I = (D, X, te) => {
     if (!t || "button" in D && D.button !== 0) return;
     D.stopPropagation();
     const y = Fo(D), Q = { id: X.id, mode: te, x0: y.x, y0: y.y, orig: X, dx: 0, dy: 0, active: te === "resize", preview: w };
@@ -4581,10 +4589,10 @@ function Pl({ editing: t, onCamera: e, onEdit: n }) {
       i.saveLayout({ ...i.state.layout, cards: Ie(f.filter((y) => y.id !== D.id)) });
       return;
     }
-    const X = w.filter((y) => y.id !== D.id), te = An(f, Ie(X)).map((y) => y.id === D.id ? { ...y, m: { x: 0, y: 0, w: Ne, h: 3, hide: !0 } } : y);
+    const X = w.filter((y) => y.id !== D.id), te = An(f, Ie(X)).map((y) => y.id === D.id ? { ...y, m: { x: 0, y: 0, w: Re, h: 3, hide: !0 } } : y);
     i.saveLayout({ ...i.state.layout, cards: te });
   }, S = (D) => {
-    const te = An(f, w).map((y) => y.id === D.id ? { ...y, m: { x: 0, y: Bn(w), w: Ne, h: 3 } } : y);
+    const te = An(f, w).map((y) => y.id === D.id ? { ...y, m: { x: 0, y: Bn(w), w: Re, h: 3 } } : y);
     i.saveLayout({ ...i.state.layout, cards: te });
   }, z = Bn(B), oe = t ? Math.max(M, z) : z, re = oe <= M ? O : 0;
   return /* @__PURE__ */ o("main", { class: "grid" + (t ? " editing" : "") + (c && c.active ? " dragging-card" : "") + (p ? " narrow" : ""), ref: a, children: [
@@ -4592,17 +4600,17 @@ function Pl({ editing: t, onCamera: e, onEdit: n }) {
       /* @__PURE__ */ o("span", { children: h("grid.narrow_note") }),
       x.length > 0 && /* @__PURE__ */ o("div", { class: "hidden-cards", children: [
         /* @__PURE__ */ o("span", { class: "muted", children: [
-          /* @__PURE__ */ o(ms, { size: 14 }),
+          /* @__PURE__ */ o(ps, { size: 14 }),
           h("grid.hidden_on_phone")
         ] }),
         x.map((D) => /* @__PURE__ */ o("button", { class: "chip", onClick: () => S(D), children: [
-          /* @__PURE__ */ o(Le, { size: 14 }),
+          /* @__PURE__ */ o(je, { size: 14 }),
           /* @__PURE__ */ o("span", { children: oo(s, D) })
         ] }, D.id))
       ] })
     ] }),
     /* @__PURE__ */ o("div", { class: "grid-inner", style: { height: Math.max(0, oe * g - ze), margin: yt + re + "px " + yt + "px" }, children: [
-      t && r.w > 0 && /* @__PURE__ */ o(Ll, { rows: oe, cols: m, cell: C, step: g }),
+      t && r.w > 0 && /* @__PURE__ */ o(jl, { rows: oe, cols: m, cell: C, step: g }),
       r.w > 0 && B.map((D) => {
         const X = !!c && c.active && c.id === D.id;
         let te = H(D);
@@ -4613,7 +4621,7 @@ function Pl({ editing: t, onCamera: e, onEdit: n }) {
         return /* @__PURE__ */ o("div", { children: [
           X && /* @__PURE__ */ o("div", { class: "drop-slot", style: H(D) }),
           /* @__PURE__ */ o(
-            jl,
+            Fl,
             {
               card: D,
               style: te,
@@ -4632,14 +4640,14 @@ function Pl({ editing: t, onCamera: e, onEdit: n }) {
     ] })
   ] });
 }
-function Ll({ rows: t, cols: e, cell: n, step: s }) {
+function jl({ rows: t, cols: e, cell: n, step: s }) {
   const i = [];
   for (let a = 0; a < t; a++)
     for (let r = 0; r < e; r++)
       i.push(/* @__PURE__ */ o("div", { class: "grid-dot", style: { left: r * s, top: a * s, width: n, height: n } }, a + ":" + r));
   return /* @__PURE__ */ o("div", { class: "grid-dots", children: i });
 }
-function jl({ card: t, style: e, editing: n, dragged: s, ha: i, onCamera: a, onEdit: r, onRemove: c, narrow: d, onStart: A }) {
+function Fl({ card: t, style: e, editing: n, dragged: s, ha: i, onCamera: a, onEdit: r, onRemove: c, narrow: d, onStart: A }) {
   const f = t.color ? " tint-" + t.color : "";
   return /* @__PURE__ */ o(
     "div",
@@ -4649,10 +4657,10 @@ function jl({ card: t, style: e, editing: n, dragged: s, ha: i, onCamera: a, onE
       onMouseDown: A ? (u) => A(u, t, "move") : void 0,
       onTouchStart: A ? (u) => A(u, t, "move") : void 0,
       children: [
-        /* @__PURE__ */ o(Cl, { title: oo(i, t), aside: !n && /* @__PURE__ */ o(Ba, { card: t }), class: "card-" + t.type, children: /* @__PURE__ */ o("div", { class: "panel-body", children: /* @__PURE__ */ o(Ia, { card: t, onCamera: a, size: { w: e.width - Hl, h: e.height - Ql } }) }) }),
+        /* @__PURE__ */ o(Ml, { title: oo(i, t), aside: !n && /* @__PURE__ */ o(Ia, { card: t }), class: "card-" + t.type, children: /* @__PURE__ */ o("div", { class: "panel-body", children: /* @__PURE__ */ o(za, { card: t, onCamera: a, size: { w: e.width - Ql, h: e.height - Pl } }) }) }),
         n && /* @__PURE__ */ o(ae, { children: [
-          /* @__PURE__ */ o("button", { class: "badge-btn badge-del", onMouseDown: xt, onTouchStart: xt, onClick: () => c(t), title: h(d ? "grid.hide_on_phone" : "common.delete"), children: d ? /* @__PURE__ */ o(ms, { size: 14 }) : /* @__PURE__ */ o(je, { size: 16 }) }),
-          /* @__PURE__ */ o("button", { class: "badge-btn badge-edit", onMouseDown: xt, onTouchStart: xt, onClick: () => r(t), title: h("common.edit"), children: /* @__PURE__ */ o(js, { size: 14 }) }),
+          /* @__PURE__ */ o("button", { class: "badge-btn badge-del", onMouseDown: xt, onTouchStart: xt, onClick: () => c(t), title: h(d ? "grid.hide_on_phone" : "common.delete"), children: d ? /* @__PURE__ */ o(ps, { size: 14 }) : /* @__PURE__ */ o(Fe, { size: 16 }) }),
+          /* @__PURE__ */ o("button", { class: "badge-btn badge-edit", onMouseDown: xt, onTouchStart: xt, onClick: () => r(t), title: h("common.edit"), children: /* @__PURE__ */ o(Ls, { size: 14 }) }),
           A && /* @__PURE__ */ o(
             "div",
             {
@@ -4678,7 +4686,7 @@ const jn = "photoframe.kiosk", It = [];
 function Fn() {
   return jn + ":" + (location.pathname.split("/")[1] || "lovelace");
 }
-function Da() {
+function Ba() {
   try {
     const t = localStorage.getItem(jn);
     return t !== null && (localStorage.setItem(Fn(), t), localStorage.removeItem(jn)), localStorage.getItem(Fn()) || "";
@@ -4686,57 +4694,57 @@ function Da() {
     return "";
   }
 }
-function Fl(t) {
+function ql(t) {
   try {
     localStorage.setItem(Fn(), t);
   } catch {
   }
   It.forEach((e) => e());
 }
-function ql(t) {
+function Nl(t) {
   return It.push(t), () => {
     It.splice(It.indexOf(t), 1);
   };
 }
-function Nl(t) {
+function Rl(t) {
   const e = new URLSearchParams(location.search);
   if (e.has("kiosk")) return e.get("kiosk") !== "0" && e.get("kiosk") !== "false";
-  const n = Da();
+  const n = Ba();
   return n ? n === "on" : t;
 }
-function Je(t) {
+function Ge(t) {
   return t && t.shadowRoot ? t.shadowRoot : null;
 }
 const qo = "photoframe-kiosk";
-let Ke = !1;
+let $e = !1;
 const Bt = [];
-function Rl(t) {
+function Vl(t) {
   return Bt.push(t), () => {
     Bt.splice(Bt.indexOf(t), 1);
   };
 }
 function No(t) {
-  t !== Ke && (Ke = t, Bt.forEach((e) => e()));
+  t !== $e && ($e = t, Bt.forEach((e) => e()));
 }
 function xn(t, e, n) {
   if (!t || t.getElementById(qo)) return;
   const s = document.createElement("style");
   s.id = qo, s.textContent = e, t.appendChild(s), n.push(() => s.remove());
 }
-function Vl() {
-  const [t, e] = v(Ke);
+function Ul() {
+  const [t, e] = v($e);
   return P(() => {
-    const n = Rl(() => e(Ke));
-    return e(Ke), n;
+    const n = Vl(() => e($e));
+    return e($e), n;
   }, []), t;
 }
-function Ul() {
+function Yl() {
   history.pushState(null, "", "/"), window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: !1 } }));
 }
-function Yl() {
-  const t = Je(document.querySelector("home-assistant"))?.querySelector("home-assistant-main"), e = Je(t);
+function Wl() {
+  const t = Ge(document.querySelector("home-assistant"))?.querySelector("home-assistant-main"), e = Ge(t);
   if (!e) return null;
-  const n = e.querySelector("ha-panel-lovelace"), s = Je(n)?.querySelector("hui-root"), i = Je(s);
+  const n = e.querySelector("ha-panel-lovelace"), s = Ge(n)?.querySelector("hui-root"), i = Ge(s);
   if (!s || !i) return null;
   const a = [], r = (A, f, u) => {
     const l = A.style.getPropertyValue(f);
@@ -4744,7 +4752,7 @@ function Yl() {
   }, c = e.querySelector("ha-drawer");
   [t, c].forEach((A) => {
     A && (r(A, "--ha-sidebar-width", "0px"), r(A, "--mdc-drawer-width", "0px"));
-  }), xn(e, ":host{--ha-sidebar-width:0px!important;--mdc-drawer-width:0px!important}ha-sidebar{display:none!important}", a), xn(Je(c), ".sidebar-shell,aside,.mdc-drawer{display:none!important;width:0!important}.app-content,.mdc-drawer-app-content{margin-left:0!important;margin-right:0!important;margin-inline-start:0!important;padding-left:0!important;padding-inline-start:0!important;width:100%!important}", a);
+  }), xn(e, ":host{--ha-sidebar-width:0px!important;--mdc-drawer-width:0px!important}ha-sidebar{display:none!important}", a), xn(Ge(c), ".sidebar-shell,aside,.mdc-drawer{display:none!important;width:0!important}.app-content,.mdc-drawer-app-content{margin-left:0!important;margin-right:0!important;margin-inline-start:0!important;padding-left:0!important;padding-inline-start:0!important;width:100%!important}", a);
   const d = e.querySelector("ha-sidebar");
   if (d) {
     const A = d.style.display;
@@ -4757,18 +4765,18 @@ function Yl() {
   };
 }
 const Ro = (t) => h("status." + t);
-function Wl() {
-  const t = ga();
+function Zl() {
+  const t = ma();
   return /* @__PURE__ */ o(ae, { children: [
-    /* @__PURE__ */ o("span", { class: "bar-clock", children: ba(t) }),
-    /* @__PURE__ */ o("span", { class: "bar-date", children: ya(t) })
+    /* @__PURE__ */ o("span", { class: "bar-clock", children: ga(t) }),
+    /* @__PURE__ */ o("span", { class: "bar-date", children: ba(t) })
   ] });
 }
-function Zl(t) {
+function Jl(t) {
   const { active: e, screen: n, screens: s } = K.state, i = s[e] || [], [a, r] = v("");
   return P(() => r(""), [n, t.editing]), i.length < 2 && !t.editing ? null : /* @__PURE__ */ o("div", { class: "screen-tabs", children: [
     i.map((c, d) => t.editing && c.id === n ? /* @__PURE__ */ o("span", { class: "screen-tab on editing", children: [
-      d > 0 && /* @__PURE__ */ o("button", { class: "screen-move", onClick: () => K.moveScreen(c.id, -1), children: /* @__PURE__ */ o(sc, { size: 14 }) }),
+      d > 0 && /* @__PURE__ */ o("button", { class: "screen-move", onClick: () => K.moveScreen(c.id, -1), children: /* @__PURE__ */ o(ac, { size: 14 }) }),
       /* @__PURE__ */ o(
         "input",
         {
@@ -4778,7 +4786,7 @@ function Zl(t) {
           onChange: (A) => K.renameScreen(c.id, A.currentTarget.value.trim())
         }
       ),
-      d < i.length - 1 && /* @__PURE__ */ o("button", { class: "screen-move", onClick: () => K.moveScreen(c.id, 1), children: /* @__PURE__ */ o(ac, { size: 14 }) }),
+      d < i.length - 1 && /* @__PURE__ */ o("button", { class: "screen-move", onClick: () => K.moveScreen(c.id, 1), children: /* @__PURE__ */ o(rc, { size: 14 }) }),
       i.length > 1 && /* @__PURE__ */ o(
         "button",
         {
@@ -4790,12 +4798,12 @@ function Zl(t) {
       )
     ] }, c.id) : /* @__PURE__ */ o("button", { class: "screen-tab" + (c.id === n ? " on" : ""), onClick: () => K.setActive(e, c.id), children: Et(c, d) }, c.id)),
     t.editing && /* @__PURE__ */ o("button", { class: "screen-tab add", onClick: () => K.addScreen(""), children: [
-      /* @__PURE__ */ o(Le, { size: 14 }),
+      /* @__PURE__ */ o(je, { size: 14 }),
       /* @__PURE__ */ o("span", { children: h("screen.add") })
     ] })
   ] });
 }
-function Jl(t, e) {
+function Gl(t, e) {
   const n = ne(null), s = (a) => "touches" in a ? a.touches[0] || a.changedTouches[0] : a;
   return {
     onTouchStart: (a) => {
@@ -4817,8 +4825,8 @@ function Jl(t, e) {
     Math.abs(c) > 90 && Math.abs(c) > Math.abs(d) * 2 && e(c < 0 ? 1 : -1);
   }
 }
-function Gl(t) {
-  const e = Z(), n = t.homes.length > 1, s = Vl(), i = t.homes.reduce((p, m) => p + (K.state.screens[m.id] || []).length, 0), a = Jl(i > 1 && !t.editing, t.onStep), r = t.homes.filter((p) => p.id === t.active)[0];
+function Xl(t) {
+  const e = Z(), n = t.homes.length > 1, s = Ul(), i = t.homes.reduce((p, m) => p + (K.state.screens[m.id] || []).length, 0), a = Gl(i > 1 && !t.editing, t.onStep), r = t.homes.filter((p) => p.id === t.active)[0];
   P(() => {
     !t.visible && t.editing && t.onEditing(!1);
   }, [t.visible]);
@@ -4833,27 +4841,27 @@ function Gl(t) {
     };
   }, [A]);
   const u = !K.card || K.card.canEdit, l = /* @__PURE__ */ o(ae, { children: [
-    u && /* @__PURE__ */ o("button", { class: "round", onClick: () => t.onEditing(!0), title: h("controls.customize"), children: /* @__PURE__ */ o(js, { size: 18 }) }),
-    /* @__PURE__ */ o("button", { class: "round", onClick: t.onSettings, title: h("controls.settings"), children: /* @__PURE__ */ o(Tc, { size: 20 }) }),
-    /* @__PURE__ */ o("button", { class: "round accent", onClick: t.onPhotos, title: h("controls.to_photos"), children: /* @__PURE__ */ o(bc, { size: 20 }) })
+    u && /* @__PURE__ */ o("button", { class: "round", onClick: () => t.onEditing(!0), title: h("controls.customize"), children: /* @__PURE__ */ o(Ls, { size: 18 }) }),
+    /* @__PURE__ */ o("button", { class: "round", onClick: t.onSettings, title: h("controls.settings"), children: /* @__PURE__ */ o(Oc, { size: 20 }) }),
+    /* @__PURE__ */ o("button", { class: "round accent", onClick: t.onPhotos, title: h("controls.to_photos"), children: /* @__PURE__ */ o(yc, { size: 20 }) })
   ] });
   return /* @__PURE__ */ o("div", { ref: t.innerRef, class: "controls" + (t.visible ? " visible" : ""), children: [
     /* @__PURE__ */ o("header", { class: "bar" + (d ? " bar-narrow" : "") + (A ? " menu-open" : "") + (t.editing ? " bar-editing" : ""), children: [
-      /* @__PURE__ */ o("div", { class: "bar-time" + (s ? " clock-link" : ""), onClick: s ? Ul : void 0, children: /* @__PURE__ */ o(Wl, {}) }),
+      /* @__PURE__ */ o("div", { class: "bar-time" + (s ? " clock-link" : ""), onClick: s ? Yl : void 0, children: /* @__PURE__ */ o(Zl, {}) }),
       n && /* @__PURE__ */ o("button", { class: "home-switch", onClick: () => t.onSwitchHome(1), title: h("controls.next_home"), children: [
         /* @__PURE__ */ o("span", { class: "home-name", children: r ? r.name : "" }),
         /* @__PURE__ */ o("span", { class: "home-dots", children: t.homes.map((p) => /* @__PURE__ */ o("i", { class: p.id === t.active ? "on" : "" }, p.id)) })
       ] }),
       /* @__PURE__ */ o("div", { class: "bar-actions", children: t.editing ? /* @__PURE__ */ o(ae, { children: [
-        /* @__PURE__ */ o("button", { class: "round", onClick: t.onAddCard, title: h("controls.add_card"), children: /* @__PURE__ */ o(Le, { size: 20 }) }),
+        /* @__PURE__ */ o("button", { class: "round", onClick: t.onAddCard, title: h("controls.add_card"), children: /* @__PURE__ */ o(je, { size: 20 }) }),
         /* @__PURE__ */ o("button", { class: "pill-btn accent-bg", onClick: () => t.onEditing(!1), children: [
-          /* @__PURE__ */ o(oc, { size: 18 }),
+          /* @__PURE__ */ o(ic, { size: 18 }),
           /* @__PURE__ */ o("span", { children: h("common.done") })
         ] })
       ] }) : d ? /* @__PURE__ */ o("div", { class: "burger", children: [
         /* @__PURE__ */ o("div", { class: "burger-items", children: l }),
         /* @__PURE__ */ o("button", { class: "round burger-btn conn-" + e.status, onClick: () => f(!A), title: Ro(e.status), children: [
-          A ? /* @__PURE__ */ o(je, { size: 20 }) : /* @__PURE__ */ o(Mc, { size: 20 }),
+          A ? /* @__PURE__ */ o(Fe, { size: 20 }) : /* @__PURE__ */ o(Ec, { size: 20 }),
           /* @__PURE__ */ o("i", { class: "burger-dot" })
         ] })
       ] }) : /* @__PURE__ */ o(ae, { children: [
@@ -4864,29 +4872,29 @@ function Gl(t) {
         l
       ] }) })
     ] }),
-    /* @__PURE__ */ o(Zl, { editing: t.editing }),
-    /* @__PURE__ */ o("div", { class: "home-pane" + (t.slide ? " slide-" + t.slide : ""), ...a, children: /* @__PURE__ */ o(Pl, { editing: t.editing, onCamera: t.onCamera, onEdit: t.onEditCard }) }, t.active + "/" + K.state.screen)
+    /* @__PURE__ */ o(Jl, { editing: t.editing }),
+    /* @__PURE__ */ o("div", { class: "home-pane" + (t.slide ? " slide-" + t.slide : ""), ...a, children: /* @__PURE__ */ o(Ll, { editing: t.editing, onCamera: t.onCamera, onEdit: t.onEditCard }) }, t.active + "/" + K.state.screen)
   ] });
 }
-function Ue(t) {
+function Ye(t) {
   return /* @__PURE__ */ o("div", { class: "modal", onClick: t.onClose, children: /* @__PURE__ */ o("div", { class: "modal-box" + (t.wide ? " modal-wide" : ""), onClick: (e) => e.stopPropagation(), children: [
     /* @__PURE__ */ o("div", { class: "modal-head", children: [
       /* @__PURE__ */ o("h2", { children: t.title }),
-      /* @__PURE__ */ o("button", { class: "icon-btn", onClick: t.onClose, children: /* @__PURE__ */ o(je, { size: 24 }) })
+      /* @__PURE__ */ o("button", { class: "icon-btn", onClick: t.onClose, children: /* @__PURE__ */ o(Fe, { size: 24 }) })
     ] }),
     t.children
   ] }) });
 }
-function Xl(t) {
-  return /* @__PURE__ */ o(Ue, { title: h("camera.live_title"), onClose: t.onClose, wide: !0, children: /* @__PURE__ */ o("div", { class: "cam-full", children: /* @__PURE__ */ o("img", { src: t.url, alt: "" }) }) });
+function Kl(t) {
+  return /* @__PURE__ */ o(Ye, { title: h("camera.live_title"), onClose: t.onClose, wide: !0, children: /* @__PURE__ */ o("div", { class: "cam-full", children: /* @__PURE__ */ o("img", { src: t.url, alt: "" }) }) });
 }
-const Kl = [5e3, 1e4, 3e4, 6e4], $l = [20, 45, 120, 0];
-function ed() {
+const $l = [5e3, 1e4, 3e4, 6e4], ed = [20, 45, 120, 0];
+function td() {
   const t = Wt(), e = K.state.screens[t] || [], n = Zt();
   return t + "/" + (e.some((s) => s.id === n) ? n : e[0] ? e[0].id : "");
 }
-function td() {
-  const t = Ye(), [e, n] = v(!1), [s, i] = v(""), a = t.haLink;
+function nd() {
+  const t = We(), [e, n] = v(!1), [s, i] = v(""), a = t.haLink;
   if (a !== "missing" && a !== "error") return null;
   const r = () => {
     n(!0), i(""), t.createHaDashboard().then(() => n(!1), (c) => {
@@ -4899,8 +4907,8 @@ function td() {
     s && /* @__PURE__ */ o("div", { class: "c-red small", children: s })
   ] });
 }
-function nd() {
-  const t = Ye(), e = t.migration, [n, s] = v(""), [i, a] = v(""), r = () => {
+function od() {
+  const t = We(), e = t.migration, [n, s] = v(""), [i, a] = v(""), r = () => {
     s("0 / " + e.photos), a(""), t.migratePhotos((c, d) => s(c + " / " + d)).then(
       () => s(""),
       (c) => {
@@ -4918,8 +4926,8 @@ function nd() {
     i && /* @__PURE__ */ o("div", { class: "c-red small", children: i })
   ] });
 }
-function od(t) {
-  const e = Ye(), { settings: n, photos: s } = e.state, i = !!e.card && !e.card.standalone, a = !!e.card || !!Ut(), [r, c] = v("photos"), d = a ? r : "ha", [A, f] = v(n), [u, l] = v(!1), [p, m] = v(""), [w, x] = v(""), C = (_) => f({ ...A, ..._ }), [g, M] = v(!1), [O, H] = v(""), [I, b] = v(""), B = (_, L) => {
+function id(t) {
+  const e = We(), { settings: n, photos: s } = e.state, i = !!e.card && !e.card.standalone, a = !!e.card || !!Ut(), [r, c] = v("photos"), d = a ? r : "ha", [A, f] = v(n), [u, l] = v(!1), [p, m] = v(""), [w, x] = v(""), C = (_) => f({ ...A, ..._ }), [g, M] = v(!1), [O, H] = v(""), [I, b] = v(""), B = (_, L) => {
     const le = Array.prototype.slice.call(_ || []).filter((fe) => /^image\//.test(fe.type) || /\.(heic|heif)$/i.test(fe.name));
     L && (L.value = ""), le.length && (l(!0), H(""), b(""), e.addPhotos(le, (fe, ut) => b(ut > 1 ? fe + " / " + ut : ""), Q ? W : void 0).then(
       () => l(!1),
@@ -4927,7 +4935,7 @@ function od(t) {
         l(!1), H(fe.message || String(fe));
       }
     ));
-  }, [T, S] = v(_i()), [z, oe] = v(Da()), [re, D] = v(fi()), [X, te] = v(Lt()), y = Ut(), Q = !!e.card && e.card.integration, V = e.card && e.card.config.albums || [], [W, F] = v(e.card && e.card.album && e.card.album !== "all" ? e.card.album : ""), [U, q] = v("");
+  }, [T, S] = v(xi()), [z, oe] = v(Ba()), [re, D] = v(fi()), [X, te] = v(Lt()), y = Ut(), Q = !!e.card && e.card.integration, V = e.card && e.card.config.albums || [], [W, F] = v(e.card && e.card.album && e.card.album !== "all" ? e.card.album : ""), [U, q] = v("");
   P(() => {
     e.card && e.card.mediaBrowserUrl(W).then(q, () => q(""));
   }, [W, !!e.card]);
@@ -4942,8 +4950,8 @@ function od(t) {
       x(h("settings.import_failed", { error: _.message }));
     }
   };
-  return /* @__PURE__ */ o(Ue, { title: /* @__PURE__ */ o("span", { class: "modal-title", children: [
-    /* @__PURE__ */ o(gc, { size: 20, class: "accent-text" }),
+  return /* @__PURE__ */ o(Ye, { title: /* @__PURE__ */ o("span", { class: "modal-title", children: [
+    /* @__PURE__ */ o(bc, { size: 20, class: "accent-text" }),
     /* @__PURE__ */ o("span", { children: h("settings.title") })
   ] }), onClose: t.onClose, children: [
     a && /* @__PURE__ */ o("div", { class: "tabs", children: [
@@ -4953,7 +4961,7 @@ function od(t) {
       !i && /* @__PURE__ */ o("button", { class: d === "ha" ? "active" : "", onClick: () => c("ha"), children: "Home Assistant" })
     ] }),
     d === "photos" && /* @__PURE__ */ o("div", { children: [
-      e.migration && /* @__PURE__ */ o(nd, {}),
+      e.migration && /* @__PURE__ */ o(od, {}),
       /* @__PURE__ */ o("p", { class: "hint", children: e.card ? h("photos.card_hint", { folder: e.card.folder }) : h("photos.local_hint") }),
       /* @__PURE__ */ o(
         "label",
@@ -4968,7 +4976,7 @@ function od(t) {
           },
           children: [
             /* @__PURE__ */ o("input", { type: "file", multiple: !0, accept: "image/*,.heic,.heif", onChange: (_) => B(_.currentTarget.files, _.currentTarget), disabled: u }),
-            /* @__PURE__ */ o(Ac, { size: 40, class: "muted" }),
+            /* @__PURE__ */ o(hc, { size: 40, class: "muted" }),
             /* @__PURE__ */ o("p", { class: "drop-title", children: u ? h("photos.uploading") + (I ? " " + I : "") : h("photos.pick") }),
             /* @__PURE__ */ o("p", { class: "hint small", children: h(Q ? "photos.formats_server" : "photos.formats") })
           ]
@@ -4986,29 +4994,29 @@ function od(t) {
         /* @__PURE__ */ o("span", { children: h("photos.count", { n: s.length }) }),
         U && /* @__PURE__ */ o("a", { href: U, target: "_blank", rel: "noopener", children: h("photos.open_media") })
       ] }),
-      !e.card && s.length > 0 && /* @__PURE__ */ o("div", { class: "thumbs thumbs-small", children: s.map((_) => /* @__PURE__ */ o("div", { class: "thumb", style: { backgroundImage: "url(" + _.url + ")" }, children: /* @__PURE__ */ o("button", { class: "thumb-del", onClick: () => e.deletePhoto(_.id), children: /* @__PURE__ */ o(je, { size: 14 }) }) }, _.id)) }),
+      !e.card && s.length > 0 && /* @__PURE__ */ o("div", { class: "thumbs thumbs-small", children: s.map((_) => /* @__PURE__ */ o("div", { class: "thumb", style: { backgroundImage: "url(" + _.url + ")" }, children: /* @__PURE__ */ o("button", { class: "thumb-del", onClick: () => e.deletePhoto(_.id), children: /* @__PURE__ */ o(Fe, { size: 14 }) }) }, _.id)) }),
       /* @__PURE__ */ o("div", { class: "option", children: [
         /* @__PURE__ */ o("label", { children: h("settings.slide_interval") }),
-        /* @__PURE__ */ o("select", { value: A.slideIntervalMs, onChange: (_) => C({ slideIntervalMs: +_.currentTarget.value }), children: Kl.map((_) => /* @__PURE__ */ o("option", { value: _, children: h("settings.interval." + _) }, _)) })
+        /* @__PURE__ */ o("select", { value: A.slideIntervalMs, onChange: (_) => C({ slideIntervalMs: +_.currentTarget.value }), children: $l.map((_) => /* @__PURE__ */ o("option", { value: _, children: h("settings.interval." + _) }, _)) })
       ] }),
       /* @__PURE__ */ o("div", { class: "option", children: [
         /* @__PURE__ */ o("label", { children: h("settings.idle_return") }),
-        /* @__PURE__ */ o("select", { value: A.idleSec, onChange: (_) => C({ idleSec: +_.currentTarget.value }), children: $l.map((_) => /* @__PURE__ */ o("option", { value: _, children: h("settings.idle." + _) }, _)) })
+        /* @__PURE__ */ o("select", { value: A.idleSec, onChange: (_) => C({ idleSec: +_.currentTarget.value }), children: ed.map((_) => /* @__PURE__ */ o("option", { value: _, children: h("settings.idle." + _) }, _)) })
       ] }),
       /* @__PURE__ */ o("div", { class: "option", children: [
         /* @__PURE__ */ o("label", { children: h("settings.language") }),
         /* @__PURE__ */ o("select", { value: T, onChange: (_) => {
-          S(_.currentTarget.value), rr(_.currentTarget.value), sn();
+          S(_.currentTarget.value), cr(_.currentTarget.value), sn();
         }, children: [
           /* @__PURE__ */ o("option", { value: "", children: h("settings.language_auto") }),
-          ar().map((_) => /* @__PURE__ */ o("option", { value: _.code, children: _.name }, _.code))
+          rr().map((_) => /* @__PURE__ */ o("option", { value: _.code, children: _.name }, _.code))
         ] })
       ] }),
       /* @__PURE__ */ o("div", { class: "option", children: [
         /* @__PURE__ */ o("label", { children: h("settings.quality") }),
         /* @__PURE__ */ o("select", { value: re, onChange: (_) => {
           const L = _.currentTarget.value;
-          D(L), Za(L);
+          D(L), Wa(L);
         }, children: [
           /* @__PURE__ */ o("option", { value: "auto", children: h("settings.quality_auto", { mode: h(pi() === "lite" ? "settings.quality_lite" : "settings.quality_full") }) }),
           /* @__PURE__ */ o("option", { value: "full", children: h("settings.quality_full") }),
@@ -5019,7 +5027,7 @@ function od(t) {
         /* @__PURE__ */ o("label", { children: h("settings.fit") }),
         /* @__PURE__ */ o("select", { value: X, onChange: (_) => {
           const L = _.currentTarget.value;
-          te(L), $a(L);
+          te(L), er(L);
         }, children: [
           /* @__PURE__ */ o("option", { value: "auto", children: h("settings.fit_auto") }),
           /* @__PURE__ */ o("option", { value: "contain", children: h("settings.fit_contain") }),
@@ -5037,7 +5045,7 @@ function od(t) {
         /* @__PURE__ */ o("label", { children: h("settings.kiosk") }),
         /* @__PURE__ */ o("select", { value: z, onChange: (_) => {
           const L = _.currentTarget.value;
-          oe(L), Fl(L);
+          oe(L), ql(L);
         }, children: [
           /* @__PURE__ */ o("option", { value: "", children: h("settings.kiosk_auto") }),
           /* @__PURE__ */ o("option", { value: "on", children: h("settings.kiosk_on") }),
@@ -5056,20 +5064,20 @@ function od(t) {
         y ? /* @__PURE__ */ o("div", { class: "auth-session", children: [
           /* @__PURE__ */ o("span", { children: h("ha.logged_in", { url: y.hassUrl }) }),
           !y.embedded && /* @__PURE__ */ o("button", { class: "btn btn-ghost", onClick: () => {
-            kr(), location.reload();
+            wr(), location.reload();
           }, children: [
-            /* @__PURE__ */ o(Cc, { size: 14 }),
+            /* @__PURE__ */ o(Mc, { size: 14 }),
             /* @__PURE__ */ o("span", { children: h("ha.logout") })
           ] })
         ] }) : /* @__PURE__ */ o("button", { class: "btn btn-ghost btn-login", onClick: () => {
-          e.saveSettings(A), Mr(A.haUrl);
+          e.saveSettings(A), Er(A.haUrl);
         }, children: [
-          /* @__PURE__ */ o(wc, { size: 16 }),
+          /* @__PURE__ */ o(Cc, { size: 16 }),
           /* @__PURE__ */ o("span", { children: h("ha.login") })
         ] }),
         /* @__PURE__ */ o("p", { class: "hint", children: h("ha.local_hint") })
       ] }),
-      /* @__PURE__ */ o(td, {}),
+      /* @__PURE__ */ o(nd, {}),
       e.frameClient && /* @__PURE__ */ o("label", { class: "field", children: [
         /* @__PURE__ */ o("span", { children: h("frame.name") }),
         /* @__PURE__ */ o(
@@ -5088,7 +5096,7 @@ function od(t) {
       /* @__PURE__ */ o("p", { class: "hint", children: h("homes.hint") + (e.card ? h("homes.card_hint") : "") }),
       /* @__PURE__ */ o("div", { class: "option", children: [
         /* @__PURE__ */ o("label", { children: h("screen.start") }),
-        /* @__PURE__ */ o("select", { value: ed(), onChange: (_) => {
+        /* @__PURE__ */ o("select", { value: td(), onChange: (_) => {
           const L = _.currentTarget.value.split("/");
           e.setStart(L[0], L[1]);
         }, children: e.state.homes.map((_) => (e.state.screens[_.id] || []).map((L, le) => /* @__PURE__ */ o("option", { value: _.id + "/" + L.id, children: (e.state.homes.length > 1 ? _.name + " · " : "") + Et(L, le) }, _.id + "/" + L.id))) })
@@ -5107,11 +5115,11 @@ function od(t) {
           /* @__PURE__ */ o("button", { class: "btn btn-ghost", onClick: () => {
             m(JSON.stringify(e.state.layout, null, 2)), x("");
           }, children: [
-            /* @__PURE__ */ o(uc, { size: 14 }),
+            /* @__PURE__ */ o(fc, { size: 14 }),
             /* @__PURE__ */ o("span", { children: h("layout.export") })
           ] }),
-          /* @__PURE__ */ o("button", { class: "btn btn-ghost", onClick: () => e.saveLayout(Ci()), children: [
-            /* @__PURE__ */ o(Bc, { size: 14 }),
+          /* @__PURE__ */ o("button", { class: "btn btn-ghost", onClick: () => e.saveLayout(wi()), children: [
+            /* @__PURE__ */ o(Dc, { size: 14 }),
             /* @__PURE__ */ o("span", { children: h("layout.reset") })
           ] })
         ] }),
@@ -5129,13 +5137,13 @@ function od(t) {
     ] })
   ] });
 }
-function id(t) {
+function sd(t) {
   const e = Object.keys(qt);
-  return /* @__PURE__ */ o(Ue, { title: h("editor.new_card"), onClose: t.onClose, children: /* @__PURE__ */ o("div", { class: "type-list", children: e.map((n) => {
-    const s = qt[n], i = Fe(s.icon);
+  return /* @__PURE__ */ o(Ye, { title: h("editor.new_card"), onClose: t.onClose, children: /* @__PURE__ */ o("div", { class: "type-list", children: e.map((n) => {
+    const s = qt[n], i = qe(s.icon);
     return /* @__PURE__ */ o("button", { class: "type-row", onClick: () => t.onPick({
       // Новая карточка встаёт в конец сетки; settle при сохранении поднимет её на свободное место.
-      id: dr(),
+      id: Ar(),
       type: n,
       title: "",
       icon: s.icon,
@@ -5148,21 +5156,21 @@ function id(t) {
       /* @__PURE__ */ o("span", { class: "status-icon", children: /* @__PURE__ */ o(i, { size: 20 }) }),
       /* @__PURE__ */ o("span", { class: "status-text", children: [
         /* @__PURE__ */ o("b", { children: nt(n) }),
-        /* @__PURE__ */ o("small", { children: ki(n) })
+        /* @__PURE__ */ o("small", { children: vi(n) })
       ] }),
-      /* @__PURE__ */ o(Le, { size: 18 })
+      /* @__PURE__ */ o(je, { size: 18 })
     ] }, n);
   }) }) });
 }
-function sd(t) {
+function ad(t) {
   const e = Z(), [n, s] = v(""), [i, a] = v(!1), [r, c] = v(t.cardType ? "devices" : "entities"), d = n.toLowerCase(), A = Object.keys(e.states).filter((l) => {
-    if (t.exclude.indexOf(l) !== -1 || !i && !Oe(e, l) || !i && t.domains.indexOf(l.split(".")[0]) === -1 || !i && t.match && !t.match(e.states[l])) return !1;
+    if (t.exclude.indexOf(l) !== -1 || !i && !He(e, l) || !i && t.domains.indexOf(l.split(".")[0]) === -1 || !i && t.match && !t.match(e.states[l])) return !1;
     if (!d) return !0;
     const p = String(e.states[l].attributes.friendly_name || "").toLowerCase();
     return l.indexOf(d) !== -1 || p.indexOf(d) !== -1;
   }).sort().slice(0, 150), f = t.cardType, u = f ? Object.keys(e.devices).map((l) => e.devices[l]).map((l) => ({
     dev: l,
-    fit: l.entities.filter((p) => e.registry[p] && e.registry[p].ec == null && Oe(e, p) && no(f, e.states[p]))
+    fit: l.entities.filter((p) => e.registry[p] && e.registry[p].ec == null && He(e, p) && no(f, e.states[p]))
   })).filter((l) => l.fit.length && (t.excludeDevices || []).indexOf(l.dev.id) === -1 && (!d || l.dev.name.toLowerCase().indexOf(d) !== -1)).sort((l, p) => l.dev.name.localeCompare(p.dev.name)) : [];
   return /* @__PURE__ */ o("div", { class: "picker", children: [
     f && /* @__PURE__ */ o("div", { class: "seg seg-wide picker-mode", children: [
@@ -5170,9 +5178,9 @@ function sd(t) {
       /* @__PURE__ */ o("button", { class: r === "entities" ? "active" : "", onClick: () => c("entities"), children: h("editor.entities") })
     ] }),
     /* @__PURE__ */ o("div", { class: "picker-search", children: [
-      /* @__PURE__ */ o(Dc, { size: 16 }),
+      /* @__PURE__ */ o(Tc, { size: 16 }),
       /* @__PURE__ */ o("input", { placeholder: h(r === "devices" ? "editor.search_device" : "editor.search_entity"), value: n, onInput: (l) => s(l.currentTarget.value) }),
-      /* @__PURE__ */ o("button", { class: "icon-btn", onClick: t.onClose, children: /* @__PURE__ */ o(je, { size: 18 }) })
+      /* @__PURE__ */ o("button", { class: "icon-btn", onClick: t.onClose, children: /* @__PURE__ */ o(Fe, { size: 18 }) })
     ] }),
     r === "entities" && /* @__PURE__ */ o("label", { class: "check", children: [
       /* @__PURE__ */ o("input", { type: "checkbox", checked: i, onChange: (l) => a(l.currentTarget.checked) }),
@@ -5196,22 +5204,22 @@ function sd(t) {
     ] }) })
   ] });
 }
-const ad = ["cover", "width", "height"], rd = [[2, 2], [3, 3], [4, 3], [6, 3], [3, 6], [6, 6], [12, 3]];
-function cd(t) {
+const rd = ["cover", "width", "height"], cd = [[2, 2], [3, 3], [4, 3], [6, 3], [3, 6], [6, 6], [12, 3]];
+function ld(t) {
   const e = Z(), [n, s] = v(t.card), [i, a] = v(null), r = qt[n.type], c = (u) => s({ ...n, ...u }), d = (u, l) => c({ items: n.items.map((p, m) => m === u ? { ...p, ...l } : p) }), A = (u, l) => {
     const p = u + l;
     if (p < 0 || p >= n.items.length) return;
     const m = n.items.slice();
     m[u] = n.items[p], m[p] = n.items[u], c({ items: m });
   }, f = Object.keys(Kt);
-  return /* @__PURE__ */ o(Ue, { title: h("editor.card_title", { type: nt(n.type) }), onClose: t.onClose, children: [
+  return /* @__PURE__ */ o(Ye, { title: h("editor.card_title", { type: nt(n.type) }), onClose: t.onClose, children: [
     /* @__PURE__ */ o("label", { class: "field", children: [
       /* @__PURE__ */ o("span", { children: h("editor.name") }),
       /* @__PURE__ */ o("input", { value: n.title, placeholder: nt(n.type), onInput: (u) => c({ title: u.currentTarget.value }) })
     ] }),
     /* @__PURE__ */ o("div", { class: "field", children: [
       /* @__PURE__ */ o("span", { children: h("editor.size") }),
-      /* @__PURE__ */ o("div", { class: "seg seg-wide", children: rd.map(([u, l]) => /* @__PURE__ */ o("button", { class: n.w === u && n.h === l ? "active" : "", onClick: () => c({ w: u, h: l }), children: [
+      /* @__PURE__ */ o("div", { class: "seg seg-wide", children: cd.map(([u, l]) => /* @__PURE__ */ o("button", { class: n.w === u && n.h === l ? "active" : "", onClick: () => c({ w: u, h: l }), children: [
         u,
         "×",
         l
@@ -5221,7 +5229,7 @@ function cd(t) {
       /* @__PURE__ */ o("span", { children: h("editor.color") }),
       /* @__PURE__ */ o("div", { class: "swatches", children: [
         /* @__PURE__ */ o("button", { class: "swatch swatch-auto" + (n.color ? "" : " active"), onClick: () => c({ color: void 0 }), title: h("editor.color_auto"), children: "A" }),
-        Object.keys(Xe).map((u) => /* @__PURE__ */ o("button", { class: "swatch" + (n.color === u ? " active" : ""), style: { background: Xe[u] }, onClick: () => c({ color: u }) }, u))
+        Object.keys(Ke).map((u) => /* @__PURE__ */ o("button", { class: "swatch" + (n.color === u ? " active" : ""), style: { background: Ke[u] }, onClick: () => c({ color: u }) }, u))
       ] })
     ] }),
     /* @__PURE__ */ o("div", { class: "field", children: [
@@ -5233,17 +5241,17 @@ function cd(t) {
     ] }),
     n.type === "cameras" && /* @__PURE__ */ o("div", { class: "field", children: [
       /* @__PURE__ */ o("span", { children: h("editor.camera_picture") }),
-      /* @__PURE__ */ o("div", { class: "seg seg-wide", children: ad.map((u) => /* @__PURE__ */ o("button", { class: (n.fit || "cover") === u ? "active" : "", onClick: () => c({ fit: u }), children: h("editor.fit." + u) }, u)) })
+      /* @__PURE__ */ o("div", { class: "seg seg-wide", children: rd.map((u) => /* @__PURE__ */ o("button", { class: (n.fit || "cover") === u ? "active" : "", onClick: () => c({ fit: u }), children: h("editor.fit." + u) }, u)) })
     ] }),
     n.type !== "cameras" && n.type !== "scenes" && /* @__PURE__ */ o("label", { class: "check check-row", children: [
       /* @__PURE__ */ o("input", { type: "checkbox", checked: !!n.chip, onChange: (u) => c({ chip: u.currentTarget.checked }) }),
       n.type === "weather" ? h("editor.weather_on_photo") : h("editor.chip_on_photo")
     ] }),
     /* @__PURE__ */ o("div", { class: "field", children: [
-      /* @__PURE__ */ o("span", { children: h("editor.items", { n: n.items.length, hint: ki(n.type).toLowerCase() }) }),
+      /* @__PURE__ */ o("span", { children: h("editor.items", { n: n.items.length, hint: vi(n.type).toLowerCase() }) }),
       i === null ? /* @__PURE__ */ o("div", { class: "items", children: [
         n.items.map((u, l) => {
-          const p = Fe(u.icon || to(u.entity, e.states[u.entity] && e.states[u.entity].attributes.device_class));
+          const p = qe(u.icon || to(u.entity, e.states[u.entity] && e.states[u.entity].attributes.device_class));
           return /* @__PURE__ */ o("div", { class: "item-block", children: [
             /* @__PURE__ */ o("div", { class: "item-row", children: [
               /* @__PURE__ */ o("button", { class: "item-icon", title: h("editor.change_icon"), onClick: () => {
@@ -5254,33 +5262,33 @@ function cd(t) {
                 /* @__PURE__ */ o("input", { value: u.name || "", placeholder: u.device ? e.devices[u.device] ? e.devices[u.device].name : h("editor.device") : he(e, { entity: u.entity }), onInput: (m) => d(l, { name: m.currentTarget.value || void 0 }) }),
                 u.device ? /* @__PURE__ */ o("span", { class: "mono", children: h("editor.device") }) : /* @__PURE__ */ o("span", { class: "mono", children: [
                   u.entity,
-                  !Oe(e, u.entity) && /* @__PURE__ */ o("em", { class: "na-tag", children: [
+                  !He(e, u.entity) && /* @__PURE__ */ o("em", { class: "na-tag", children: [
                     " · ",
                     h("editor.unavailable")
                   ] })
                 ] }),
                 n.type === "climate" && /* @__PURE__ */ o("button", { class: "link", onClick: () => a({ index: l, field: "hum" }), children: [
-                  /* @__PURE__ */ o(Qe, { size: 12 }),
+                  /* @__PURE__ */ o(Pe, { size: 12 }),
                   u.hum ? u.hum : h("editor.add_humidity")
                 ] }),
                 n.type === "ac" && /* @__PURE__ */ o("button", { class: "link", onClick: () => a({ index: l, field: "temp" }), children: [
-                  /* @__PURE__ */ o(sa, { size: 12 }),
+                  /* @__PURE__ */ o(ia, { size: 12 }),
                   u.temp ? u.temp : h("editor.room_sensor")
                 ] })
               ] }),
-              /* @__PURE__ */ o("button", { class: "icon-btn", onClick: () => A(l, -1), children: /* @__PURE__ */ o(Ui, { size: 16 }) }),
-              /* @__PURE__ */ o("button", { class: "icon-btn", onClick: () => A(l, 1), children: /* @__PURE__ */ o(Ri, { size: 16 }) }),
+              /* @__PURE__ */ o("button", { class: "icon-btn", onClick: () => A(l, -1), children: /* @__PURE__ */ o(Vi, { size: 16 }) }),
+              /* @__PURE__ */ o("button", { class: "icon-btn", onClick: () => A(l, 1), children: /* @__PURE__ */ o(Ni, { size: 16 }) }),
               /* @__PURE__ */ o("button", { class: "icon-btn danger", onClick: () => c({ items: n.items.filter((m, w) => w !== l) }), children: /* @__PURE__ */ o(rt, { size: 16 }) })
             ] }),
-            u.device && /* @__PURE__ */ o(ld, { it: u, type: n.type, onChange: (m) => d(l, m) })
+            u.device && /* @__PURE__ */ o(dd, { it: u, type: n.type, onChange: (m) => d(l, m) })
           ] }, u.entity + l);
         }),
         /* @__PURE__ */ o("button", { class: "btn btn-ghost", onClick: () => a("add"), children: [
-          /* @__PURE__ */ o(Le, { size: 16 }),
+          /* @__PURE__ */ o(je, { size: 16 }),
           /* @__PURE__ */ o("span", { children: n.type === "weather" && !n.items.length ? h("editor.pick_forecast") : h("editor.add_device") })
         ] })
       ] }) : /* @__PURE__ */ o(
-        sd,
+        ad,
         {
           domains: i === "add" ? r.domains : ["sensor"],
           match: i !== "add" ? (u) => u.attributes.device_class === (i.field === "hum" ? "humidity" : "temperature") : (u) => no(n.type, u),
@@ -5306,8 +5314,8 @@ function cd(t) {
     ] })
   ] });
 }
-function ld(t) {
-  const e = Z(), n = t.it, s = n.skip || [], i = n.names || {}, a = Sa(e, t.type, { ...n, skip: [], names: {} });
+function dd(t) {
+  const e = Z(), n = t.it, s = n.skip || [], i = n.names || {}, a = Ea(e, t.type, { ...n, skip: [], names: {} });
   if (!a.length) return /* @__PURE__ */ o("span", { class: "mono", children: h("editor.no_matching") });
   const r = a.map((f) => f.entity), c = (f, u) => {
     const l = r.slice(), p = l[f];
@@ -5324,12 +5332,12 @@ function ld(t) {
     return /* @__PURE__ */ o("div", { class: "device-part" + (l ? "" : " off"), children: [
       /* @__PURE__ */ o("input", { type: "checkbox", checked: l, title: h(l ? "editor.part_hide" : "editor.part_show"), onChange: (p) => A(f.entity, p.currentTarget.checked) }),
       /* @__PURE__ */ o("input", { class: "part-name", value: i[f.entity] || "", placeholder: f.name || f.entity, onInput: (p) => d(f.entity, p.currentTarget.value) }),
-      /* @__PURE__ */ o("button", { class: "icon-btn", disabled: u === 0, onClick: () => c(u, -1), children: /* @__PURE__ */ o(Ui, { size: 14 }) }),
-      /* @__PURE__ */ o("button", { class: "icon-btn", disabled: u === a.length - 1, onClick: () => c(u, 1), children: /* @__PURE__ */ o(Ri, { size: 14 }) })
+      /* @__PURE__ */ o("button", { class: "icon-btn", disabled: u === 0, onClick: () => c(u, -1), children: /* @__PURE__ */ o(Vi, { size: 14 }) }),
+      /* @__PURE__ */ o("button", { class: "icon-btn", disabled: u === a.length - 1, onClick: () => c(u, 1), children: /* @__PURE__ */ o(Ni, { size: 14 }) })
     ] }, f.entity);
   }) });
 }
-function dd({ thumb: t, sheet: e }) {
+function Ad({ thumb: t, sheet: e }) {
   const [n, s] = v({ x: 0, y: 0, w: window.innerWidth, h: window.innerHeight }), [i, a] = v(t ? [t] : []);
   Zn(() => {
     if (!e) return;
@@ -5349,30 +5357,30 @@ function dd({ thumb: t, sheet: e }) {
     /* @__PURE__ */ o("div", { class: "sheet-tint" })
   ] });
 }
-function Ad({ card: t, tone: e, onCamera: n, onClose: s }) {
+function hd({ card: t, tone: e, onCamera: n, onClose: s }) {
   const i = Z(), a = ne(null), [r, c] = v(null);
   Zn(() => {
     c(a.current);
   }, []);
   const d = ["switches", "scenes", "cameras", "ac", "speakers", "tv", "weather"].indexOf(t.type) !== -1;
   return /* @__PURE__ */ o("div", { class: "sheet-layer", onClick: s, children: /* @__PURE__ */ o("div", { ref: a, class: "sheet sheet-" + t.type + (d ? " sheet-wide" : "") + (t.color ? " tint-" + t.color : ""), onClick: (A) => A.stopPropagation(), children: [
-    /* @__PURE__ */ o(dd, { thumb: e ? e.thumb : void 0, sheet: r }),
+    /* @__PURE__ */ o(Ad, { thumb: e ? e.thumb : void 0, sheet: r }),
     /* @__PURE__ */ o("div", { class: "sheet-inner", children: [
       /* @__PURE__ */ o("div", { class: "panel-head", children: [
         /* @__PURE__ */ o("h2", { children: oo(i, t) }),
         /* @__PURE__ */ o("div", { class: "sheet-actions", children: [
-          /* @__PURE__ */ o(Ba, { card: t }),
-          /* @__PURE__ */ o("button", { class: "sheet-close", onClick: s, children: /* @__PURE__ */ o(je, { size: 18 }) })
+          /* @__PURE__ */ o(Ia, { card: t }),
+          /* @__PURE__ */ o("button", { class: "sheet-close", onClick: s, children: /* @__PURE__ */ o(Fe, { size: 18 }) })
         ] })
       ] }),
-      /* @__PURE__ */ o(Ia, { card: t, size: { w: d ? 600 : 420, h: 600 }, onCamera: n })
+      /* @__PURE__ */ o(za, { card: t, size: { w: d ? 600 : 420, h: 600 }, onCamera: n })
     ] })
   ] }) });
 }
-const Ta = 36e5, Dt = 24 * Ta, Oa = { "24h": Dt, "7d": 7 * Dt, "30d": 30 * Dt }, hd = ["binary_sensor", "switch", "light", "input_boolean", "fan", "lock", "cover", "media_player"], ud = ["on", "open", "unlocked", "playing", "home"];
-function Ha(t) {
+const Da = 36e5, Dt = 24 * Da, Ta = { "24h": Dt, "7d": 7 * Dt, "30d": 30 * Dt }, ud = ["binary_sensor", "switch", "light", "input_boolean", "fan", "lock", "cover", "media_player"], fd = ["on", "open", "unlocked", "playing", "home"];
+function Oa(t) {
   if (!t) return "line";
-  if (hd.indexOf(t.entity_id.split(".")[0]) !== -1) return "timeline";
+  if (ud.indexOf(t.entity_id.split(".")[0]) !== -1) return "timeline";
   const e = t.attributes.state_class;
   return e === "total" || e === "total_increasing" ? "bars" : isNaN(parseFloat(t.state)) ? "timeline" : "line";
 }
@@ -5409,14 +5417,14 @@ function Yo(t) {
     isNaN(s) || e.push({ t: n.t, v: s });
   }), e;
 }
-function fd(t, e, n) {
-  const s = e.entity_id, i = Ha(e), a = Date.now(), r = a - Oa[n], c = { kind: i, from: r, to: a, points: [], segments: [], bucketMs: 0 };
+function pd(t, e, n) {
+  const s = e.entity_id, i = Oa(e), a = Date.now(), r = a - Ta[n], c = { kind: i, from: r, to: a, points: [], segments: [], bucketMs: 0 };
   if (i === "timeline")
     return _n(t, s, r, a).then((d) => {
       const A = d.map((f, u) => ({
         from: Math.max(r, f.t),
         to: u + 1 < d.length ? d[u + 1].t : a,
-        on: f.s === "unavailable" || f.s === "unknown" ? null : ud.indexOf(f.s) !== -1
+        on: f.s === "unavailable" || f.s === "unknown" ? null : fd.indexOf(f.s) !== -1
       }));
       return { ...c, segments: A };
     });
@@ -5424,7 +5432,7 @@ function fd(t, e, n) {
     const d = n === "24h" ? "hour" : "day";
     return Uo(t, s, r, a, d, ["change"]).then((A) => ({
       ...c,
-      bucketMs: d === "hour" ? Ta : Dt,
+      bucketMs: d === "hour" ? Da : Dt,
       points: A.filter((f) => f.change != null).map((f) => ({ t: Vo(f.start), v: f.change }))
     }));
   }
@@ -5433,7 +5441,7 @@ function fd(t, e, n) {
     return A.length ? { ...c, points: A } : _n(t, s, r, a).then((f) => ({ ...c, points: Yo(f) }));
   });
 }
-function pd(t) {
+function md(t) {
   const e = t.points;
   if (t.kind === "timeline") {
     let r = 0, c = 0, d = null;
@@ -5462,27 +5470,27 @@ function pd(t) {
     avg: a ? i / a : void 0
   };
 }
-function md(t, e) {
+function gd(t, e) {
   const n = t.registry[e], s = n && n.di ? t.devices[n.di] : void 0;
   return s ? Promise.resolve(s.entities.filter((i) => i !== e && t.registry[i].ec == null)) : Promise.resolve([]);
 }
-const gd = ["24h", "7d", "30d"], bd = ["switch", "light", "fan", "input_boolean"];
+const bd = ["24h", "7d", "30d"], yd = ["switch", "light", "fan", "input_boolean"];
 function vn(t, e) {
   const n = t.states[e];
   return String(n && n.attributes.friendly_name || e);
 }
-function yd(t) {
+function xd(t) {
   if (t.length < 2) return t;
   const e = t.map((s) => s.split(" "));
   let n = 0;
   for (; e.every((s) => s.length > n + 1 && s[n] === e[0][n]); ) n++;
   return e.map((s) => s.slice(n).join(" "));
 }
-function xd(t) {
+function _d(t) {
   const e = Math.round(t / 6e4), n = Math.floor(e / 1440), s = Math.floor(e % 1440 / 60), i = e % 60;
   return [n ? h("duration.days", { n }) : "", s || n ? h("duration.hours", { n: s }) : "", n ? "" : h("duration.minutes", { n: i })].filter(Boolean).join(" ");
 }
-function _d({ entity: t }) {
+function vd({ entity: t }) {
   const e = Z(), [n, s] = v(!1);
   P(() => {
     if (!n) return;
@@ -5508,14 +5516,14 @@ function de(t) {
     t.note && /* @__PURE__ */ o("div", { class: "stat-note", children: t.note })
   ] });
 }
-function vd({ series: t, sum: e, unit: n, range: s, current: i }) {
+function kd({ series: t, sum: e, unit: n, range: s, current: i }) {
   const a = n ? " " + n : "";
   if (t.kind === "timeline") {
     const r = t.to - t.from;
     return /* @__PURE__ */ o("div", { class: "stats", children: [
       /* @__PURE__ */ o(de, { label: h("stat.now"), value: i }),
       /* @__PURE__ */ o(de, { label: h("stat.turned_on"), value: String(e.onCount || 0), note: h("stat.times") }),
-      /* @__PURE__ */ o(de, { label: h("stat.on_time"), value: xd(e.onMs || 0) }),
+      /* @__PURE__ */ o(de, { label: h("stat.on_time"), value: _d(e.onMs || 0) }),
       /* @__PURE__ */ o(de, { label: h("stat.on_share"), value: Math.round((e.onMs || 0) / r * 100) + "%" })
     ] });
   }
@@ -5529,7 +5537,7 @@ function vd({ series: t, sum: e, unit: n, range: s, current: i }) {
         {
           label: h("stat.peak"),
           value: e.peak ? ee(e.peak.v) + a : "—",
-          note: e.peak ? t.bucketMs >= 864e5 ? ct(e.peak.t) : Pe(e.peak.t) : void 0
+          note: e.peak ? t.bucketMs >= 864e5 ? ct(e.peak.t) : Le(e.peak.t) : void 0
         }
       ),
       /* @__PURE__ */ o(de, { label: h("stat.counter_now"), value: i })
@@ -5542,7 +5550,7 @@ function vd({ series: t, sum: e, unit: n, range: s, current: i }) {
     /* @__PURE__ */ o(de, { label: h("stat.avg"), value: e.avg != null ? ee(e.avg) + a : "—" })
   ] });
 }
-function kd({ series: t, unit: e, range: n }) {
+function wd({ series: t, unit: e, range: n }) {
   const s = t.kind === "timeline" ? t.segments.slice().reverse().slice(0, 60).map((a) => [Ce(a.from, n), a.on ? h("switch.on") : a.on === null ? h("chart.no_connection") : h("switch.off"), "—"]) : t.points.slice().reverse().slice(0, 60).map((a) => [
     t.kind === "bars" && t.bucketMs >= 864e5 ? ct(a.t) : Ce(a.t, n),
     ee(a.v) + (e ? " " + e : ""),
@@ -5554,15 +5562,15 @@ function kd({ series: t, unit: e, range: n }) {
     i && /* @__PURE__ */ o("td", { class: "muted", children: a[2] })
   ] }, r)) }) }) });
 }
-function wd(t) {
-  const e = Z(), [n, s] = v(t.entities[0]), [i, a] = v("24h"), [r, c] = v(null), [d, A] = v(""), [f, u] = v([]), [l, p] = v(!1), m = ne(null), w = io(m).w || 600, x = e.states[n], C = jt(e, n).trim(), g = Ha(x);
+function Cd(t) {
+  const e = Z(), [n, s] = v(t.entities[0]), [i, a] = v("24h"), [r, c] = v(null), [d, A] = v(""), [f, u] = v([]), [l, p] = v(!1), m = ne(null), w = io(m).w || 600, x = e.states[n], C = jt(e, n).trim(), g = Oa(x);
   P(() => {
-    md(e, t.entities[0]).then((b) => u(b.filter((B) => !!e.states[B])), () => {
+    gd(e, t.entities[0]).then((b) => u(b.filter((B) => !!e.states[B])), () => {
     });
   }, [t.entities[0]]), P(() => {
     if (!x) return;
     let b = !0;
-    return c(null), A(""), fd(e, x, i).then(
+    return c(null), A(""), pd(e, x, i).then(
       (B) => {
         b && c(B);
       },
@@ -5573,14 +5581,14 @@ function wd(t) {
       b = !1;
     };
   }, [n, i, e.status]);
-  const M = t.entities.concat(f.filter((b) => t.entities.indexOf(b) === -1)).filter((b) => b === n || Oe(e, b)), O = yd(M.map((b) => vn(e, b))), H = !x || et(x.state) ? h("sensor.no_data") : g === "timeline" ? x.state === "on" ? h("switch.on") : x.state === "off" ? h("switch.off") : x.state : ee(parseFloat(x.state)) + (C ? " " + C : ""), I = n.split(".")[0];
-  return I === "weather" ? /* @__PURE__ */ o(Ue, { title: vn(e, n), onClose: t.onClose, wide: !0, children: /* @__PURE__ */ o("div", { class: "detail", ref: m, children: /* @__PURE__ */ o(Ea, { card: { id: "detail", type: "weather", title: "", x: 0, y: 0, w: 6, h: 6, items: [{ entity: n }] }, size: { w, h: 560 } }) }) }) : /* @__PURE__ */ o(Ue, { title: vn(e, n), onClose: t.onClose, wide: !0, children: /* @__PURE__ */ o("div", { class: "detail", ref: m, children: [
+  const M = t.entities.concat(f.filter((b) => t.entities.indexOf(b) === -1)).filter((b) => b === n || He(e, b)), O = xd(M.map((b) => vn(e, b))), H = !x || et(x.state) ? h("sensor.no_data") : g === "timeline" ? x.state === "on" ? h("switch.on") : x.state === "off" ? h("switch.off") : x.state : ee(parseFloat(x.state)) + (C ? " " + C : ""), I = n.split(".")[0];
+  return I === "weather" ? /* @__PURE__ */ o(Ye, { title: vn(e, n), onClose: t.onClose, wide: !0, children: /* @__PURE__ */ o("div", { class: "detail", ref: m, children: /* @__PURE__ */ o(Ma, { card: { id: "detail", type: "weather", title: "", x: 0, y: 0, w: 6, h: 6, items: [{ entity: n }] }, size: { w, h: 560 } }) }) }) : /* @__PURE__ */ o(Ye, { title: vn(e, n), onClose: t.onClose, wide: !0, children: /* @__PURE__ */ o("div", { class: "detail", ref: m, children: [
     /* @__PURE__ */ o("div", { class: "detail-hero", children: [
       /* @__PURE__ */ o("div", { children: [
         /* @__PURE__ */ o("div", { class: "hero-value", children: H }),
         x && /* @__PURE__ */ o("div", { class: "muted small", children: h("detail.updated", { when: Ce(Date.parse(x.last_changed || "") || Date.now(), "7d") }) })
       ] }),
-      bd.indexOf(I) !== -1 && x && /* @__PURE__ */ o(_d, { entity: n }, n)
+      yd.indexOf(I) !== -1 && x && /* @__PURE__ */ o(vd, { entity: n }, n)
     ] }),
     M.length > 1 && /* @__PURE__ */ o("div", { class: "chips", children: M.map((b, B) => {
       const T = e.states[b], S = !T || et(T.state) ? "—" : isNaN(parseFloat(T.state)) ? T.state === "on" ? h("chip.state_on") : T.state === "off" ? h("chip.state_off") : T.state : ee(parseFloat(T.state)) + jt(e, b);
@@ -5590,34 +5598,34 @@ function wd(t) {
       ] }, b);
     }) }),
     /* @__PURE__ */ o("div", { class: "detail-tools", children: [
-      /* @__PURE__ */ o("div", { class: "seg", children: gd.map((b) => /* @__PURE__ */ o("button", { class: b === i ? "active" : "", onClick: () => a(b), children: h("range." + b) }, b)) }),
+      /* @__PURE__ */ o("div", { class: "seg", children: bd.map((b) => /* @__PURE__ */ o("button", { class: b === i ? "active" : "", onClick: () => a(b), children: h("range." + b) }, b)) }),
       /* @__PURE__ */ o("button", { class: "chip-btn" + (l ? " on" : ""), onClick: () => p(!l), children: [
-        /* @__PURE__ */ o(Lc, { size: 14 }),
+        /* @__PURE__ */ o(jc, { size: 14 }),
         /* @__PURE__ */ o("span", { children: h("detail.table") })
       ] })
     ] }),
     d && /* @__PURE__ */ o("div", { class: "chart-empty c-red", children: h("detail.load_error", { error: d }) }),
     !d && !r && /* @__PURE__ */ o("div", { class: "chart-empty", children: h("common.loading") }),
-    r && (l ? /* @__PURE__ */ o(kd, { series: r, unit: C, range: i }) : /* @__PURE__ */ o(Gc, { series: r, unit: C, range: i, width: w })),
-    r && /* @__PURE__ */ o(vd, { series: r, sum: pd(r), unit: C, range: i, current: H }),
+    r && (l ? /* @__PURE__ */ o(wd, { series: r, unit: C, range: i }) : /* @__PURE__ */ o(Xc, { series: r, unit: C, range: i, width: w })),
+    r && /* @__PURE__ */ o(kd, { series: r, sum: md(r), unit: C, range: i, current: H }),
     r && r.kind !== "timeline" && i !== "24h" && /* @__PURE__ */ o("div", { class: "muted small detail-foot", children: [
       r.kind === "bars" ? h("detail.foot_bars") : h(i === "7d" ? "detail.foot_hourly" : "detail.foot_daily"),
       " · ",
-      h("detail.days", { n: Math.round(Oa[i] / 864e5) })
+      h("detail.days", { n: Math.round(Ta[i] / 864e5) })
     ] })
   ] }) });
 }
-function Qa(t, e, n) {
+function Ha(t, e, n) {
   const s = (i) => i.split(",").map((a) => t + a).join(",");
   return s(".accent-text") + "{color:" + e + "}" + s(".light.on .light-icon") + "{background:" + e + "}" + s(".light.on") + "{border-color:" + e + ";background:" + n + "}" + s(".seg .active") + "{background:" + n + ";color:" + e + "}" + s(".room-temp sup") + "{color:" + e + "}";
 }
-function Cd(t) {
+function Md(t) {
   const e = parseInt(t.slice(1), 16);
   return "rgba(" + (e >> 16) + "," + (e >> 8 & 255) + "," + (e & 255) + ",0.2)";
 }
-const Md = Object.keys(Xe).map((t) => Qa(".tint-" + t + " ", Xe[t], Cd(Xe[t]))).join("");
-function Ed() {
-  const t = Ye(), e = cr(), n = Ja(), { settings: s, layout: i, sync: a, homes: r, active: c } = t.state;
+const Ed = Object.keys(Ke).map((t) => Ha(".tint-" + t + " ", Ke[t], Md(Ke[t]))).join("");
+function Sd() {
+  const t = We(), e = lr(), n = Za(), { settings: s, layout: i, sync: a, homes: r, active: c } = t.state;
   P(() => t.start(), []);
   const d = Ai(() => new Xn("", () => Promise.resolve("")), []), A = t.card ? t.card.client : t.haClient || d, [f, u] = v(""), l = (E) => {
     const Y = r.findIndex((Ee) => Ee.id === c), pe = r[(Y + E + r.length) % r.length];
@@ -5653,7 +5661,7 @@ function Ed() {
       S(Y), clearTimeout(z.current), z.current = window.setTimeout(() => S(""), (E.duration || 30) * 1e3);
     }
   }), [A]);
-  const [oe, re] = v(null), [D, X] = v(null), [te, y] = v(!1), [Q, V] = v(null), [W, F] = v(!0), [U, q] = v(""), N = Lr(U || void 0), G = oe && i.cards.filter((E) => E.id === oe)[0] || null, ie = a === "local" && !t.haClient;
+  const [oe, re] = v(null), [D, X] = v(null), [te, y] = v(!1), [Q, V] = v(null), [W, F] = v(!0), [U, q] = v(""), N = jr(U || void 0), G = oe && i.cards.filter((E) => E.id === oe)[0] || null, ie = a === "local" && !t.haClient;
   P(() => {
     ie && B(!0);
   }, [ie]), P(() => {
@@ -5674,7 +5682,7 @@ function Ed() {
     return E.addEventListener("scroll", Y), () => E.removeEventListener("scroll", Y);
   }, []);
   const [L, le] = v(!1);
-  Nr({ root: ve, controls: At, ambient: ht, soft: _ }, M, O, !Me && !L, () => le(!0));
+  Rr({ root: ve, controls: At, ambient: ht, soft: _ }, M, O, !Me && !L, () => le(!0));
   const fe = (M || !!G) && !$ && !H;
   P(() => {
     if (!fe || !s.idleSec) return;
@@ -5692,12 +5700,12 @@ function Ed() {
     const Y = i.cards.some((ft) => ft.id === E.id), pe = ot(E), Ee = Y ? i.cards.map((ft) => ft.id === E.id ? pe : ft) : i.cards.concat(pe);
     t.saveLayout({ ...i, cards: Ie(Ee, pe) }), X(null);
   };
-  return /* @__PURE__ */ o(bi.Provider, { value: A, children: /* @__PURE__ */ o(yi.Provider, { value: V, children: /* @__PURE__ */ o("div", { class: "root q-" + n, children: [
-    /* @__PURE__ */ o("style", { children: Md + (N ? Qa("", N.accent, N.accentSoft) : "") }),
+  return /* @__PURE__ */ o(gi.Provider, { value: A, children: /* @__PURE__ */ o(bi.Provider, { value: V, children: /* @__PURE__ */ o("div", { class: "root q-" + n, children: [
+    /* @__PURE__ */ o("style", { children: Ed + (N ? Ha("", N.accent, N.accentSoft) : "") }),
     /* @__PURE__ */ o("div", { class: "app", ref: ve, lang: e, children: [
-      /* @__PURE__ */ o(Vr, { urls: m, index: x % Math.max(w, 1), tone: N, soft: M, softRef: _, onShow: q }),
+      /* @__PURE__ */ o(Ur, { urls: m, index: x % Math.max(w, 1), tone: N, soft: M, softRef: _, onShow: q }),
       /* @__PURE__ */ o(
-        El,
+        Sl,
         {
           visible: !M,
           showHint: W && !G,
@@ -5709,7 +5717,7 @@ function Ed() {
         }
       ),
       /* @__PURE__ */ o(
-        Gl,
+        Xl,
         {
           innerRef: At,
           visible: M,
@@ -5728,10 +5736,10 @@ function Ed() {
         }
       )
     ] }),
-    G && /* @__PURE__ */ o(Ad, { card: G, tone: N, onCamera: S, onClose: () => re(null) }),
-    T && /* @__PURE__ */ o(Xl, { url: T, onClose: () => S("") }),
+    G && /* @__PURE__ */ o(hd, { card: G, tone: N, onCamera: S, onClose: () => re(null) }),
+    T && /* @__PURE__ */ o(Kl, { url: T, onClose: () => S("") }),
     b && /* @__PURE__ */ o(
-      od,
+      id,
       {
         onClose: () => B(!1),
         onCustomize: () => {
@@ -5739,11 +5747,11 @@ function Ed() {
         }
       }
     ),
-    te && /* @__PURE__ */ o(id, { onClose: () => y(!1), onPick: (E) => {
+    te && /* @__PURE__ */ o(sd, { onClose: () => y(!1), onPick: (E) => {
       y(!1), X({ card: E, isNew: !0 });
     } }),
     D && /* @__PURE__ */ o(
-      cd,
+      ld,
       {
         card: D.card,
         onSave: ut,
@@ -5753,10 +5761,10 @@ function Ed() {
         onClose: () => X(null)
       }
     ),
-    Q && /* @__PURE__ */ o(wd, { entities: Q, onClose: () => V(null) }, Q.join(","))
+    Q && /* @__PURE__ */ o(Cd, { entities: Q, onClose: () => V(null) }, Q.join(","))
   ] }) }) });
 }
-class Sd extends Xn {
+class zd extends Xn {
   constructor() {
     super("", () => Promise.resolve("")), this.hass = null;
   }
@@ -5810,21 +5818,21 @@ class Sd extends Xn {
     return e || "";
   }
 }
-function zd(t) {
+function Id(t) {
   return t && t.__esModule && Object.prototype.hasOwnProperty.call(t, "default") ? t.default : t;
 }
 var kn, Wo;
-function Id() {
+function Bd() {
   return Wo || (Wo = 1, kn = {
     webm: "data:video/webm;base64,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",
     mp4: "data:video/mp4;base64,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"
   }), kn;
 }
 var wn, Zo;
-function Bd() {
+function Dd() {
   if (Zo) return wn;
   Zo = 1;
-  const { webm: t, mp4: e } = Id(), n = () => typeof navigator < "u" && parseFloat(
+  const { webm: t, mp4: e } = Bd(), n = () => typeof navigator < "u" && parseFloat(
     ("" + (/CPU.*OS ([0-9_]{3,4})[0-9_]{0,1}|(CPU like).*AppleWebKit.*Mobile/i.exec(
       navigator.userAgent
     ) || [0, ""])[1]).replace("undefined", "3_2").replace("_", ".").replace("_", "")
@@ -5875,10 +5883,10 @@ function Bd() {
   }
   return wn = i, wn;
 }
-var Dd = Bd();
-const Td = /* @__PURE__ */ zd(Dd);
+var Td = Dd();
+const Od = /* @__PURE__ */ Id(Td);
 let qn = null;
-const Jo = new Td();
+const Jo = new Od();
 function Cn() {
   const t = navigator.wakeLock;
   return !t || document.visibilityState !== "visible" ? Promise.resolve(!1) : t.request("screen").then(
@@ -5889,7 +5897,7 @@ function Cn() {
   );
 }
 let Go = !1;
-function Od() {
+function Hd() {
   if (Go || (Go = !0, /SmartFrame\//.test(navigator.userAgent))) return;
   Cn(), document.addEventListener("visibilitychange", () => {
     document.visibilityState === "visible" && !qn && Cn();
@@ -5902,22 +5910,22 @@ function Od() {
   };
   document.addEventListener("touchend", t), document.addEventListener("click", t);
 }
-const Hd = ':host{display:block;position:relative;height:calc(100vh - var(--header-height, 56px));min-height:420px;overflow:hidden;font-family:Inter,Roboto,-apple-system,"Segoe UI",sans-serif;color:#f5f7fb;background:#000;border-radius:var(--ha-card-border-radius,0)}#app{position:absolute;top:0;left:0;right:0;bottom:0}';
-class Qd extends HTMLElement {
+const Qd = ':host{display:block;position:relative;height:calc(100vh - var(--header-height, 56px));min-height:420px;overflow:hidden;font-family:Inter,Roboto,-apple-system,"Segoe UI",sans-serif;color:#f5f7fb;background:#000;border-radius:var(--ha-card-border-radius,0)}#app{position:absolute;top:0;left:0;right:0;bottom:0}';
+class Pd extends HTMLElement {
   constructor() {
-    super(...arguments), this.client = new Sd(), this.backend = null, this.config = { type: "custom:photoframe-card" }, this.root = null, this.exitKiosk = null, this.offKiosk = null, this.offIntegration = null;
+    super(...arguments), this.client = new zd(), this.backend = null, this.config = { type: "custom:photoframe-card" }, this.root = null, this.exitKiosk = null, this.offKiosk = null, this.offIntegration = null;
   }
   // Включить/выключить киоск по текущим настройкам. Фронтенд HA дорисовывается не сразу —
   // поэтому вызывается и при монтировании, и при каждом обновлении hass, пока не получится.
   syncKiosk() {
-    const e = this.config.kiosk != null ? this.config.kiosk : !!(this.backend && this.backend.integration && this.backend.config.kiosk), n = this.isConnected && Nl(!!e);
-    n && !this.exitKiosk && (this.exitKiosk = Yl()), !n && this.exitKiosk && (this.exitKiosk(), this.exitKiosk = null);
+    const e = this.config.kiosk != null ? this.config.kiosk : !!(this.backend && this.backend.integration && this.backend.config.kiosk), n = this.isConnected && Rl(!!e);
+    n && !this.exitKiosk && (this.exitKiosk = Wl()), !n && this.exitKiosk && (this.exitKiosk(), this.exitKiosk = null);
   }
   setConfig(e) {
     this.config = e, this.backend && !this.backend.integration && (this.backend.config = e, K.applyCardConfig(e)), this.syncKiosk();
   }
   set hass(e) {
-    this.client.setHass(e), this.syncKiosk(), this.backend || (this.backend = new Nt(this.client, this.config), K.attachCard(this.backend), Si(this.client).then((n) => {
+    this.client.setHass(e), this.syncKiosk(), this.backend || (this.backend = new Nt(this.client, this.config), K.attachCard(this.backend), Ei(this.client).then((n) => {
       if (!n) return;
       const s = new Nt(this.client, n, void 0, !1, !0);
       this.backend = s, K.attachCard(s), this.isConnected && !this.offIntegration && (this.offIntegration = s.watch((i) => K.applyCardConfig(i))), this.syncKiosk();
@@ -5925,7 +5933,7 @@ class Qd extends HTMLElement {
   }
   connectedCallback() {
     const e = this.backend;
-    e && e.integration && !this.offIntegration && (this.offIntegration = e.watch((n) => K.applyCardConfig(n))), this.mount(), this.offKiosk = ql(() => this.syncKiosk()), this.syncKiosk();
+    e && e.integration && !this.offIntegration && (this.offIntegration = e.watch((n) => K.applyCardConfig(n))), this.mount(), this.offKiosk = Nl(() => this.syncKiosk()), this.syncKiosk();
   }
   disconnectedCallback() {
     this.root && co(null, this.root), this.root = null, this.exitKiosk && (this.exitKiosk(), this.exitKiosk = null), this.offKiosk && (this.offKiosk(), this.offKiosk = null), this.offIntegration && (this.offIntegration(), this.offIntegration = null);
@@ -5942,14 +5950,14 @@ class Qd extends HTMLElement {
   mount() {
     if (this.root || !this.backend || !this.isConnected) return;
     const e = this.shadowRoot || this.attachShadow({ mode: "open" }), n = document.createElement("style");
-    n.textContent = Hd + Va;
+    n.textContent = Qd + Ra;
     const s = document.createElement("div");
-    s.id = "app", e.appendChild(n), e.appendChild(s), this.root = s, co(/* @__PURE__ */ o(Ed, {}), s), Od();
+    s.id = "app", e.appendChild(n), e.appendChild(s), this.root = s, co(/* @__PURE__ */ o(Sd, {}), s), Hd();
   }
 }
-customElements.get("photoframe-card") || customElements.define("photoframe-card", Qd);
+customElements.get("photoframe-card") || customElements.define("photoframe-card", Pd);
 console.info("%c PHOTO-FRAME %c v0.3.1 ", "color:#fff;background:#0891b2;font-weight:700", "color:#0891b2;background:#fff");
-Ir();
+Br();
 const Nn = window;
 Nn.customCards = Nn.customCards || [];
 Nn.customCards.push({

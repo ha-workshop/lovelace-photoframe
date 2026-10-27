@@ -7,7 +7,7 @@ import type { HAClient } from './ha';
 import type { HomeScreens, Layout } from './layout';
 import type { Home, Photo, Settings } from './store';
 import { resize } from './photos';
-import { targetWidth } from './quality';
+import { targetSize } from './quality';
 import { t } from '../i18n';
 
 export const CARD_TYPE = 'custom:photoframe-card';
@@ -174,12 +174,14 @@ export class CardBackend {
   }
 
   // Только id фото в папке (без подписанных ссылок) — дёшево проверить, не поменялся ли набор.
-  // С интеграцией фото готовит сервер: список альбома со ссылками на кадры под ширину этого экрана.
+  // С интеграцией фото готовит сервер: список альбома со ссылками на кадры под размер этого экрана.
   private integrationPhotos(): Promise<Photo[]> {
+    const size = targetSize();
     return this.client.call<{ photos: Array<{ id: string; url: string }> }>({
       type: 'photoframe/photos',
       album: this.album || 'all',
-      width: targetWidth(),
+      width: size.w,
+      height: size.h,
     }).then((r) => r.photos.map((p) => ({ id: p.id, url: this.client.resolveUrl(p.url) })));
   }
 
