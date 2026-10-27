@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Сборка интерфейса для интеграции Photo Frame (mZer0ne/ha-photoframe):
+# Сборка интерфейса для интеграции Photo Frame (ha-workshop/ha-photoframe):
 #   <папка>/photoframe-card.js  — карточка для дашбордов
 #   <папка>/pwa/                — отдельное приложение (интеграция раздаёт его по /photoframe/)
 #

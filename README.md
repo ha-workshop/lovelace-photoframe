@@ -1,4 +1,4 @@
-<p align="center"><img src="https://raw.githubusercontent.com/mZer0ne/lovelace-photoframe/main/docs/icon.png" width="128" height="128" alt="Photo Frame"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/ha-workshop/lovelace-photoframe/main/docs/icon.png" width="128" height="128" alt="Photo Frame"></p>
 
 # Photo Frame for Home Assistant
 
@@ -9,16 +9,16 @@ Your photos, a big clock and the weather fill the screen. Swipe up and your ligh
 air conditioner, cameras, speakers and TV are right there. Leave it alone for a minute — back to photos.
 
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories)
-[![Release](https://img.shields.io/github/v/release/mZer0ne/lovelace-photoframe)](https://github.com/mZer0ne/lovelace-photoframe/releases)
+[![Release](https://img.shields.io/github/v/release/ha-workshop/lovelace-photoframe)](https://github.com/ha-workshop/lovelace-photoframe/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 | Photo frame | Control panel |
 |---|---|
-| ![Photo frame mode](https://raw.githubusercontent.com/mZer0ne/lovelace-photoframe/main/docs/screenshots/ambient.jpg) | ![Control panel](https://raw.githubusercontent.com/mZer0ne/lovelace-photoframe/main/docs/screenshots/controls.jpg) |
+| ![Photo frame mode](https://raw.githubusercontent.com/ha-workshop/lovelace-photoframe/main/docs/screenshots/ambient.jpg) | ![Control panel](https://raw.githubusercontent.com/ha-workshop/lovelace-photoframe/main/docs/screenshots/controls.jpg) |
 
 | Temperature history | Energy use |
 |---|---|
-| ![Temperature chart](https://raw.githubusercontent.com/mZer0ne/lovelace-photoframe/main/docs/screenshots/chart-temperature.jpg) | ![Energy per day](https://raw.githubusercontent.com/mZer0ne/lovelace-photoframe/main/docs/screenshots/chart-energy.jpg) |
+| ![Temperature chart](https://raw.githubusercontent.com/ha-workshop/lovelace-photoframe/main/docs/screenshots/chart-temperature.jpg) | ![Energy per day](https://raw.githubusercontent.com/ha-workshop/lovelace-photoframe/main/docs/screenshots/chart-energy.jpg) |
 
 ## Features
 
@@ -60,10 +60,10 @@ Photo Frame is **one dashboard card** (`custom:photoframe-card`) — not an add-
 
 ## Installation
 
-1. HACS → ⋮ → **Custom repositories** → `https://github.com/mZer0ne/lovelace-photoframe`,
+1. HACS → ⋮ → **Custom repositories** → `https://github.com/ha-workshop/lovelace-photoframe`,
    category **Dashboard**.
 
-   [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=mZer0ne&repository=lovelace-photoframe&category=plugin)
+   [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ha-workshop&repository=lovelace-photoframe&category=plugin)
 2. Find **Photo Frame** in HACS and install it. HACS adds the resource
    `/hacsfiles/lovelace-photoframe/dist/photoframe-card.js` (if not: *Settings → Dashboards → Resources*,
    type *JavaScript module*).
