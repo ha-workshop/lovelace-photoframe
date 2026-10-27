@@ -34,6 +34,8 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <!-- Китайские планшеты при «быстром» включении шлют своё -->
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <!-- Обновили APK из HA — открыть рамку снова -->
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
         <receiver android:name=".AdminReceiver"

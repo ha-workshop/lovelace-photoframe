@@ -4,7 +4,7 @@ import { DetailContext, HAContext } from './lib/hooks';
 import { useLanguage } from './i18n';
 import { useQuality } from './lib/quality';
 import { useStore } from './lib/store';
-import { reportFrame } from './lib/frame';
+import { reportFrame, updateApk } from './lib/frame';
 import { applyBacklight, dimOpacity, onHardwareWake } from './lib/screen';
 import { ACCENTS, clampBox, settle, type Card } from './lib/layout';
 import { useTone } from './lib/photoTone';
@@ -91,6 +91,7 @@ export function App() {
     else if (c.command === 'show_panel') setControls(true);
     else if (c.command === 'show_photos') { setControls(false); setSheetId(null); setCameraUrl(''); }
     else if (c.command === 'reload') location.reload();
+    else if (c.command === 'update_apk') updateApk();
     else if (c.command === 'show_screen' && c.screen) {
       const parts = c.screen.split('/');
       store.setActive(parts[0], parts[1]);

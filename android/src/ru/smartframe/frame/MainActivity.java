@@ -11,6 +11,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -36,6 +37,12 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 
 import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 // Рамка — полноэкранный WebView с PWA, которую раздаёт Home Assistant.
 // Интерфейс живёт на сервере (./deploy.sh pwa обновляет его без переустановки APK),
@@ -355,6 +362,25 @@ public class MainActivity extends Activity {
             photos.preload(url);
         }
 
+        // Версия APK — HA показывает обновление, когда интеграция раздаёт новее.
+        @JavascriptInterface
+        public String getApkVersion() {
+            try {
+                PackageInfo p = getPackageManager().getPackageInfo(getPackageName(), 0);
+                return p.versionName;
+            } catch (Exception e) {
+                return "";
+            }
+        }
+
+        // Обновление из HA (кнопка «Установить» у обновления рамки): скачать APK, который раздаёт интеграция, и поставить.
+        @JavascriptInterface
+        public void updateApk(final String url) {
+            new Thread(new Runnable() {
+                public void run() { installUpdate(url); }
+            }).start();
+        }
+
         // Сон из HA: погасить экран совсем (если дали право) или включить обратно.
         @JavascriptInterface
         public void setScreenOn(final boolean on) {
@@ -362,6 +388,40 @@ public class MainActivity extends Activity {
                 public void run() { setScreen(on); }
             });
         }
+    }
+
+    // С root (как на рамках с SuperSU) — тихо через pm install; без него — системный экран установки, нажать «Установить».
+    // После обновления Android перезапускает рамку сам (BootReceiver, MY_PACKAGE_REPLACED).
+    private void installUpdate(String url) {
+        File apk = new File(getExternalCacheDir() != null ? getExternalCacheDir() : getCacheDir(), "update.apk");
+        HttpURLConnection c = null;
+        try {
+            c = (HttpURLConnection) new URL(url).openConnection();
+            c.setConnectTimeout(15000);
+            c.setReadTimeout(60000);
+            if (c.getResponseCode() != 200) return;
+            InputStream in = c.getInputStream();
+            FileOutputStream out = new FileOutputStream(apk);
+            byte[] buf = new byte[16384];
+            for (int n; (n = in.read(buf)) > 0;) out.write(buf, 0, n);
+            out.close();
+            // Системному установщику файл должен быть доступен на чтение.
+            apk.setReadable(true, false);
+        } catch (Exception e) {
+            return;
+        } finally {
+            if (c != null) c.disconnect();
+        }
+        try {
+            Process p = Runtime.getRuntime().exec(new String[] { "su", "-c", "pm install -r " + apk.getAbsolutePath() });
+            if (p.waitFor() == 0) return;
+        } catch (Exception e) {
+            // root нет — ставим через системный установщик
+        }
+        Intent install = new Intent(Intent.ACTION_VIEW);
+        install.setDataAndType(Uri.fromFile(apk), "application/vnd.android.package-archive");
+        install.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(install);
     }
 
     // 0…1 — яркость подсветки поверх системной; 0 — минимум (рамка «спит»: страница чёрная).
