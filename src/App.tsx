@@ -4,6 +4,7 @@ import { DetailContext, HAContext } from './lib/hooks';
 import { useLanguage } from './i18n';
 import { useQuality } from './lib/quality';
 import { useStore } from './lib/store';
+import { reportFrame } from './lib/frame';
 import { ACCENTS, clampBox, settle, type Card } from './lib/layout';
 import { useTone } from './lib/photoTone';
 import { useSwipe } from './lib/swipe';
@@ -64,12 +65,44 @@ export function App() {
   const n = urls.length;
 
   const [index, setIndex] = useState(0);
+  // HA видит, что на рамке сейчас: текущее фото (имя и картинка у сущности устройства) и экран.
+  const current = n ? urls[index % n] : '';
+  useEffect(() => {
+    const ha = store.frameClient;
+    if (!ha || !current || /^(data|blob):/.test(current)) return;
+    const path = current.replace(/^https?:\/\/[^/]+/, '');
+    reportFrame(ha, { photo: decodeURIComponent(path.split('?')[0].split('/').pop() || ''), photo_url: path });
+  }, [current, store.frameClient]);
+  useEffect(() => {
+    if (store.frameClient) reportFrame(store.frameClient, { screen: active + '/' + store.state.screen });
+  }, [active, store.state.screen, store.frameClient]);
   // Открыта ли панель и идёт ли редактирование — из общего хранилища, чтобы пережить пересоздание карточки.
   const [controls, setControls] = useState(store.ui.controls);
   const [editing, setEditing] = useState(store.ui.editing);
   useEffect(() => { store.ui.controls = controls; store.ui.editing = editing; }, [controls, editing]);
   const [showSettings, setShowSettings] = useState(false);
   const [cameraUrl, setCameraUrl] = useState('');
+  const cameraTimer = useRef(0);
+
+  // Команды из HA — кнопки устройства рамки и службы photoframe.* (рамка с интеграцией Photo Frame).
+  useEffect(() => store.onCommand((c) => {
+    if (c.command === 'next_photo') setIndex((i) => i + 1);
+    else if (c.command === 'show_panel') setControls(true);
+    else if (c.command === 'show_photos') { setControls(false); setSheetId(null); setCameraUrl(''); }
+    else if (c.command === 'reload') location.reload();
+    else if (c.command === 'show_screen' && c.screen) {
+      const parts = c.screen.split('/');
+      store.setActive(parts[0], parts[1]);
+      setControls(true);
+    } else if (c.command === 'show_camera' && c.entity) {
+      // Позвонили в дверь: камера поверх всего на N секунд, потом обратно.
+      const url = client.cameraStreamUrl(c.entity);
+      if (!url) return;
+      setCameraUrl(url);
+      clearTimeout(cameraTimer.current);
+      cameraTimer.current = window.setTimeout(() => setCameraUrl(''), (c.duration || 30) * 1000);
+    }
+  }), [client]);
   const [sheetId, setSheetId] = useState<string | null>(null);
   const [editCard, setEditCard] = useState<{ card: Card; isNew: boolean } | null>(null);
   const [adding, setAdding] = useState(false);

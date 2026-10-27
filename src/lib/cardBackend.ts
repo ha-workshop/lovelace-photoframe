@@ -80,8 +80,12 @@ export class CardBackend {
     readonly integration = false,
   ) {}
 
+  // Альбом этой рамки (подпапка папки фото) — выбирается в HA, у устройства рамки; all — вся папка.
+  album = '';
+
   get folder() {
-    return (this.config.media_folder || 'photoframe').replace(/^\/+|\/+$/g, '');
+    const base = (this.config.media_folder || 'photoframe').replace(/^\/+|\/+$/g, '');
+    return this.album && this.album !== 'all' ? base + '/' + this.album : base;
   }
 
   // Источник «Моих медиа»: от интеграции, а без неё — спрашиваем у HA. Обычно это local (= /media),

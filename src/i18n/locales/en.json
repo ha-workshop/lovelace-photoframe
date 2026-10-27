@@ -312,5 +312,8 @@
   "lock.color.sky": "Sky",
   "lock.color.rose": "Rose",
   "editor.part_hide": "Hide in the card",
-  "editor.part_show": "Show in the card"
+  "editor.part_show": "Show in the card",
+  "frame.name": "This frame's name in Home Assistant",
+  "frame.name_placeholder": "e.g. Kitchen",
+  "frame.hint": "The frame is a device in HA (Settings → Devices): its album, start screen, buttons and services for automations live there."
 }
