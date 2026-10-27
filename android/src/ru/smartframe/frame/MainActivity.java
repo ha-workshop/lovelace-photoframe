@@ -18,6 +18,7 @@ import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -29,11 +30,15 @@ import android.widget.EditText;
 //
 // Указывается только адрес сервера Home Assistant — при первом запуске или через adb:
 //   adb shell am start -n ru.smartframe.frame/.MainActivity -e ha http://192.168.1.10:8123
-// Страница рамки на нём — /local/photoframe/index.html (туда её кладёт ./deploy.sh pwa).
+// Страница рамки на нём — /photoframe/index.html (её раздаёт интеграция Photo Frame);
+// интеграции нет — /local/photoframe/index.html (туда PWA кладёт ./deploy.sh pwa).
 public class MainActivity extends Activity {
     private static final String PREFS = "frame";
     private static final String KEY_HA = "ha";
-    private static final String PAGE = "/local/photoframe/index.html";
+    private static final String PAGE = "/photoframe/index.html";
+    private static final String PAGE_LOCAL = "/local/photoframe/index.html";
+    // Интеграции нет (404) — переходим на копию в www и запоминаем это до следующего запуска.
+    private boolean local;
     private static final int PICK_PHOTOS = 1;
 
     private WebView web;
@@ -66,6 +71,14 @@ public class MainActivity extends Activity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 return false;
+            }
+
+            @Override
+            public void onReceivedHttpError(WebView view, WebResourceRequest req, WebResourceResponse res) {
+                if (req.isForMainFrame() && res.getStatusCode() == 404 && !local) {
+                    local = true;
+                    view.loadUrl(url());
+                }
             }
 
             @Override
@@ -129,7 +142,7 @@ public class MainActivity extends Activity {
     private String url() {
         String ha = ha();
         if (!ha.matches("(?i)^https?://.*")) ha = "http://" + ha;
-        return ha.replaceAll("/+$", "") + PAGE;
+        return ha.replaceAll("/+$", "") + (local ? PAGE_LOCAL : PAGE);
     }
 
     private void saveHa(String ha) {
