@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { defaultLayout, newScreenId, normalizeScreens, type HomeScreens, type Layout, type Screen } from './layout';
 import * as local from './photos';
-import { CardBackend, loadCardConfig, type CardConfig } from './cardBackend';
+import { CardBackend, loadCardConfig, loadIntegration, type CardConfig, type IntegrationConfig } from './cardBackend';
 import { HAClient } from './ha';
 import { accessToken, haSession } from './haAuth';
 import { createDashboard, DASHBOARD_PATH } from './setup';
@@ -212,14 +212,26 @@ class Store {
 
   // Режим карточки дашборда: источник данных — конфиг карточки, его HA присылает заново при каждом сохранении.
   attachCard(backend: CardBackend) {
-    const firstTime = !this.card;
+    const previous = this.card;
     this.card = backend;
     this.applyCardConfig(backend.config);
-    if (firstTime) {
-      this.reloadCardPhotos();
-      // Подписанные ссылки на фото живут сутки — обновляем раз в 12 часов.
+    // Новое хранилище (например, нашлась интеграция) — папка фото могла смениться.
+    if (!previous || previous.folder !== backend.folder) this.reloadCardPhotos();
+    if (!previous) {
+      // Подписанные ссылки на фото живут сутки — обновляем раз в 12 часов,
+      // а новые и удалённые фото (загрузили через «Медиа» в HA) подхватываем каждые 10 минут.
       this.photoTimer = window.setInterval(() => this.reloadCardPhotos(), 12 * 3600e3);
+      window.setInterval(() => this.checkCardPhotos(), 10 * 60e3);
     }
+  }
+
+  // Поменялся ли набор фото в папке — только тогда перечитываем ссылки (иначе кадр на экране перезагрузится).
+  private checkCardPhotos() {
+    if (!this.card) return;
+    this.card.listPhotoIds().then((ids) => {
+      const now = this.state.photos.map((p) => String(p.id)).sort().join('|');
+      if (ids.slice().sort().join('|') !== now) this.reloadCardPhotos();
+    }, () => {});
   }
 
   applyCardConfig(cfg: CardConfig) {
@@ -283,11 +295,15 @@ class Store {
       if (client.status === was) return;
       was = client.status;
       if (client.status === 'connected') {
-        // При каждом (пере)подключении: свежий конфиг и подписка на его изменения
+        // При каждом (пере)подключении — свежий конфиг и подписка на его изменения.
+        // Стоит интеграция Photo Frame — всё в ней; нет — в карточке на дашборде «Фоторамка»
         // (HA шлёт lovelace_updated после каждого сохранения дашборда — из карточки или с другой рамки).
-        this.loadHaCard();
-        client.subscribeMessage({ type: 'subscribe_events', event_type: 'lovelace_updated' }, (ev) => {
-          if (ev && ev.data && ev.data.url_path === DASHBOARD_PATH) this.loadHaCard();
+        loadIntegration(client).then((cfg) => {
+          if (cfg) { this.useIntegration(client, cfg); return; }
+          this.loadHaCard();
+          client.subscribeMessage({ type: 'subscribe_events', event_type: 'lovelace_updated' }, (ev) => {
+            if (ev && ev.data && ev.data.url_path === DASHBOARD_PATH) this.loadHaCard();
+          });
         });
       } else if (client.status === 'auth_invalid') {
         this.haLink = 'error';
@@ -296,6 +312,20 @@ class Store {
     });
     client.connect();
     this.notify();
+  }
+
+  // Интеграция Photo Frame: данные в её хранилище, изменения — по её подписке.
+  private useIntegration(client: HAClient, cfg: IntegrationConfig) {
+    this.haLink = 'ready';
+    if (this.card && this.card.integration) {
+      this.card.config = cfg;
+      this.applyCardConfig(cfg);
+    } else {
+      this.offerMigration();
+      this.attachCard(new CardBackend(client, cfg, undefined, true, true));
+    }
+    const card = this.card!;
+    card.watch((c) => this.applyCardConfig(c));
   }
 
   private loadHaCard() {

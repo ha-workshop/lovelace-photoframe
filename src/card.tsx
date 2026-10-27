@@ -3,7 +3,7 @@ import css from './styles.css?inline';
 import { App } from './App';
 import { store } from './lib/store';
 import { HassClient, type Hass } from './lib/hassClient';
-import { CardBackend, type CardConfig } from './lib/cardBackend';
+import { CardBackend, loadIntegration, type CardConfig } from './lib/cardBackend';
 import { keepScreenOn } from './lib/wakeLock';
 import { enterKiosk, kioskWanted, onKioskPref } from './lib/kiosk';
 import { offerSetup } from './lib/setup';
@@ -23,11 +23,13 @@ class PhotoFrameCard extends HTMLElement {
   private root: HTMLElement | null = null;
   private exitKiosk: (() => void) | null = null;
   private offKiosk: (() => void) | null = null;
+  private offIntegration: (() => void) | null = null;
 
   // Включить/выключить киоск по текущим настройкам. Фронтенд HA дорисовывается не сразу —
   // поэтому вызывается и при монтировании, и при каждом обновлении hass, пока не получится.
   private syncKiosk() {
-    const want = this.isConnected && kioskWanted(!!this.config.kiosk);
+    const kiosk = this.config.kiosk != null ? this.config.kiosk : !!(this.backend && this.backend.integration && this.backend.config.kiosk);
+    const want = this.isConnected && kioskWanted(!!kiosk);
     if (want && !this.exitKiosk) this.exitKiosk = enterKiosk();
     if (!want && this.exitKiosk) { this.exitKiosk(); this.exitKiosk = null; }
   }
@@ -35,7 +37,8 @@ class PhotoFrameCard extends HTMLElement {
   setConfig(config: CardConfig) {
     this.config = config;
     // Конфиг пересылается при каждом сохранении дашборда — так изменения с других устройств приходят сюда.
-    if (this.backend) {
+    // С интеграцией данные живут в ней, а не в конфиге карточки.
+    if (this.backend && !this.backend.integration) {
       this.backend.config = config;
       store.applyCardConfig(config);
     }
@@ -48,11 +51,25 @@ class PhotoFrameCard extends HTMLElement {
     if (!this.backend) {
       this.backend = new CardBackend(this.client, this.config);
       store.attachCard(this.backend);
+      // Стоит интеграция Photo Frame — переезжаем на её хранилище и подписку.
+      // HA вставляет карточку на страницу чуть позже, чем передаёт hass, — подписку включаем, когда она уже там
+      // (или в connectedCallback).
+      loadIntegration(this.client).then((cfg) => {
+        if (!cfg) return;
+        const backend = new CardBackend(this.client, cfg, undefined, false, true);
+        this.backend = backend;
+        store.attachCard(backend);
+        if (this.isConnected && !this.offIntegration) this.offIntegration = backend.watch((c) => store.applyCardConfig(c));
+        this.syncKiosk();
+      });
     }
     this.mount();
   }
 
   connectedCallback() {
+    // Карточку вернули на страницу — снова слушаем изменения из интеграции.
+    const backend = this.backend;
+    if (backend && backend.integration && !this.offIntegration) this.offIntegration = backend.watch((c) => store.applyCardConfig(c));
     this.mount();
     this.offKiosk = onKioskPref(() => this.syncKiosk());
     this.syncKiosk();
@@ -64,6 +81,7 @@ class PhotoFrameCard extends HTMLElement {
     // Ушли с дашборда — меню и шапку HA возвращаем.
     if (this.exitKiosk) { this.exitKiosk(); this.exitKiosk = null; }
     if (this.offKiosk) { this.offKiosk(); this.offKiosk = null; }
+    if (this.offIntegration) { this.offIntegration(); this.offIntegration = null; }
   }
 
   getCardSize() { return 12; }
