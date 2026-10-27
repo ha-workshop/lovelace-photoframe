@@ -126,6 +126,15 @@ function readCache(): State {
 }
 
 
+// Стояла ли интеграция Photo Frame при прошлом подключении — тогда после перезапуска HA её ждём.
+const INTEGRATION_KEY = 'photoframe.integration';
+function usedIntegration() {
+  try { return localStorage.getItem(INTEGRATION_KEY) === '1'; } catch (e) { return false; }
+}
+function rememberIntegration(on: boolean) {
+  try { if (on) localStorage.setItem(INTEGRATION_KEY, '1'); else localStorage.removeItem(INTEGRATION_KEY); } catch (e) { /* ignore */ }
+}
+
 class Store {
   state: State = readCache();
   private listeners: Array<() => void> = [];
@@ -299,13 +308,21 @@ class Store {
         // При каждом (пере)подключении — свежий конфиг и подписка на его изменения.
         // Стоит интеграция Photo Frame — всё в ней; нет — в карточке на дашборде «Фоторамка»
         // (HA шлёт lovelace_updated после каждого сохранения дашборда — из карточки или с другой рамки).
-        loadIntegration(client).then((cfg) => {
-          if (cfg) { this.useIntegration(client, cfg); return; }
+        const load = (tries: number) => loadIntegration(client).then((cfg) => {
+          if (cfg) { rememberIntegration(true); this.useIntegration(client, cfg); return; }
+          // HA после перезапуска уже пускает, а интеграция ещё грузится — отвечает «нет такой команды».
+          // Рамка, которая работала с интеграцией, ждёт её (иначе осталась бы без устройства в HA до следующего обрыва).
+          if (usedIntegration() && tries > 0) {
+            window.setTimeout(() => { if (client.status === 'connected') load(tries - 1); }, 10000);
+            return;
+          }
+          rememberIntegration(false);
           this.loadHaCard();
           client.subscribeMessage({ type: 'subscribe_events', event_type: 'lovelace_updated' }, (ev) => {
             if (ev && ev.data && ev.data.url_path === DASHBOARD_PATH) this.loadHaCard();
           });
         });
+        load(30);
       } else if (client.status === 'auth_invalid') {
         this.haLink = 'error';
         this.notify();
