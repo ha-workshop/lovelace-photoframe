@@ -6,15 +6,22 @@
 #   android/build.sh install <ha>    …и сразу задать адрес HA (например http://192.168.1.10:8123)
 #
 # Нужен Android SDK (ANDROID_HOME или ~/Library/Android/sdk) и JDK 17+.
+#
+# Подпись — ключом из KEYSTORE (по умолчанию ~/.android/debug.keystore, пароли KS_PASS/KEY_PASS — «android»).
+# Обновить рамку поверх установленного APK можно только той же подписью: релизы интеграции ha-photoframe
+# подписывают тем же ключом (секрет GitHub). APK_VERSION — версия вместо package.json (релиз интеграции).
 set -euo pipefail
 cd "$(dirname "$0")"
 
 SDK="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
 BT="$SDK/build-tools/$(ls "$SDK/build-tools" | sort -V | tail -1)"
 JAR="$SDK/platforms/$(ls "$SDK/platforms" | sort -V | tail -1)/android.jar"
-VERSION=$(node -p "require('../package.json').version")
-# versionCode из версии: 0.2.1 → 201
-CODE=$(echo "$VERSION" | awk -F. '{ print $1 * 10000 + $2 * 100 + $3 }')
+VERSION="${APK_VERSION:-$(node -p "require('../package.json').version")}"
+KEYSTORE="${KEYSTORE:-$HOME/.android/debug.keystore}"
+[[ -f "$KEYSTORE" ]] || { echo "Нет ключа подписи $KEYSTORE" >&2; exit 1; }
+# versionCode — время сборки (ГГДДДЧЧММ): всегда растёт, даже когда версия релиза интеграции (0.2.x) ниже
+# версии карточки (0.3.x), — Android не ставит APK с меньшим versionCode поверх установленного.
+CODE=$(date -u +%y%j%H%M)
 OUT=build
 
 rm -rf "$OUT" && mkdir -p "$OUT/gen" "$OUT/classes" "$OUT/dex" "$OUT/res"
@@ -27,7 +34,7 @@ javac --release 8 -nowarn -Xlint:-options -classpath "$JAR" -d "$OUT/classes" \
 "$BT/d8" --min-api 21 --lib "$JAR" --output "$OUT/dex" $(find "$OUT/classes" -name '*.class')
 (cd "$OUT/dex" && zip -q -j ../unsigned.apk classes.dex)
 "$BT/zipalign" -f 4 "$OUT/unsigned.apk" "$OUT/aligned.apk"
-"$BT/apksigner" sign --ks "$HOME/.android/debug.keystore" --ks-pass pass:android --key-pass pass:android \
+"$BT/apksigner" sign --ks "$KEYSTORE" --ks-pass "pass:${KS_PASS:-android}" --key-pass "pass:${KEY_PASS:-android}" \
   --out "$OUT/photoframe.apk" "$OUT/aligned.apk"
 echo "✓ $(pwd)/$OUT/photoframe.apk ($VERSION)"
 
