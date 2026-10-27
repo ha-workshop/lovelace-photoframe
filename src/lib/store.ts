@@ -9,7 +9,7 @@ import { CardBackend, loadCardConfig, loadIntegration, type CardConfig, type Int
 import { HAClient } from './ha';
 import { accessToken, haSession } from './haAuth';
 import { createDashboard, DASHBOARD_PATH } from './setup';
-import { connectFrame, frameName, setFrameName, type FrameCommand, type FrameState } from './frame';
+import { connectFrame, frameName, reportFrame, setFrameName, type FrameCommand, type FrameState } from './frame';
 import { t } from '../i18n';
 
 export interface Settings {
@@ -343,6 +343,9 @@ class Store {
 
   // ── Рамка как устройство в HA ───────────────────────
   frameClient: HAClient | null = null;
+  // Экран из HA: спит ли рамка и яркость (lib/screen). Без интеграции — всегда включён.
+  screenOn = true;
+  brightness = 100;
   private commandListeners: Array<(c: FrameCommand) => void> = [];
 
   // Команды из HA (кнопки устройства, службы): следующее фото, показать камеру… Выполняет App.
@@ -358,12 +361,21 @@ class Store {
       const [home, screen] = s.start_screen.split('/');
       if (home !== mainHome() || screen !== startScreen()) this.setStart(home, screen);
     }
+    if (s.screen_on !== undefined) this.screenOn = s.screen_on;
+    if (s.brightness !== undefined) this.brightness = s.brightness;
     const card = this.card;
     const album = s.album || 'all';
     if (card && card.album !== album) {
       card.album = album;
       this.reloadCardPhotos();
     }
+    this.notify();
+  }
+
+  // Коснулись спящей рамки — просыпается и сообщает HA (сущность «Экран» включается).
+  wakeScreen() {
+    this.screenOn = true;
+    if (this.frameClient) reportFrame(this.frameClient, { screen_on: true });
     this.notify();
   }
 

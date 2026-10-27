@@ -35,6 +35,8 @@ svg { display: block; flex-shrink: 0; }
 .app { position: relative; height: 100%; overflow: hidden; }
 
 /* ── Фон ─────────────────────────────────────────── */
+/* В APK фото рисует Android под страницей — фон страницы прозрачный (lib/nativePhoto) */
+.native-photos body, .native-photos .backdrop { background: transparent; }
 .backdrop { position: absolute; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; }
 .slide {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -102,20 +104,23 @@ svg { display: block; flex-shrink: 0; }
 
 .ambient { transition: -webkit-transform 0.5s var(--ease); transition: transform 0.5s var(--ease); }
 
-/* Ручка внизу, как home indicator на iOS */
-.grabber {
-  position: absolute; left: 0; right: 0; bottom: 10px; bottom: max(10px, env(safe-area-inset-bottom));
-  display: flex; flex-direction: column; align-items: center;
+
+/* Стрелка к управлению домом внизу по центру, где начинается смахивание: без плашки, с мягкой тенью.
+   Появляется при касании фото и покачивается вверх. */
+.home-hint {
+  position: absolute; left: 50%; bottom: 1.5vh; bottom: max(1.5vh, env(safe-area-inset-bottom));
+  -webkit-transform: translateX(-50%); transform: translateX(-50%);
+  display: flex; padding: 6px 24px; background: none; border: 0; color: var(--ink);
+  opacity: 0; pointer-events: none; transition: opacity 0.6s ease, color 1.2s ease;
 }
-.grabber-text {
-  font-size: 13px; color: var(--ink-2); letter-spacing: 0.03em; margin-bottom: 10px;
-  opacity: 0; transition: opacity 1s;
-  -webkit-animation: nudge 2.4s ease-in-out infinite; animation: nudge 2.4s ease-in-out infinite;
-}
-.grabber-text.visible { opacity: 1; }
-.grabber-bar { width: 134px; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, 0.7); box-shadow: 0 0 12px rgba(0, 0, 0, 0.3); }
-@-webkit-keyframes nudge { 0%, 60%, 100% { -webkit-transform: translateY(0); } 30% { -webkit-transform: translateY(-6px); } }
-@keyframes nudge { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+.home-hint.visible { opacity: 1; pointer-events: auto; }
+.home-hint svg { -webkit-filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.55)); filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.55));
+  -webkit-animation: nudge 2.4s ease-in-out infinite; animation: nudge 2.4s ease-in-out infinite; }
+.text-contrast .home-hint.ink-dark svg { -webkit-filter: drop-shadow(0 1px 6px rgba(255, 255, 255, 0.6)); filter: drop-shadow(0 1px 6px rgba(255, 255, 255, 0.6)); }
+.ambient.customizing .home-hint { display: none; }
+.q-lite .home-hint svg { -webkit-animation: none; animation: none; }
+@-webkit-keyframes nudge { 0%, 60%, 100% { -webkit-transform: translateY(0); } 30% { -webkit-transform: translateY(-5px); } }
+@keyframes nudge { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
 
 /* Во время жеста — без анимаций, элементы идут за пальцем */
 .dragging .ambient, .dragging .controls, .dragging .soft { transition: none; }
@@ -686,7 +691,7 @@ svg { display: block; flex-shrink: 0; }
 .q-lite .panel, .q-lite .modal-box, .q-lite .sheet, .q-lite .glance, .q-lite .cell.dragged .panel,
 .q-lite .light.on, .q-lite .light.on .light-icon, .q-lite .media-art, .q-lite .badge-btn { box-shadow: none !important; }
 .q-lite .ambient-clock, .q-lite .ambient .header { text-shadow: none; }
-.q-lite .eq b, .q-lite .live i, .q-lite .grabber-text, .q-lite .editing .cell, .q-lite .sheet, .q-lite .sheet-layer { -webkit-animation: none !important; animation: none !important; }
+.q-lite .eq b, .q-lite .live i, .q-lite .editing .cell, .q-lite .sheet, .q-lite .sheet-layer { -webkit-animation: none !important; animation: none !important; }
 .q-lite .controls, .q-lite .ambient { transition-duration: 0.2s; }
 .q-lite .cell, .q-lite .light, .q-lite .light-icon, .q-lite .soft { transition: none; }
 
@@ -784,7 +789,6 @@ svg { display: block; flex-shrink: 0; }
   border: 1.5px dashed rgba(255, 255, 255, 0.55); background: rgba(255, 255, 255, 0.06);
 }
 .ambient.customizing .glances { min-height: 64px; min-width: 120px; }
-.ambient.customizing .grabber { display: none; }
 .glance-add { color: var(--ink-2); }
 .lock-ui { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 30; pointer-events: none; }
 .lock-top {
@@ -831,14 +835,14 @@ svg { display: block; flex-shrink: 0; }
   position: absolute; left: 4vw; right: 4vw; max-width: none; margin: 0; justify-content: center;
 }
 .ambient.widgets-top .glances { top: 4vh; top: max(4vh, env(safe-area-inset-top)); bottom: auto; }
-.ambient.widgets-bottom .glances { bottom: 7vh; top: auto; }
+.ambient.widgets-bottom .glances { bottom: 7vh; bottom: calc(1.5vh + 48px); top: auto; }
 .ambient.widgets-top .glance, .ambient.widgets-bottom .glance { margin: 6px 5px 0; }
 /* Часы сверху, а виджеты тоже сверху — часы ниже, чтобы не наезжали */
 .ambient.lock-top.widgets-top { padding-top: 18vh; }
 
 /* «В обратку» к фото: все надписи берут цвет своего блока (его считает Ambient по участку кадра) и меняются
    плавно вместе с кадром. Тёмный текст — со светлой тенью и светлыми плашками, иначе не прочитать. */
-.ambient-time, .ambient-clock, .glances, .grabber-text { transition: color 1.2s ease; }
+.ambient-time, .ambient-clock, .glances { transition: color 1.2s ease; }
 .text-contrast .ambient-time, .text-contrast .ambient-date, .text-contrast .ambient-weather,
 .text-contrast .aw-desc, .text-contrast .aw-desc small, .text-contrast .glance, .text-contrast .glance svg { color: inherit; }
 .text-contrast .ambient-date { opacity: 0.85; }
@@ -854,3 +858,8 @@ svg { display: block; flex-shrink: 0; }
 .lock-color-contrast span { display: block; color: #fff; font-size: 16px; font-weight: 800; line-height: 30px; text-align: center;
   text-shadow: -1px -1px 0 #111, 1px -1px 0 #111, -1px 1px 0 #111, 1px 1px 0 #111; }
 
+
+/* Экран рамки из HA: затемнение (яркость в браузере) и сон — чёрный экран, касание будит (lib/screen) */
+.screen-dim { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9000; background: #000; pointer-events: none;
+  transition: opacity 0.8s ease; }
+.screen-dim.asleep { pointer-events: auto; }

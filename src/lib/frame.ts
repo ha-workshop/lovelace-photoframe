@@ -8,7 +8,7 @@ declare const __VERSION__: string;
 const ID_KEY = 'photoframe.frameId';
 const NAME_KEY = 'photoframe.frameName';
 
-export interface FrameState { type: 'state'; name?: string; album?: string; start_screen?: string | null }
+export interface FrameState { type: 'state'; name?: string; album?: string; start_screen?: string | null; screen_on?: boolean; brightness?: number }
 export interface FrameCommand { type: 'command'; command: string; entity?: string; duration?: number; screen?: string }
 
 function read(key: string) {
@@ -52,6 +52,6 @@ export function connectFrame(client: HAClient, onEvent: (event: FrameState | Fra
 }
 
 // Сообщить HA, что рамка сейчас показывает (фото, экран). Без ответа — это не важно для работы рамки.
-export function reportFrame(client: HAClient, data: { photo?: string | null; photo_url?: string | null; screen?: string | null }) {
+export function reportFrame(client: HAClient, data: { photo?: string | null; photo_url?: string | null; screen?: string | null; screen_on?: boolean }) {
   client.call({ type: 'photoframe/frame/report', frame_id: frameId(), ...data }).catch(() => {});
 }
