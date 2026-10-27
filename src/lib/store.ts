@@ -543,9 +543,9 @@ class Store {
 
   // Пачка фото — строго по одному, чтобы не держать в памяти все исходники разом.
   // Ошибка одного файла не останавливает остальные; в конце сообщаем, сколько не загрузилось.
-  addPhotos(files: File[], onProgress?: (done: number, total: number) => void): Promise<void> {
+  addPhotos(files: File[], onProgress?: (done: number, total: number) => void, album?: string): Promise<void> {
     const card = this.card;
-    const one: (f: File) => Promise<unknown> = card ? (f) => card.addPhoto(f) : (f) => local.addPhoto(f);
+    const one: (f: File) => Promise<unknown> = card ? (f) => card.addPhoto(f, album) : (f) => local.addPhoto(f);
     const reload = (): Promise<unknown> => (card ? this.reloadCardPhotos() : this.reloadLocalPhotos());
     const errors: string[] = [];
     let done = 0;
