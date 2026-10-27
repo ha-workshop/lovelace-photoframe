@@ -15,6 +15,8 @@ export interface CardConfig {
   type: string;
   // Дома в карточке — только раскладки одного HA: id и имя, без адресов и токенов.
   media_folder?: string;
+  // Источник «Моих медиа» (обычно local; в media_dirs его можно назвать иначе) — сообщает интеграция.
+  media_source?: string;
   // Прятать меню и шапку HA, пока карточка на экране (на устройстве можно переопределить).
   kiosk?: boolean;
   settings?: Partial<Settings>;
@@ -82,8 +84,27 @@ export class CardBackend {
     return (this.config.media_folder || 'photoframe').replace(/^\/+|\/+$/g, '');
   }
 
-  private get folderId() {
-    return 'media-source://media_source/local/' + this.folder;
+  // Источник «Моих медиа»: от интеграции, а без неё — спрашиваем у HA. Обычно это local (= /media),
+  // но в configuration.yaml media_dirs его можно назвать иначе (media: /media) — тогда local не существует.
+  private sourceJob: Promise<string> | null = null;
+
+  private source(): Promise<string> {
+    if (this.config.media_source) return Promise.resolve(this.config.media_source);
+    if (!this.sourceJob) {
+      type Node = { media_content_id?: string; children?: Array<{ media_content_id: string }> };
+      this.sourceJob = this.client.call<Node>({ type: 'media_source/browse_media', media_content_id: 'media-source://media_source' }).then((root) => {
+        // Один источник — HA сразу показывает его содержимое (id вида …/media_source/<источник>/.),
+        // несколько — список источников.
+        const ids = [root.media_content_id || ''].concat((root.children || []).map((c) => c.media_content_id));
+        const found = ids.map((id) => (/^media-source:\/\/media_source\/([^/]+)\//.exec(id) || [])[1]).filter(Boolean) as string[];
+        return found.indexOf('local') !== -1 ? 'local' : found[0] || 'local';
+      }, () => 'local');
+    }
+    return this.sourceJob;
+  }
+
+  private folderId(): Promise<string> {
+    return this.source().then((source) => 'media-source://media_source/' + source + '/' + this.folder);
   }
 
   get canEdit() {
@@ -137,18 +158,18 @@ export class CardBackend {
 
   // Только id фото в папке (без подписанных ссылок) — дёшево проверить, не поменялся ли набор.
   listPhotoIds(): Promise<string[]> {
-    return this.client.call<{ children?: Array<{ media_content_id: string; media_class: string }> }>({
+    return this.folderId().then((folder) => this.client.call<{ children?: Array<{ media_content_id: string; media_class: string }> }>({
       type: 'media_source/browse_media',
-      media_content_id: this.folderId,
-    }).then((dir) => (dir.children || []).filter((c) => c.media_class === 'image').map((c) => c.media_content_id));
+      media_content_id: folder,
+    })).then((dir) => (dir.children || []).filter((c) => c.media_class === 'image').map((c) => c.media_content_id));
   }
 
   // Папки нет — HA отвечает ошибкой; отдаём понятный текст, чтобы показать его в настройках.
   listPhotos(): Promise<Photo[]> {
-    return this.client.call<{ children?: Array<{ media_content_id: string; media_class: string; title: string }> }>({
+    return this.folderId().then((folder) => this.client.call<{ children?: Array<{ media_content_id: string; media_class: string; title: string }> }>({
       type: 'media_source/browse_media',
-      media_content_id: this.folderId,
-    }).then((dir) => {
+      media_content_id: folder,
+    })).then((dir) => {
       const images = (dir.children || []).filter((c) => c.media_class === 'image');
       // Подписанные ссылки живут сутки; список перечитываем раньше, чем они истекут.
       return Promise.all(images.map((c) => this.client.call<{ url: string }>({
@@ -165,12 +186,12 @@ export class CardBackend {
 
   // Уже уменьшенный кадр (dataURL JPEG) — так же лежат фото, загруженные в браузер до перехода на HA.
   addPhotoData(dataUrl: string, name: string): Promise<void> {
-    return Promise.resolve().then(() => {
+    return this.folderId().then((folder) => {
       const bin = atob(dataUrl.split(',')[1]);
       const bytes = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
       const form = new FormData();
-      form.append('media_content_id', this.folderId);
+      form.append('media_content_id', folder);
       form.append('file', new Blob([bytes], { type: 'image/jpeg' }), name);
       return this.client.fetch('/api/media_source/local_source/upload', { method: 'POST', body: form }).then((r) => {
         if (r.ok) return;
