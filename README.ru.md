@@ -1,4 +1,4 @@
-<p align="center"><img src="https://raw.githubusercontent.com/mZer0ne/lovelace-photoframe/main/docs/icon.png" width="128" height="128" alt="Photo Frame"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/ha-workshop/lovelace-photoframe/main/docs/icon.png" width="128" height="128" alt="Photo Frame"></p>
 
 # Photo Frame — фоторамка для Home Assistant
 
@@ -12,16 +12,16 @@
 > swipe up for a customizable smart-home control panel. HACS dashboard card, no add-ons, no tokens.*
 
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories)
-[![Release](https://img.shields.io/github/v/release/mZer0ne/lovelace-photoframe)](https://github.com/mZer0ne/lovelace-photoframe/releases)
+[![Release](https://img.shields.io/github/v/release/ha-workshop/lovelace-photoframe)](https://github.com/ha-workshop/lovelace-photoframe/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 | Фоторамка | Панель управления |
 |---|---|
-| ![Режим фоторамки](https://raw.githubusercontent.com/mZer0ne/lovelace-photoframe/main/docs/screenshots/ambient.jpg) | ![Панель управления](https://raw.githubusercontent.com/mZer0ne/lovelace-photoframe/main/docs/screenshots/controls.jpg) |
+| ![Режим фоторамки](https://raw.githubusercontent.com/ha-workshop/lovelace-photoframe/main/docs/screenshots/ambient.jpg) | ![Панель управления](https://raw.githubusercontent.com/ha-workshop/lovelace-photoframe/main/docs/screenshots/controls.jpg) |
 
 | История температуры | Расход электроэнергии |
 |---|---|
-| ![График температуры](https://raw.githubusercontent.com/mZer0ne/lovelace-photoframe/main/docs/screenshots/chart-temperature.jpg) | ![Расход по дням](https://raw.githubusercontent.com/mZer0ne/lovelace-photoframe/main/docs/screenshots/chart-energy.jpg) |
+| ![График температуры](https://raw.githubusercontent.com/ha-workshop/lovelace-photoframe/main/docs/screenshots/chart-temperature.jpg) | ![Расход по дням](https://raw.githubusercontent.com/ha-workshop/lovelace-photoframe/main/docs/screenshots/chart-energy.jpg) |
 
 ## Что умеет
 
@@ -65,10 +65,10 @@ Photo Frame — это **одна карточка дашборда** (`custom:p
 
 ## Установка
 
-1. HACS → три точки → **Пользовательские репозитории** → `https://github.com/mZer0ne/lovelace-photoframe`,
+1. HACS → три точки → **Пользовательские репозитории** → `https://github.com/ha-workshop/lovelace-photoframe`,
    категория **Dashboard**.
 
-   [![Открыть в HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=mZer0ne&repository=lovelace-photoframe&category=plugin)
+   [![Открыть в HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ha-workshop&repository=lovelace-photoframe&category=plugin)
 2. Найдите **Photo Frame** в HACS и установите. Ресурс `/hacsfiles/lovelace-photoframe/dist/photoframe-card.js`
    HACS добавит сам (если нет — «Настройки → Дашборды → Ресурсы», тип *JavaScript-модуль*).
 3. Создайте папку для фото: `/media/photoframe` (через Samba, File editor или терминал).
