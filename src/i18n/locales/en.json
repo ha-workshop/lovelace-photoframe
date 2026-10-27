@@ -324,5 +324,16 @@
   "settings.fit": "How to show photos",
   "settings.fit_auto": "Auto — whole if orientation differs",
   "settings.fit_contain": "Whole, with glow around",
-  "settings.fit_cover": "Fill the screen, crop edges"
+  "settings.fit_cover": "Fill the screen, crop edges",
+  "lock.size.xs": "XS",
+  "lock.size.xl": "XL",
+  "lock.widgets_pos": "Position",
+  "lock.widgets_pos.clock": "With clock",
+  "lock.widgets_pos.top": "Top",
+  "lock.widgets_pos.bottom": "Bottom",
+  "lock.date_pos": "Date",
+  "lock.date_pos.auto": "Auto",
+  "lock.date_pos.above": "Above clock",
+  "lock.date_pos.below": "Below clock",
+  "lock.color.contrast": "Auto — contrast with the photo"
 }

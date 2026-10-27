@@ -4,12 +4,17 @@
 import { useEffect, useState } from 'preact/hooks';
 
 export type ClockFont = 'thin' | 'light' | 'regular' | 'bold';
-export type ClockColor = 'white' | 'accent' | 'warm' | 'mint' | 'sky' | 'rose';
-export type ClockSize = 's' | 'm' | 'l';
+// contrast — «в обратку» к фото под часами (считается по кадру, см. Ambient).
+export type ClockColor = 'white' | 'contrast' | 'accent' | 'warm' | 'mint' | 'sky' | 'rose';
+export type ClockSize = 'xs' | 's' | 'm' | 'l' | 'xl';
 // auto — в углу на большом экране, по центру на телефоне; top — по центру сверху, как на iPhone.
 export type LockLayout = 'auto' | 'corner' | 'center' | 'top';
 // auto — текстом на большом экране, значками на телефоне.
 export type ChipStyle = 'auto' | 'text' | 'icons';
+// Где виджеты (плашки управления домом): рядом с часами или отдельно — вверху или внизу экрана.
+export type WidgetsPos = 'clock' | 'top' | 'bottom';
+// Дата над часами или под ними; auto — над, когда часы по центру сверху (как на iPhone), иначе под.
+export type DatePos = 'auto' | 'above' | 'below';
 
 export interface LockPrefs {
   font: ClockFont;
@@ -17,8 +22,10 @@ export interface LockPrefs {
   size: ClockSize;
   layout: LockLayout;
   date: boolean;
+  datePos: DatePos;
   weather: boolean;
   chipStyle: ChipStyle;
+  widgetsPos: WidgetsPos;
   // Виджеты: какие спрятаны и в каком порядке остальные (id карточек). Новых карточек в order нет — они в конце.
   hidden: string[];
   order: string[];
@@ -26,7 +33,7 @@ export interface LockPrefs {
 
 export const FONT_WEIGHT: Record<ClockFont, number> = { thin: 200, light: 300, regular: 500, bold: 700 };
 export const CLOCK_COLOR: Record<ClockColor, string> = {
-  white: '#ffffff', accent: '', warm: '#fcd34d', mint: '#6ee7b7', sky: '#7dd3fc', rose: '#fda4af',
+  white: '#ffffff', contrast: '', accent: '', warm: '#fcd34d', mint: '#6ee7b7', sky: '#7dd3fc', rose: '#fda4af',
 };
 
 const KEY = 'photoframe.lockscreen';
@@ -35,7 +42,7 @@ const OLD_HIDDEN_KEY = 'photoframe.hiddenChips';
 const listeners: Array<() => void> = [];
 
 function defaults(): LockPrefs {
-  return { font: 'thin', color: 'white', size: 'm', layout: 'auto', date: true, weather: true, chipStyle: 'auto', hidden: [], order: [] };
+  return { font: 'thin', color: 'white', size: 'm', layout: 'auto', date: true, datePos: 'auto', weather: true, chipStyle: 'auto', widgetsPos: 'clock', hidden: [], order: [] };
 }
 
 export function lockPrefs(): LockPrefs {

@@ -726,8 +726,10 @@ svg { display: block; flex-shrink: 0; }
 /* ── Экран с фото: вид, свой у устройства (lib/lockscreen) ──
    Классы на .ambient: lock-<расположение>, lock-size-<размер>, chips-<вид виджетов>.
    Цепочки из трёх классов сильнее правил «портрет/телефон» выше. */
+.ambient.lock-size-xs .ambient-time { font-size: 10vh; }
 .ambient.lock-size-s .ambient-time { font-size: 15vh; }
 .ambient.lock-size-l .ambient-time { font-size: 28vh; }
+.ambient.lock-size-xl .ambient-time { font-size: 34vh; }
 
 /* По центру (внизу или сверху, как на iPhone): всё в столбик по центру */
 .ambient.lock-center, .ambient.lock-top { flex-direction: column; align-items: center; justify-content: flex-end; }
@@ -738,7 +740,8 @@ svg { display: block; flex-shrink: 0; }
 .ambient.lock-center .glance, .ambient.lock-top .glance { margin: 6px 5px 0; }
 /* Сверху — дата над часами, как на экране блокировки iPhone */
 .ambient.lock-top .ambient-clock { display: flex; flex-direction: column; align-items: center; }
-.ambient.lock-top .ambient-date { -webkit-order: -1; order: -1; margin: 0 0 1vh; }
+/* Дата над часами (так по умолчанию при «По центру сверху» или по выбору) */
+.ambient-date.above { margin: 0 0 1vh; }
 
 /* В углу — всегда как на большом экране, даже на телефоне */
 .ambient.lock-corner .ambient-clock { text-align: left; }
@@ -753,22 +756,29 @@ svg { display: block; flex-shrink: 0; }
 .ambient.chips-text .glance svg { margin-right: 8px; width: 18px; height: 18px; }
 
 @media (max-width: 900px), (orientation: portrait) {
+  .ambient.lock-size-xs .ambient-time { font-size: 7vh; }
   .ambient.lock-size-s .ambient-time { font-size: 10vh; }
   .ambient.lock-size-m .ambient-time { font-size: 13vh; }
   .ambient.lock-size-l .ambient-time { font-size: 17vh; }
+  .ambient.lock-size-xl .ambient-time { font-size: 21vh; }
 }
 @media (max-width: 700px) {
+  .ambient.lock-size-xs .ambient-time { font-size: 15vw; }
   .ambient.lock-size-s .ambient-time { font-size: 20vw; }
-  .ambient.lock-size-m .ambient-time { font-size: 27vw; }
-  .ambient.lock-size-l .ambient-time { font-size: 34vw; }
+  .ambient.lock-size-m .ambient-time { font-size: 26vw; }
+  .ambient.lock-size-l .ambient-time { font-size: 31vw; }
+  .ambient.lock-size-xl .ambient-time { font-size: 35vw; }
   .ambient.lock-corner .ambient-clock { text-align: left; }
   .ambient.lock-corner .glances { justify-content: flex-start; }
 }
 
 /* Режим настройки: экран чуть отъезжает, часы и виджеты обведены и нажимаются */
 .ambient.customizing { -webkit-transform: scale(0.9); transform: scale(0.9); }
-/* Открыта панель снизу — экран поднимается над ней, чтобы правки было видно сразу */
-.ambient.customizing.panel-up { -webkit-transform: translateY(-34%) scale(0.72); transform: translateY(-34%) scale(0.72); }
+/* Открыта панель снизу — весь экран уменьшается и встаёт над ней (как на iPhone), ничего не уезжает за край */
+.ambient.customizing.panel-up {
+  -webkit-transform-origin: 50% 0; transform-origin: 50% 0;
+  -webkit-transform: translateY(2vh) scale(0.5); transform: translateY(2vh) scale(0.5);
+}
 .ambient.customizing .ambient-clock, .ambient.customizing .glances {
   pointer-events: auto; cursor: pointer; border-radius: 18px; padding: 10px 14px;
   border: 1.5px dashed rgba(255, 255, 255, 0.55); background: rgba(255, 255, 255, 0.06);
@@ -815,3 +825,32 @@ svg { display: block; flex-shrink: 0; }
 /* Вкладка «Фото» с медиатекой HA: сколько фото и ссылка на папку — миниатюр нет, фото смотрят в HA */
 .photos-count { display: flex; align-items: center; justify-content: space-between; margin: 12px 0 4px; font-size: 13px; color: var(--ink-2); }
 .photos-count a { color: #7dd3fc; text-decoration: none; }
+
+/* Виджеты отдельно от часов — вверху или внизу экрана, по центру */
+.ambient.widgets-top .glances, .ambient.widgets-bottom .glances {
+  position: absolute; left: 4vw; right: 4vw; max-width: none; margin: 0; justify-content: center;
+}
+.ambient.widgets-top .glances { top: 4vh; top: max(4vh, env(safe-area-inset-top)); bottom: auto; }
+.ambient.widgets-bottom .glances { bottom: 7vh; top: auto; }
+.ambient.widgets-top .glance, .ambient.widgets-bottom .glance { margin: 6px 5px 0; }
+/* Часы сверху, а виджеты тоже сверху — часы ниже, чтобы не наезжали */
+.ambient.lock-top.widgets-top { padding-top: 18vh; }
+
+/* «В обратку» к фото: все надписи берут цвет своего блока (его считает Ambient по участку кадра) и меняются
+   плавно вместе с кадром. Тёмный текст — со светлой тенью и светлыми плашками, иначе не прочитать. */
+.ambient-time, .ambient-clock, .glances, .grabber-text { transition: color 1.2s ease; }
+.text-contrast .ambient-time, .text-contrast .ambient-date, .text-contrast .ambient-weather,
+.text-contrast .aw-desc, .text-contrast .aw-desc small, .text-contrast .glance, .text-contrast .glance svg { color: inherit; }
+.text-contrast .ambient-date { opacity: 0.85; }
+.text-contrast .aw-desc { opacity: 0.8; }
+.text-contrast .aw-desc small { opacity: 0.8; }
+.text-contrast .glance.lit svg { color: var(--warm); }
+.text-contrast .ink-dark, .text-contrast .ink-dark .ambient-time { text-shadow: 0 1px 24px rgba(255, 255, 255, 0.45); }
+.text-contrast .glances.ink-dark .glance { background: rgba(255, 255, 255, 0.5); border-color: rgba(0, 0, 0, 0.1); }
+.text-contrast .glances.ink-dark .glance.alert { color: #fff; }
+.lock-color-contrast { background: linear-gradient(135deg, #ffffff 50%, #111111 50%); }
+/* Буква «А» (авто) на бело-чёрном кружке: белая с тёмной обводкой — читается на обеих половинах */
+.lock-color-contrast { padding: 0; }
+.lock-color-contrast span { display: block; color: #fff; font-size: 16px; font-weight: 800; line-height: 30px; text-align: center;
+  text-shadow: -1px -1px 0 #111, 1px -1px 0 #111, -1px 1px 0 #111, 1px 1px 0 #111; }
+
