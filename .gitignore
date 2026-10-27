@@ -19,3 +19,6 @@ legacy-php/
 
 # Настройки деплоя (сервер, пути)
 .deploy.env
+
+# Сборка интерфейса для интеграции (scripts/build-frontend.sh)
+build/

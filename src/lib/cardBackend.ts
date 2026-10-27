@@ -46,6 +46,14 @@ function dashboardPath(): string | null {
   return first === 'lovelace' ? null : first;
 }
 
+// Интеграция Photo Frame (ha-photoframe): если стоит — дома, экраны и настройки лежат в её хранилище
+// (.storage/photoframe), а не в конфиге карточки. null — интеграции нет, работаем через дашборд.
+export interface IntegrationConfig extends CardConfig { can_edit?: boolean }
+
+export function loadIntegration(client: HAClient): Promise<IntegrationConfig | null> {
+  return client.call<IntegrationConfig>({ type: 'photoframe/config' }).then((c) => ({ ...c, type: CARD_TYPE }), () => null);
+}
+
 // Конфиг карточки с дашборда (url_path = null — дашборд по умолчанию). null — карточки там нет.
 export function loadCardConfig(client: HAClient, url_path: string | null): Promise<CardConfig | null> {
   return client.call<Lovelace>({ type: 'lovelace/config', url_path }).then(
@@ -61,7 +69,14 @@ export function loadCardConfig(client: HAClient, url_path: string | null): Promi
 export class CardBackend {
   // dashboard — путь дашборда с карточкой; не задан — тот, на котором открыта карточка.
   // standalone — это PWA со своим подключением к HA, а не карточка внутри фронтенда HA.
-  constructor(readonly client: HAClient, public config: CardConfig, private dashboard?: string | null, readonly standalone = false) {}
+  // integration — данные в интеграции Photo Frame (photoframe/config/*), а не в конфиге дашборда.
+  constructor(
+    readonly client: HAClient,
+    public config: IntegrationConfig,
+    private dashboard?: string | null,
+    readonly standalone = false,
+    readonly integration = false,
+  ) {}
 
   get folder() {
     return (this.config.media_folder || 'photoframe').replace(/^\/+|\/+$/g, '');
@@ -72,7 +87,18 @@ export class CardBackend {
   }
 
   get canEdit() {
-    return this.client.isAdmin;
+    return this.integration ? this.config.can_edit !== false : this.client.isAdmin;
+  }
+
+  // Изменения от других устройств (интеграция рассылает конфиг после каждого сохранения).
+  // Пока свои сохранения в пути — пропускаем, иначе раскладка мигнёт назад.
+  watch(onChange: (config: IntegrationConfig) => void): () => void {
+    if (!this.integration) return () => {};
+    return this.client.subscribeMessage({ type: 'photoframe/config/subscribe' }, (c: IntegrationConfig) => {
+      if (this.busy) return;
+      this.config = { ...c, type: CARD_TYPE };
+      onChange(this.config);
+    });
   }
 
   // Сохранения идут строго по очереди: каждое читает свежий конфиг дашборда. Иначе два сохранения подряд
@@ -87,6 +113,12 @@ export class CardBackend {
   save(patch: Partial<CardConfig>): Promise<void> {
     this.saving++;
     const run = () => {
+      if (this.integration) {
+        const msg: Record<string, unknown> = { type: 'photoframe/config/save' };
+        (['homes', 'layouts', 'settings'] as const).forEach((k) => { if (k in patch) msg[k] = patch[k]; });
+        this.config = { ...this.config, ...patch };
+        return this.client.call<void>(msg);
+      }
       const url_path = this.dashboard !== undefined ? this.dashboard : dashboardPath();
       return this.client.call<Lovelace>({ type: 'lovelace/config', url_path }).then((cfg) => {
         const card = findCard(cfg);
@@ -101,6 +133,14 @@ export class CardBackend {
     next.then(done, done);
     this.queue = next.catch(() => {});
     return next;
+  }
+
+  // Только id фото в папке (без подписанных ссылок) — дёшево проверить, не поменялся ли набор.
+  listPhotoIds(): Promise<string[]> {
+    return this.client.call<{ children?: Array<{ media_content_id: string; media_class: string }> }>({
+      type: 'media_source/browse_media',
+      media_content_id: this.folderId,
+    }).then((dir) => (dir.children || []).filter((c) => c.media_class === 'image').map((c) => c.media_content_id));
   }
 
   // Папки нет — HA отвечает ошибкой; отдаём понятный текст, чтобы показать его в настройках.
