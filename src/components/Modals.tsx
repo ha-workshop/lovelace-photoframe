@@ -5,7 +5,7 @@ import { haSession, login, logout } from '../lib/haAuth';
 import { frameName as currentFrameName } from '../lib/frame';
 import { defaultLayout, screenTitle, type Layout } from '../lib/layout';
 import { kioskPref, setKioskPref, type KioskPref } from '../lib/kiosk';
-import { autoQuality, qualityPref, setQualityPref, type QualityPref } from '../lib/quality';
+import { autoQuality, photoFit, qualityPref, setPhotoFit, setQualityPref, type PhotoFit, type QualityPref } from '../lib/quality';
 import { applyLanguage, languages, preferredLanguage, setPreferredLanguage, t } from '../i18n';
 import { MAIN_HOME, mainHome, startScreen, store as frame, useStore, type Home, type Settings } from '../lib/store';
 
@@ -137,6 +137,7 @@ export function SettingsModal(props: { onClose: () => void; onCustomize: () => v
   const [language, setLanguage] = useState(preferredLanguage());
   const [kiosk, setKiosk] = useState<KioskPref>(kioskPref());
   const [qPref, setQPref] = useState<QualityPref>(qualityPref());
+  const [fit, setFit] = useState<PhotoFit>(photoFit());
   const session = haSession();
   // Фото живут в медиатеке HA — смотреть и удалять их там; здесь только загрузка (и альбом с интеграцией).
   const integration = !!store.card && store.card.integration;
@@ -249,6 +250,14 @@ export function SettingsModal(props: { onClose: () => void; onCustomize: () => v
               <option value="auto">{t('settings.quality_auto', { mode: t(autoQuality() === 'lite' ? 'settings.quality_lite' : 'settings.quality_full') })}</option>
               <option value="full">{t('settings.quality_full')}</option>
               <option value="lite">{t('settings.quality_lite')}</option>
+            </select>
+          </div>
+          <div class="option">
+            <label>{t('settings.fit')}</label>
+            <select value={fit} onChange={(e) => { const v = e.currentTarget.value as PhotoFit; setFit(v); setPhotoFit(v); }}>
+              <option value="auto">{t('settings.fit_auto')}</option>
+              <option value="contain">{t('settings.fit_contain')}</option>
+              <option value="cover">{t('settings.fit_cover')}</option>
             </select>
           </div>
           {/* Экран с фото настраивается прямо на нём — как экран блокировки iPhone. */}

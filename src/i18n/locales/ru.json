@@ -320,5 +320,9 @@
   "photos.album_root": "Без альбома (вся папка)",
   "photos.count": "Фото в медиатеке: {n}",
   "photos.open_media": "Открыть в медиатеке HA",
-  "photos.formats_server": "PNG, JPG, WEBP, HEIC — можно сразу пачкой, обработку делает сервер"
+  "photos.formats_server": "PNG, JPG, WEBP, HEIC — можно сразу пачкой, обработку делает сервер",
+  "settings.fit": "Как показывать фото",
+  "settings.fit_auto": "Авто — чужую ориентацию целиком",
+  "settings.fit_contain": "Целиком, с подсветкой по краям",
+  "settings.fit_cover": "Во весь экран, края обрезаются"
 }

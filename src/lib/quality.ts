@@ -108,3 +108,37 @@ export function preparePhoto(url: string): Promise<string> {
   }
   return job;
 }
+
+// ── Как показывать фото (своё у каждого устройства) ─────
+// auto — во весь экран, а кадр другой ориентации, чем экран, — целиком с подсветкой по краям;
+// contain — всегда целиком (без обрезки), с подсветкой; cover — всегда во весь экран, края обрезаются.
+export type PhotoFit = 'auto' | 'contain' | 'cover';
+const FIT_KEY = 'photoframe.fit';
+
+export function photoFit(): PhotoFit {
+  try { return (localStorage.getItem(FIT_KEY) as PhotoFit) || 'auto'; } catch (e) { return 'auto'; }
+}
+
+export function setPhotoFit(v: PhotoFit) {
+  try { localStorage.setItem(FIT_KEY, v); } catch (e) { /* ignore */ }
+  listeners.forEach((l) => l());
+}
+
+export function usePhotoFit(): PhotoFit {
+  const [fit, setFit] = useState(photoFit());
+  useEffect(() => {
+    const fn = () => setFit(photoFit());
+    listeners.push(fn);
+    return () => { listeners.splice(listeners.indexOf(fn), 1); };
+  }, []);
+  return fit;
+}
+
+// Показывать ли кадр w×h целиком на этом экране.
+export function shouldContain(w: number, h: number): boolean {
+  const fit = photoFit();
+  if (!w || !h || fit === 'cover') return false;
+  if (fit === 'contain') return true;
+  return (w >= h) !== (window.innerWidth >= window.innerHeight);
+}
+
