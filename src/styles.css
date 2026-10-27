@@ -68,10 +68,11 @@ svg { display: block; flex-shrink: 0; }
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
   display: flex; align-items: flex-end; justify-content: space-between;
   padding: 0 5vw 9vh;
-  opacity: 0; transform: translateY(-80px);
+  /* Спрятан — уехал вверх целиком, как экран блокировки при разблокировке */
+  -webkit-transform: translateY(-100%); transform: translateY(-100%);
   pointer-events: none;
 }
-.ambient.visible { opacity: 1; transform: none; }
+.ambient.visible { -webkit-transform: none; transform: none; }
 .clock-link { pointer-events: auto; cursor: pointer; }
 .ambient-clock { text-shadow: 0 2px 30px rgba(0, 0, 0, 0.35); }
 .ambient-time { font-size: 22vh; font-weight: 200; letter-spacing: -0.04em; line-height: 0.9; }
@@ -91,7 +92,7 @@ svg { display: block; flex-shrink: 0; }
 .glance.alert svg, .glance.warn svg { color: #fff; }
 .glance.warn { background: rgba(217, 119, 6, 0.5); }
 
-.ambient { transition: opacity 0.6s var(--ease), transform 0.6s var(--ease); }
+.ambient { transition: -webkit-transform 0.5s var(--ease); transition: transform 0.5s var(--ease); }
 
 /* Ручка внизу, как home indicator на iOS */
 .grabber {
@@ -111,8 +112,6 @@ svg { display: block; flex-shrink: 0; }
 /* Во время жеста — без анимаций, элементы идут за пальцем */
 .dragging .ambient, .dragging .controls, .dragging .soft { transition: none; }
 .dragging .controls { pointer-events: none; }
-.grabber-top { display: flex; justify-content: center; margin: -10px 0 8px; padding: 4px 0; }
-.grabber-top .grabber-bar { width: 60px; height: 4px; background: rgba(255, 255, 255, 0.35); box-shadow: none; }
 
 /* ── Панель управления ───────────────────────────── */
 .controls {
@@ -123,11 +122,12 @@ svg { display: block; flex-shrink: 0; }
   padding-left: max(28px, env(safe-area-inset-left));
   padding-right: max(28px, env(safe-area-inset-right));
   padding-bottom: max(28px, env(safe-area-inset-bottom));
-  opacity: 0; transform: translateY(60px);
-  transition: opacity 0.45s var(--ease), transform 0.45s var(--ease);
+  /* Спрятана — прозрачная и чуть дальше; проявляется, пока экран с фото уезжает вверх */
+  opacity: 0; -webkit-transform: scale(0.96); transform: scale(0.96);
+  transition: opacity 0.5s var(--ease), -webkit-transform 0.5s var(--ease); transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
   pointer-events: none;
 }
-.controls.visible { opacity: 1; transform: none; pointer-events: auto; }
+.controls.visible { opacity: 1; -webkit-transform: none; transform: none; pointer-events: auto; }
 
 .bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
 .bar-time { display: flex; align-items: baseline; }
@@ -147,6 +147,27 @@ svg { display: block; flex-shrink: 0; }
 .round:active { transform: scale(0.92); }
 .round.accent { background: #7dd3fc; color: #0b0d14; border-color: transparent; }
 
+/* Узкая панель: дом по центру шапки, кнопки под бургером — меню выезжает влево поверх шапки, контент не двигается */
+.bar { position: relative; }
+.bar-narrow .bar-date { display: none; }
+.bar-narrow .bar-clock { font-size: 30px; }
+/* Имя дома — ровно по центру шапки, а не между часами и кнопками разной ширины */
+.home-switch { position: absolute; left: 50%; top: 50%; -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%); transition: opacity 0.2s; }
+.home-switch:active { -webkit-transform: translate(-50%, -50%) scale(0.96); transform: translate(-50%, -50%) scale(0.96); }
+.bar-narrow.menu-open .home-switch { opacity: 0; pointer-events: none; }
+.bar-narrow.bar-editing .home-switch { display: none; }
+.burger { position: relative; display: flex; align-items: center; }
+.burger-items {
+  position: absolute; right: 58px; top: 0; display: flex; align-items: center;
+  opacity: 0; pointer-events: none; -webkit-transform: translateX(24px); transform: translateX(24px);
+  transition: opacity 0.22s var(--ease), -webkit-transform 0.22s var(--ease); transition: opacity 0.22s var(--ease), transform 0.22s var(--ease);
+}
+.menu-open .burger-items { opacity: 1; pointer-events: auto; -webkit-transform: none; transform: none; }
+.burger-btn { position: relative; }
+.burger-dot { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--warm); }
+.burger-btn.conn-connected .burger-dot { background: var(--green); }
+.burger-btn.conn-auth_invalid .burger-dot, .burger-btn.conn-disconnected .burger-dot { background: var(--red); }
+
 /* Отрицательный margin = PAD в Grid.tsx: поле под значки не сдвигает сетку относительно шапки. */
 .grid { position: relative; flex: 1; min-height: 0; margin: -16px; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .grid::-webkit-scrollbar { display: none; }
@@ -157,7 +178,12 @@ svg { display: block; flex-shrink: 0; }
 .drop-slot { position: absolute; border-radius: 28px; border: 2px dashed rgba(255, 255, 255, 0.45); background: rgba(255, 255, 255, 0.08); transition: left 0.15s, top 0.15s, width 0.15s, height 0.15s; }
 .grid-dots { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
 .grid-dot { position: absolute; border-radius: 10px; background: rgba(255, 255, 255, 0.035); }
-.grid-note { font-size: 12px; color: var(--ink-3); margin-bottom: 10px; }
+.grid-note { font-size: 12px; color: var(--ink-3); padding: 8px 16px 0; }
+.hidden-cards { display: flex; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+.hidden-cards .muted { display: flex; align-items: center; margin-right: 8px; }
+.hidden-cards .muted svg { margin-right: 4px; }
+.hidden-cards .chip { display: flex; align-items: center; margin: 0 6px 6px 0; }
+.hidden-cards .chip svg { margin-right: 4px; }
 .editing .cell { cursor: move; }
 .dragging-card, .dragging-card * { cursor: grabbing; }
 .badge-btn {
@@ -192,6 +218,16 @@ svg { display: block; flex-shrink: 0; }
 
 /* Дома: переключатель в шапке и въезд раскладки при свайпе */
 .home-pane { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+/* Экраны дома: вкладки под шапкой панели (в редактировании — имя правится во вкладке) */
+.screen-tabs { display: flex; align-items: center; overflow-x: auto; white-space: nowrap; margin: -8px 0 12px; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
+.screen-tab { display: -webkit-inline-flex; display: inline-flex; -webkit-flex-shrink: 0; flex-shrink: 0; align-items: center; height: 34px; padding: 0 14px; margin-right: 8px; border-radius: 17px; font-size: 14px; font-weight: 500; color: var(--ink-3); background: rgba(255, 255, 255, 0.06); }
+.screen-tab.on { color: var(--ink); background: rgba(255, 255, 255, 0.16); font-weight: 600; }
+.screen-tab.add svg { margin-right: 4px; }
+.screen-tab.editing { padding: 0 4px; }
+.screen-tab input { width: auto; min-width: 0; height: 30px; padding: 0 6px; border: 0; border-radius: 10px; background: transparent; color: var(--ink); font: inherit; text-align: center; }
+.screen-tab input:focus { background: rgba(0, 0, 0, 0.25); outline: none; }
+.screen-move, .screen-del { display: flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; border-radius: 14px; color: var(--ink-3); }
+.screen-del.sure { padding: 0 10px; background: rgba(239, 68, 68, 0.85); color: #fff; font-size: 13px; }
 .slide-next { -webkit-animation: in-next 0.35s var(--ease); animation: in-next 0.35s var(--ease); }
 .slide-prev { -webkit-animation: in-prev 0.35s var(--ease); animation: in-prev 0.35s var(--ease); }
 @-webkit-keyframes in-next { from { opacity: 0; -webkit-transform: translateX(60px); } }
@@ -242,8 +278,14 @@ svg { display: block; flex-shrink: 0; }
 .cols-3 .light { width: calc(33.333% - 10px); }
 .cols-4 .light { width: calc(25% - 10px); }
 .cols-5 .light { width: calc(20% - 10px); }
+.cols-6 .light { width: calc(16.666% - 10px); }
 .lights.compact .light { min-height: 70px; padding: 10px 12px; }
 .lights.compact .light-icon { width: 30px; height: 30px; margin-bottom: 6px; }
+/* Совсем мало места: плитка — строка «значок + имя», состояние видно по подсветке */
+.lights.list .light { flex-direction: row; align-items: center; justify-content: flex-start; min-height: 0; padding: 7px 10px; border-radius: 14px; }
+.lights.list .light-icon { width: 28px; height: 28px; margin: 0 8px 0 0; -webkit-flex-shrink: 0; flex-shrink: 0; }
+.lights.list .light-name { min-width: 0; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lights.list .light-state { display: none; }
 .light {
   width: calc(50% - 10px); margin: 5px; min-height: 96px; flex-grow: 1;
   display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between;
@@ -269,7 +311,12 @@ svg { display: block; flex-shrink: 0; }
 .seg button { padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 500; color: var(--ink-2); }
 .seg .active { background: rgba(255, 255, 255, 0.14); color: var(--ink); }
 .cam-wrap { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-.seg-inline { -webkit-align-self: flex-start; align-self: flex-start; margin-bottom: 10px; }
+.seg-inline { -webkit-align-self: flex-start; align-self: flex-start; -webkit-flex-shrink: 0; flex-shrink: 0; max-width: 100%; margin-bottom: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.seg-inline::-webkit-scrollbar { display: none; }
+.seg-inline button { -webkit-flex-shrink: 0; flex-shrink: 0; white-space: nowrap; }
+/* Вкладки устройств во всю ширину блока, поровну и по центру; не влезают — прокрутка вбок */
+.seg-full { -webkit-align-self: stretch; align-self: stretch; }
+.seg-full button { -webkit-flex: 1 0 auto; flex: 1 0 auto; text-align: center; }
 .cam { position: relative; flex: 1; min-height: 120px; border-radius: 18px; overflow: hidden; background: rgba(0, 0, 0, 0.45); cursor: pointer; }
 .cam img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
 /* По ширине / по высоте: одна сторона кадра во всю карточку, вторая — по пропорциям, по центру.
@@ -373,6 +420,9 @@ svg { display: block; flex-shrink: 0; }
 .option { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--panel-line); font-size: 14px; color: var(--ink-2); }
 .option select { padding: 8px 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.08); color: var(--ink); font-size: 13px; }
 .option select option { color: #000; }
+.option-col { display: block; }
+.chip-picker { margin-top: 8px; }
+.chip-picker .check { margin: 4px 0; color: var(--ink); }
 
 .field { display: block; margin-bottom: 14px; }
 .field span { display: block; font-size: 12px; color: var(--ink-3); margin-bottom: 6px; }
@@ -382,8 +432,6 @@ svg { display: block; flex-shrink: 0; }
   -webkit-user-select: text; user-select: text;
 }
 .field input:focus { border-color: #7dd3fc; }
-.diag-head { display: flex; align-items: center; font-size: 12px; color: var(--ink-3); margin: 8px 0; }
-.diag-head svg { margin-right: 6px; }
 .table-wrap { max-height: 240px; overflow-y: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; background: rgba(0, 0, 0, 0.2); }
 .diag { width: 100%; border-collapse: collapse; font-size: 12px; }
 .diag td { padding: 7px 10px; border-bottom: 1px solid var(--panel-line); word-break: break-all; }
@@ -413,7 +461,8 @@ svg { display: block; flex-shrink: 0; }
 .check input { margin-right: 10px; width: 18px; height: 18px; }
 .check-row { padding: 10px 0; border-top: 1px solid var(--panel-line); border-bottom: 1px solid var(--panel-line); margin-bottom: 14px; }
 .items { border-radius: 14px; background: rgba(0, 0, 0, 0.2); padding: 4px 8px 8px; }
-.item-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--panel-line); }
+.item-block { border-bottom: 1px solid var(--panel-line); }
+.item-row { display: flex; align-items: center; padding: 8px 0; }
 .item-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.08); margin-right: 10px; flex-shrink: 0; }
 .item-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .item-main input { padding: 6px 8px; margin-left: -8px; border-radius: 8px; font-size: 14px; -webkit-user-select: text; user-select: text; }
@@ -425,6 +474,19 @@ svg { display: block; flex-shrink: 0; }
 .link svg { margin-right: 4px; }
 .btn-ghost { margin-top: 8px; background: rgba(255, 255, 255, 0.08); color: var(--ink); font-weight: 500; }
 .btn[disabled] { opacity: 0.4; }
+/* Авторизация в настройках PWA: адрес, токен, «или» и вход через HA */
+.auth { margin-bottom: 16px; padding: 14px 16px 2px; border-radius: 16px; background: rgba(255, 255, 255, 0.04); }
+.auth-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+.auth-or { display: flex; align-items: center; margin: -2px 0 12px; font-size: 12px; color: var(--ink-3); }
+.auth-or:before, .auth-or:after { content: ''; -webkit-flex: 1; flex: 1; height: 1px; background: rgba(255, 255, 255, 0.12); }
+.auth-or span { margin: 0 12px; }
+.auth .btn-login { width: 100%; justify-content: center; margin: 0 0 4px; }
+.auth-session { display: flex; align-items: center; justify-content: space-between; margin: -2px 0 6px; font-size: 13px; color: var(--ink-2); }
+.auth-session .btn { margin: 0 0 0 12px; -webkit-flex-shrink: 0; flex-shrink: 0; }
+.ha-storage { margin: 0 0 14px; }
+.ha-storage .hint { margin: 0; }
+.migration { margin: 0 0 14px; padding: 12px 14px; border-radius: 14px; background: rgba(255, 255, 255, 0.08); }
+.migration p { margin: 0 0 4px; font-size: 14px; }
 .picker { border-radius: 14px; background: rgba(0, 0, 0, 0.25); padding: 8px; }
 .picker-search { display: flex; align-items: center; padding: 4px 6px; border-radius: 10px; background: rgba(255, 255, 255, 0.07); color: var(--ink-3); }
 .picker-search input { flex: 1; padding: 8px; border: 0; background: none; font-size: 14px; color: var(--ink); -webkit-user-select: text; user-select: text; }
@@ -440,13 +502,6 @@ svg { display: block; flex-shrink: 0; }
 .home-row { padding: 12px 0; border-bottom: 1px solid var(--panel-line); }
 .home-row-head { display: flex; align-items: center; margin-bottom: 8px; }
 .home-input { flex: 1; min-width: 0; padding: 8px 10px; border-radius: 10px; font-size: 15px; font-weight: 600; background: rgba(255, 255, 255, 0.06); -webkit-user-select: text; user-select: text; }
-.main-check { margin: 0 8px 0 12px; font-size: 13px; white-space: nowrap; }
-.home-ha input { display: block; width: 100%; margin-top: 8px; padding: 10px 12px; border-radius: 10px; font-size: 14px; background: rgba(255, 255, 255, 0.06); border: 1px solid var(--panel-line); -webkit-user-select: text; user-select: text; }
-.sync-state { display: flex; align-items: center; padding: 12px 14px; border-radius: 12px; background: rgba(255, 255, 255, 0.05); font-size: 13px; margin-bottom: 16px; color: var(--ink-2); }
-.sync-state i { width: 8px; height: 8px; border-radius: 50%; margin-right: 10px; background: var(--warm); flex-shrink: 0; }
-.sync-synced i { background: var(--green); box-shadow: 0 0 8px var(--green); }
-.sync-offline i { background: var(--red); }
-.sync-local i { background: var(--ink-3); }
 .row-btns { display: flex; }
 .row-btns .btn { margin: 0 8px 8px 0; }
 .json { display: block; width: 100%; height: 120px; padding: 10px; border-radius: 12px; font: 12px Menlo, monospace; color: var(--ink); background: rgba(0, 0, 0, 0.3); border: 1px solid var(--panel-line); -webkit-user-select: text; user-select: text; resize: vertical; }
@@ -481,7 +536,15 @@ svg { display: block; flex-shrink: 0; }
 .ac-fan button { padding: 6px 10px; font-size: 12px; }
 
 /* ── Колонки и телевизоры ─────────────────────────── */
-.media { flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 0; }
+.media-wrap { -webkit-flex: 1 0 auto; flex: 1 0 auto; }
+/* Плеер по центру, пока помещается; не помещается — растёт вниз и прокручивается, а не лезет на вкладки */
+.media { -webkit-flex: 1 0 auto; flex: 1 0 auto; display: flex; flex-direction: column; }
+.media > :first-child { margin-top: auto; }
+.media > :last-child { margin-bottom: auto; }
+.media.short .media-art { width: 52px; height: 52px; border-radius: 12px; }
+.media.short .media-controls { margin: 8px 0 2px; }
+.media.short .media-controls button { width: 38px; height: 38px; }
+.media.short .media-controls .media-play { width: 46px; height: 46px; }
 .media-top { display: flex; align-items: center; }
 .media-art { width: 72px; height: 72px; flex-shrink: 0; border-radius: 14px; background-size: cover; background-position: center; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); }
 .media.big .media-art { width: 112px; height: 112px; border-radius: 18px; }
@@ -510,7 +573,9 @@ svg { display: block; flex-shrink: 0; }
 .vol-bar:before { content: ''; position: absolute; top: -12px; bottom: -12px; left: 0; right: 0; }
 .vol-fill { position: absolute; top: 0; left: 0; bottom: 0; border-radius: 3px; background: var(--ink); }
 .vol-num { width: 28px; text-align: right; font-size: 12px; color: var(--ink-3); }
-.media-sources { margin: 10px -4px 0; }
+.media-sources { margin: 10px -4px 0; -webkit-flex-wrap: nowrap; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.media-sources::-webkit-scrollbar { display: none; }
+.media-sources .chip { -webkit-flex-shrink: 0; flex-shrink: 0; white-space: nowrap; }
 .media-off { align-items: center; text-align: center; }
 .media-power { margin: 14px 0 0; }
 .media-hint { margin-top: 10px; max-width: 220px; }
@@ -592,6 +657,31 @@ svg { display: block; flex-shrink: 0; }
 .detail-foot { margin-top: 10px; }
 .detail .table-wrap { max-height: 210px; }
 
+/* ── Качество отображения ───────────────────────── */
+.root { height: 100%; }
+
+/* «Красиво» (iPad, компьютеры): настоящее матовое стекло под панелями и окнами. */
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .q-full .panel, .q-full .glance, .q-full .round, .q-full .chip-btn {
+    -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%);
+  }
+  .q-full .panel { background: rgba(12, 14, 22, 0.32); }
+  .q-full .modal { -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  .q-full .modal-box { background: rgba(20, 22, 32, 0.82); -webkit-backdrop-filter: blur(24px) saturate(150%); backdrop-filter: blur(24px) saturate(150%); }
+}
+
+/* «Лёгкое» (старые рамки): без приближения фото, размытия, теней и фоновых анимаций. */
+.q-lite .slide { transform: none !important; transition: opacity 0.6s linear; }
+.q-lite .soft { display: none; }
+.q-lite .shade.deep { background-color: rgba(4, 6, 12, 0.82); }
+.q-lite .sheet-glass .glass-layer { display: none; }
+.q-lite .panel, .q-lite .modal-box, .q-lite .sheet, .q-lite .glance, .q-lite .cell.dragged .panel,
+.q-lite .light.on, .q-lite .light.on .light-icon, .q-lite .media-art, .q-lite .badge-btn { box-shadow: none !important; }
+.q-lite .ambient-clock, .q-lite .ambient .header { text-shadow: none; }
+.q-lite .eq b, .q-lite .live i, .q-lite .grabber-text, .q-lite .editing .cell, .q-lite .sheet, .q-lite .sheet-layer { -webkit-animation: none !important; animation: none !important; }
+.q-lite .controls, .q-lite .ambient { transition-duration: 0.2s; }
+.q-lite .cell, .q-lite .light, .q-lite .light-icon, .q-lite .soft { transition: none; }
+
 /* ── Портрет / телефон ───────────────────────────── */
 @media (max-width: 900px), (orientation: portrait) {
   .ambient { display: block; padding-top: 0; }
@@ -602,6 +692,19 @@ svg { display: block; flex-shrink: 0; }
   .glance { margin: 6px 8px 0 0; }
 
   .controls { padding: 16px; padding-top: max(16px, env(safe-area-inset-top)); }
+}
+
+/* ── Телефон: часы и погода по центру, плашки — круглые значки (что там — по тапу) ── */
+@media (max-width: 700px) {
+  .ambient-clock { left: 6vw; right: 6vw; text-align: center; }
+  .ambient-weather { justify-content: center; }
+  .glances { justify-content: center; }
+  .glance { width: 52px; height: 52px; padding: 0; margin: 6px 5px 0; justify-content: center; border-radius: 50%; }
+  .glance span { display: none; }
+  .glance svg { margin: 0; width: 22px; height: 22px; }
+}
+
+@media (max-width: 900px), (orientation: portrait) {
   .bar-date { display: none; }
   .conn { display: none; }
   .sheet-layer { justify-content: center; padding: 0 12px 12px; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
@@ -611,3 +714,92 @@ svg { display: block; flex-shrink: 0; }
   .stat { min-width: 40%; }
   .rooms .room-temp { font-size: 36px; }
 }
+
+/* ── Экран с фото: вид, свой у устройства (lib/lockscreen) ──
+   Классы на .ambient: lock-<расположение>, lock-size-<размер>, chips-<вид виджетов>.
+   Цепочки из трёх классов сильнее правил «портрет/телефон» выше. */
+.ambient.lock-size-s .ambient-time { font-size: 15vh; }
+.ambient.lock-size-l .ambient-time { font-size: 28vh; }
+
+/* По центру (внизу или сверху, как на iPhone): всё в столбик по центру */
+.ambient.lock-center, .ambient.lock-top { flex-direction: column; align-items: center; justify-content: flex-end; }
+.ambient.lock-top { justify-content: flex-start; padding-top: 10vh; }
+.ambient.lock-center .ambient-clock, .ambient.lock-top .ambient-clock { position: static; text-align: center; }
+.ambient.lock-center .ambient-weather, .ambient.lock-top .ambient-weather { justify-content: center; }
+.ambient.lock-center .glances, .ambient.lock-top .glances { position: static; max-width: none; justify-content: center; margin-top: 3vh; }
+.ambient.lock-center .glance, .ambient.lock-top .glance { margin: 6px 5px 0; }
+/* Сверху — дата над часами, как на экране блокировки iPhone */
+.ambient.lock-top .ambient-clock { display: flex; flex-direction: column; align-items: center; }
+.ambient.lock-top .ambient-date { -webkit-order: -1; order: -1; margin: 0 0 1vh; }
+
+/* В углу — всегда как на большом экране, даже на телефоне */
+.ambient.lock-corner .ambient-clock { text-align: left; }
+.ambient.lock-corner .ambient-weather { justify-content: flex-start; }
+
+/* Виджеты значками — круглые кнопки без текста; текстом — даже на телефоне */
+.ambient.chips-icons .glance { width: 52px; height: 52px; padding: 0; margin: 6px 5px 0; justify-content: center; border-radius: 50%; }
+.ambient.chips-icons .glance span { display: none; }
+.ambient.chips-icons .glance svg { margin: 0; width: 22px; height: 22px; }
+.ambient.chips-text .glance { width: auto; height: auto; padding: 9px 16px 9px 13px; border-radius: 999px; }
+.ambient.chips-text .glance span { display: inline; }
+.ambient.chips-text .glance svg { margin-right: 8px; width: 18px; height: 18px; }
+
+@media (max-width: 900px), (orientation: portrait) {
+  .ambient.lock-size-s .ambient-time { font-size: 10vh; }
+  .ambient.lock-size-m .ambient-time { font-size: 13vh; }
+  .ambient.lock-size-l .ambient-time { font-size: 17vh; }
+}
+@media (max-width: 700px) {
+  .ambient.lock-size-s .ambient-time { font-size: 20vw; }
+  .ambient.lock-size-m .ambient-time { font-size: 27vw; }
+  .ambient.lock-size-l .ambient-time { font-size: 34vw; }
+  .ambient.lock-corner .ambient-clock { text-align: left; }
+  .ambient.lock-corner .glances { justify-content: flex-start; }
+}
+
+/* Режим настройки: экран чуть отъезжает, часы и виджеты обведены и нажимаются */
+.ambient.customizing { -webkit-transform: scale(0.9); transform: scale(0.9); }
+/* Открыта панель снизу — экран поднимается над ней, чтобы правки было видно сразу */
+.ambient.customizing.panel-up { -webkit-transform: translateY(-34%) scale(0.72); transform: translateY(-34%) scale(0.72); }
+.ambient.customizing .ambient-clock, .ambient.customizing .glances {
+  pointer-events: auto; cursor: pointer; border-radius: 18px; padding: 10px 14px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.55); background: rgba(255, 255, 255, 0.06);
+}
+.ambient.customizing .glances { min-height: 64px; min-width: 120px; }
+.ambient.customizing .grabber { display: none; }
+.glance-add { color: var(--ink-2); }
+.lock-ui { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 30; pointer-events: none; }
+.lock-top {
+  position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; padding-top: max(16px, env(safe-area-inset-top)); pointer-events: auto;
+  font-size: 14px; color: var(--ink-2); text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+}
+.lock-panel {
+  position: absolute; left: 50%; bottom: 16px; width: 420px; max-width: calc(100% - 24px); max-height: 70%; overflow-y: auto;
+  -webkit-transform: translateX(-50%); transform: translateX(-50%);
+  padding: 16px 18px 10px; border-radius: 24px; pointer-events: auto;
+  background: rgba(20, 22, 32, 0.92); border: 1px solid var(--panel-line); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+.lock-panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 16px; }
+.lock-fonts { display: flex; margin: 0 -4px 12px; }
+.lock-font { -webkit-flex: 1; flex: 1; margin: 0 4px; height: 64px; border-radius: 14px; font-size: 34px; background: rgba(255, 255, 255, 0.06); border: 1.5px solid transparent; }
+.lock-font.on { border-color: #7dd3fc; background: rgba(125, 211, 252, 0.12); }
+.lock-colors { display: flex; margin: 0 0 6px; }
+.lock-color { width: 34px; height: 34px; margin-right: 10px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.15); }
+.lock-color.on { border-color: #fff; box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25); }
+.lock-widget { display: flex; align-items: center; border-top: 1px solid var(--panel-line); }
+.lock-widget .check { -webkit-flex: 1; flex: 1; margin: 10px 0; }
+.lock-widget .check svg { margin-right: 8px; color: var(--ink-2); }
+.lock-widget .icon-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
+.lock-widget .icon-btn[disabled] { opacity: 0.25; }
+.option-hint { display: block; margin-top: 2px; font-size: 12px; color: var(--ink-3); }
+
+/* Сущности устройства в редакторе карточки: галочка, своё имя, порядок; снята галочка — не показывается */
+.device-parts { margin: 0 0 8px 52px; }
+.device-part { display: flex; align-items: center; padding: 2px 0; }
+.device-part input[type=checkbox] { width: 18px; height: 18px; margin: 0 8px 0 0; -webkit-flex-shrink: 0; flex-shrink: 0; }
+.device-part .part-name { -webkit-flex: 1; flex: 1; min-width: 0; padding: 6px 10px; border-radius: 10px; font-size: 13px; background: rgba(255, 255, 255, 0.05); border: 1px solid transparent; color: var(--ink); }
+.device-part .part-name:focus { border-color: var(--panel-line); outline: none; }
+.device-part .icon-btn { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; -webkit-flex-shrink: 0; flex-shrink: 0; }
+.device-part .icon-btn[disabled] { opacity: 0.25; }
+.device-part.off .part-name { opacity: 0.45; text-decoration: line-through; }

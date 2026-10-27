@@ -1,19 +1,25 @@
-// Тестовый стенд карточки: имитирует дашборд HA. Живые состояния — с HA через сервис рамок (только чтение),
+// Тестовый стенд карточки: имитирует дашборд HA. Живые состояния — с вашего HA (только чтение),
 // сохранение конфига дашборда и медиатека подменены локальными заглушками, чтобы не менять настоящий HA.
+// HA — по входу через его страницу входа: card-harness.html?ha=http://192.168.1.10:8123 (дальше вход помнится).
 import { HAClient } from '../src/lib/ha';
+import { accessToken, finishLogin, haSession, login } from '../src/lib/haAuth';
 import '../src/card';
 
 const KEY = 'photoframe.harness.config';
-const ha = new HAClient('', '', true);
+await finishLogin();
+const session = haSession();
+if (!session) {
+  const url = new URLSearchParams(location.search).get('ha');
+  if (url) login(url);
+  else document.body.textContent = 'Укажите адрес HA: card-harness.html?ha=http://192.168.1.10:8123';
+}
+const ha = new HAClient(session ? session.hassUrl : '', accessToken);
 ha.connect();
 
 async function initialConfig() {
   const saved = localStorage.getItem(KEY);
   if (saved) return JSON.parse(saved);
-  const st = await fetch('/api/state').then((r) => r.json());
-  const layouts: Record<string, unknown> = {};
-  Object.keys(st.layouts || {}).forEach((k) => { if (st.layouts[k]) layouts[k] = st.layouts[k].value; });
-  return { type: 'custom:photoframe-card', media_folder: 'photoframe', layouts };
+  return { type: 'custom:photoframe-card', media_folder: 'photoframe', layouts: {} };
 }
 
 type CardEl = HTMLElement & { setConfig(c: unknown): void; hass: unknown };

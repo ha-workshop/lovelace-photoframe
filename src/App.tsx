@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { HAClient } from './lib/ha';
 import { DetailContext, HAContext } from './lib/hooks';
 import { useLanguage } from './i18n';
-import { mainHome, useStore } from './lib/store';
+import { useQuality } from './lib/quality';
+import { useStore } from './lib/store';
 import { ACCENTS, clampBox, settle, type Card } from './lib/layout';
 import { useTone } from './lib/photoTone';
 import { useSwipe } from './lib/swipe';
@@ -36,20 +37,14 @@ export function App() {
   const store = useStore();
   // Смена языка перерисовывает всё приложение.
   const language = useLanguage();
+  // «Красиво» или «Лёгкое» — на этом устройстве (см. lib/quality).
+  const qualityMode = useQuality();
   const { settings, layout, sync, homes, active } = store.state;
   useEffect(() => store.start(), []);
-  // С сервисом — через его прокси (токен только в сервисе, у каждого дома свой HA); без сервиса — напрямую.
-  // Соединения с уже открытыми домами держим, чтобы свайп между домами был мгновенным.
-  const proxy = sync !== 'local' && sync !== 'card';
-  const pool = useMemo<Record<string, HAClient>>(() => ({}), [proxy, proxy ? '' : settings.haUrl, proxy ? '' : settings.token]);
-  // Карточка дашборда: все дома — через hass фронтенда HA, без токенов.
-  const client = store.card
-    ? store.card.client
-    : pool[active] || (pool[active] = proxy
-      ? new HAClient('', '', true, active)
-      : new HAClient(settings.haUrl, settings.token, false));
-  useEffect(() => { if (client.status === 'idle') client.connect(); }, [client]);
-  useEffect(() => () => Object.keys(pool).forEach((k) => pool[k].disconnect()), [pool]);
+  // Подключение к HA: в карточке — hass фронтенда HA; в PWA его держит store (через него же хранилище в HA).
+  // Пока PWA не вошла в HA — пустой клиент.
+  const idle = useMemo(() => new HAClient('', () => Promise.resolve('')), []);
+  const client = store.card ? store.card.client : store.haClient || idle;
 
   const [slide, setSlide] = useState<'' | 'next' | 'prev'>('');
   const switchHome = (dir: number) => {
@@ -59,6 +54,11 @@ export function App() {
     setSlide(dir > 0 ? 'next' : 'prev');
     setSheetId(null);
     store.setActive(next.id);
+  };
+  const step = (dir: number) => {
+    setSlide(dir > 0 ? 'next' : 'prev');
+    setSheetId(null);
+    store.step(dir);
   };
   const urls = store.photoUrls;
   const n = urls.length;
@@ -75,12 +75,15 @@ export function App() {
   const [adding, setAdding] = useState(false);
   const [detail, setDetail] = useState<string[] | null>(null);
   const [hint, setHint] = useState(true);
-  const tone = useTone(urls[index % Math.max(n, 1)]);
+  // Цвет интерфейса — по кадру, который уже на экране (уменьшенному), а не по оригиналу.
+  const [shown, setShown] = useState('');
+  const tone = useTone(shown || undefined);
   // Карточку поверх фото берём из актуальной раскладки — правки с других рамок видны сразу.
   const sheet = sheetId ? layout.cards.filter((c) => c.id === sheetId)[0] || null : null;
 
   // HA не настроен — сразу открываем настройки (ждём ответа сервиса, чтобы не мигать).
-  const needsSetup = sync === 'local' ? !settings.haUrl || !settings.token : sync === 'synced' && !settings.hasToken;
+  // PWA ещё не вошла в HA — сразу открываем настройки на входе.
+  const needsSetup = sync === 'local' && !store.haClient;
   useEffect(() => { if (needsSetup) setShowSettings(true); }, [needsSetup]);
 
   // Слайдшоу идёт всегда — и под панелью управления, просто «размытое».
@@ -111,7 +114,9 @@ export function App() {
     el.addEventListener('scroll', pin);
     return () => el.removeEventListener('scroll', pin);
   }, []);
-  useSwipe({ root: rootRef, controls: controlsRef, ambient: ambientRef, soft: softRef }, controls, setControls, !busy);
+  // Настройка экрана с фото (как на iPhone): долгое нажатие на фото или «Настроить» в настройках.
+  const [customizing, setCustomizing] = useState(false);
+  useSwipe({ root: rootRef, controls: controlsRef, ambient: ambientRef, soft: softRef }, controls, setControls, !busy && !customizing, () => setCustomizing(true));
 
   // Без касаний — прячем управление/карточку и возвращаемся к фото (вместо сна экрана).
   // Во время редактирования раскладки не прячем.
@@ -121,8 +126,8 @@ export function App() {
     let timer = 0;
     const arm = () => {
       clearTimeout(timer);
-      // …и к главному дому этого устройства.
-      timer = window.setTimeout(() => { setControls(false); setSheetId(null); store.setActive(mainHome()); }, settings.idleSec * 1000);
+      // …и к стартовому экрану этого устройства.
+      timer = window.setTimeout(() => { setControls(false); setSheetId(null); store.goStart(); }, settings.idleSec * 1000);
     };
     const events = ['touchstart', 'mousedown', 'keydown'];
     events.forEach((e) => document.addEventListener(e, arm));
@@ -144,15 +149,19 @@ export function App() {
   return (
     <HAContext.Provider value={client}>
     <DetailContext.Provider value={setDetail}>
+    {/* Класс качества — на общем корне: модалки и карточки поверх фото живут вне .app. */}
+    <div class={'root q-' + qualityMode}>
       <style>{TINTS + (tone ? accentCss('', tone.accent, tone.accentSoft) : '')}</style>
       <div class="app" ref={rootRef} lang={language}>
-        <Backdrop urls={urls} index={index % Math.max(n, 1)} tone={tone} soft={controls} softRef={softRef} />
+        <Backdrop urls={urls} index={index % Math.max(n, 1)} tone={tone} soft={controls} softRef={softRef} onShow={setShown} />
         <Ambient
           visible={!controls}
           showHint={hint && !sheet}
           innerRef={ambientRef}
           onSheet={(card) => setSheetId(card.id)}
           onConnection={() => setShowSettings(true)}
+          customizing={customizing}
+          onDone={() => setCustomizing(false)}
         />
         <Controls
           innerRef={controlsRef}
@@ -167,12 +176,18 @@ export function App() {
           active={active}
           slide={slide}
           onSwitchHome={switchHome}
+          onStep={step}
           onAddCard={() => setAdding(true)}
         />
       </div>
       {sheet && <Sheet card={sheet} tone={tone} onCamera={setCameraUrl} onClose={() => setSheetId(null)} />}
       {cameraUrl && <CameraModal url={cameraUrl} onClose={() => setCameraUrl('')} />}
-      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+      {showSettings && (
+        <SettingsModal
+          onClose={() => setShowSettings(false)}
+          onCustomize={() => { setShowSettings(false); setControls(false); setCustomizing(true); }}
+        />
+      )}
       {adding && <AddCardModal onClose={() => setAdding(false)} onPick={(card) => { setAdding(false); setEditCard({ card, isNew: true }); }} />}
       {editCard && (
         <CardEditor
@@ -186,6 +201,7 @@ export function App() {
         />
       )}
       {detail && <DetailModal key={detail.join(',')} entities={detail} onClose={() => setDetail(null)} />}
+    </div>
     </DetailContext.Provider>
     </HAContext.Provider>
   );

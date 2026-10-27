@@ -1,58 +1,83 @@
-// Общее состояние рамки: настройки, раскладка, альбом.
-// Источник правды — сервис (SQLite), изменения приходят по SSE от других рамок.
-// Если сервиса нет (PWA лежит как статика), всё работает локально: localStorage + IndexedDB.
+// Общее состояние рамки: настройки, дома и их экраны, альбом.
+// Источник правды — Home Assistant: конфиг карточки на дашборде «Фоторамка» (её же показывает HA)
+// и медиатека /media/photoframe. Рамка-PWA входит в HA через его страницу входа (lib/haAuth).
+// Пока входа нет или в HA нет дашборда — всё живёт в этом браузере: localStorage + IndexedDB.
 import { useEffect, useState } from 'preact/hooks';
-import { absolute, clientId, request } from './api';
-import { defaultLayout, normalize, type Layout } from './layout';
+import { defaultLayout, newScreenId, normalizeScreens, type HomeScreens, type Layout, type Screen } from './layout';
 import * as local from './photos';
-import type { CardBackend, CardConfig } from './cardBackend';
+import { CardBackend, loadCardConfig, type CardConfig } from './cardBackend';
+import { HAClient } from './ha';
+import { accessToken, haSession } from './haAuth';
+import { createDashboard, DASHBOARD_PATH } from './setup';
 import { t } from '../i18n';
 
 export interface Settings {
+  // Адрес HA для входа (пусто — домен, с которого открыта рамка).
   haUrl: string;
-  // Токен HA. Когда есть сервис, он хранится только там: здесь пусто, а hasToken говорит, задан ли он.
-  token: string;
-  hasToken?: boolean;
   slideIntervalMs: number;
   // Через сколько секунд без касаний прятать управление и возвращаться к фото; 0 — не прятать.
   idleSec: number;
 }
 
-// id: число — фото сервиса или IndexedDB, строка — media_content_id из медиатеки HA.
+// id: число — фото из IndexedDB, строка — media_content_id из медиатеки HA.
 export interface Photo { id: number | string; url: string }
 
-// card — рамка работает карточкой дашборда HA, всё хранится в конфиге карточки.
-export type Sync = 'connecting' | 'synced' | 'offline' | 'local' | 'card';
+// card — всё хранится в конфиге карточки HA (в самой карточке или в PWA, вошедшей в HA);
+// local — в этом браузере (входа в HA нет или в HA нет дашборда); connecting — ещё не решили.
+export type Sync = 'connecting' | 'local' | 'card';
 
-// Дом: своя раскладка и свой HA (пустой haUrl — тот же HA, что у главного). Токен на рамку не приходит;
-// token здесь бывает только в момент сохранения из настроек.
-export interface Home { id: string; name: string; haUrl: string; hasToken?: boolean; token?: string }
+// Дом — свой набор экранов (все дома живут в одном HA).
+export interface Home { id: string; name: string }
 
 export const MAIN_HOME = 'main';
 
 interface State {
   settings: Settings;
   homes: Home[];
-  layouts: Record<string, Layout>;
-  // Какой дом сейчас на экране; layout — его раскладка (для удобства компонентов).
+  // Экраны каждого дома: свои сетки карточек, листаются свайпом.
+  screens: Record<string, Screen[]>;
+  // Какой дом и какой его экран сейчас показаны; layout — раскладка этого экрана (для удобства компонентов).
   active: string;
-  layout: Layout;
+  screen: string;
+  layout: Screen;
   photos: Photo[];
   sync: Sync;
 }
 
-interface Stored<T> { value: T; version: number }
 
 const CACHE_KEY = 'photoframe.cache';
-// Главный дом — настройка конкретного устройства, в сервис не уходит.
+// Главный дом и его стартовый экран — настройка конкретного устройства, в сервис не уходит.
 const MAIN_KEY = 'photoframe.mainHome';
-
-function emptyLayout(): Layout {
-  return { cols: 12, cards: [] };
-}
+const START_KEY = 'photoframe.startScreen';
 
 export function mainHome(): string {
   try { return localStorage.getItem(MAIN_KEY) || MAIN_HOME; } catch (e) { return MAIN_HOME; }
+}
+
+// Пусто — первый экран главного дома.
+export function startScreen(): string {
+  try { return localStorage.getItem(START_KEY) || ''; } catch (e) { return ''; }
+}
+
+const mainScreens = () => normalizeScreens(null, defaultLayout);
+
+// Вошла ли PWA в HA (вход через страницу HA или сессия HA, внутри которого открыта рамка — lib/haAuth).
+export function haConnected(): boolean {
+  return !!haSession();
+}
+
+// Хранилище PWA в HA: connecting — подключаемся и читаем дашборд; ready — всё в HA;
+// missing — в HA нет дашборда «Фоторамка» с карточкой; error — не удалось прочитать.
+export type HaLink = 'none' | 'connecting' | 'ready' | 'missing' | 'error';
+
+// Что лежало в браузере до перехода на хранилище HA — можно перенести одной кнопкой.
+const BACKUP_KEY = 'photoframe.localBackup';
+const MIGRATED_KEY = 'photoframe.migrated';
+interface LocalBackup { homes: Home[]; screens: Record<string, Screen[]> }
+
+// Как экраны дома уходят в хранилище.
+function packHome(list: Screen[]): HomeScreens {
+  return { screens: list.map((x) => ({ id: x.id, name: x.name, cols: x.cols, cards: x.cards })) };
 }
 
 
@@ -60,14 +85,14 @@ function defaults(): State {
   return {
     settings: {
       haUrl: '',
-      token: '',
       slideIntervalMs: 10000,
       idleSec: 45,
     },
-    homes: [{ id: MAIN_HOME, name: t('home.default_name'), haUrl: '' }],
-    layouts: { [MAIN_HOME]: defaultLayout() },
+    homes: [{ id: MAIN_HOME, name: t('home.default_name') }],
+    screens: { [MAIN_HOME]: mainScreens() },
     active: mainHome(),
-    layout: defaultLayout(),
+    screen: startScreen(),
+    layout: mainScreens()[0],
     photos: [],
     sync: 'connecting',
   };
@@ -79,31 +104,30 @@ function readCache(): State {
     const raw = localStorage.getItem(CACHE_KEY);
     if (raw) {
       const c = JSON.parse(raw);
-      const layouts: Record<string, Layout> = {};
-      // Старый кэш хранил одну раскладку — это раскладка главного дома.
-      const cached = c.layouts || (c.layout ? { [MAIN_HOME]: c.layout } : {});
-      Object.keys(cached).forEach((id) => { layouts[id] = normalize(cached[id]); });
-      if (!layouts[MAIN_HOME]) layouts[MAIN_HOME] = d.layout;
-      return { ...d, settings: { ...d.settings, ...c.settings }, homes: c.homes || d.homes, layouts, photos: c.photos || [] };
+      const screens: Record<string, Screen[]> = {};
+      // Старый кэш: раскладка на дом (layouts) или одна раскладка (layout) — каждая станет одним экраном.
+      if (c.screens) Object.keys(c.screens).forEach((id) => { screens[id] = normalizeScreens({ screens: c.screens[id] }); });
+      else {
+        const cached = c.layouts || (c.layout ? { [MAIN_HOME]: c.layout } : {});
+        Object.keys(cached).forEach((id) => { screens[id] = normalizeScreens(cached[id]); });
+      }
+      if (!screens[MAIN_HOME]) screens[MAIN_HOME] = d.screens[MAIN_HOME];
+      const cs = c.settings || {};
+      const settings = { ...d.settings };
+      if (typeof cs.haUrl === 'string') settings.haUrl = cs.haUrl;
+      if (typeof cs.slideIntervalMs === 'number') settings.slideIntervalMs = cs.slideIntervalMs;
+      if (typeof cs.idleSec === 'number') settings.idleSec = cs.idleSec;
+      const homes = c.homes ? c.homes.map((h: Home) => ({ id: h.id, name: h.name })) : d.homes;
+      return { ...d, settings, homes, screens, photos: c.photos || [] };
     }
-    // Миграция со старого ключа, где жили только настройки.
-    const old = localStorage.getItem('photoframe.settings');
-    if (old) return { ...d, settings: { ...d.settings, ...JSON.parse(old) } };
   } catch (e) { /* ignore */ }
   return d;
 }
 
-// Старые версии держали токен на рамке — убираем, когда рамка работает через сервис.
-function forgetLocalToken() {
-  try {
-    localStorage.removeItem('photoframe.settings');
-  } catch (e) { /* ignore */ }
-}
 
 class Store {
   state: State = readCache();
   private listeners: Array<() => void> = [];
-  private events: EventSource | null = null;
   card: CardBackend | null = null;
   // Состояние экрана, которое должно пережить пересоздание карточки: HA создаёт карточку заново
   // после каждого сохранения дашборда (перенос карточки в редакторе) — без этого рамка «схлопывалась» на фото.
@@ -118,43 +142,72 @@ class Store {
   private set(patch: Partial<State>) {
     const next = { ...this.state, ...patch };
     if (!next.homes.some((h) => h.id === next.active)) next.active = MAIN_HOME;
-    next.layout = next.layouts[next.active] || emptyLayout();
+    const list = next.screens[next.active] || normalizeScreens(null);
+    const screen = list.filter((x) => x.id === next.screen)[0] || list[0];
+    next.screen = screen.id;
+    next.layout = screen;
     this.state = next;
-    if (patch.settings || patch.layouts || patch.homes || patch.photos) {
+    if (patch.settings || patch.screens || patch.homes || patch.photos) {
       try {
-        const { settings, homes, layouts, photos } = this.state;
-        const local = this.state.sync === 'local';
-        // Токен кэшируется только в автономном режиме — иначе он живёт лишь в сервисе.
+        const { settings, homes, screens, photos } = this.state;
         localStorage.setItem(CACHE_KEY, JSON.stringify({
-          settings: local ? settings : { ...settings, token: '' },
+          settings,
           homes,
-          layouts,
-          photos: local ? [] : photos,
+          screens,
+          photos: this.state.sync === 'local' ? [] : photos,
         }));
       } catch (e) { /* ignore */ }
     }
     this.listeners.forEach((l) => l());
   }
 
-  setActive(id: string) {
-    if (id !== this.state.active) this.set({ active: id });
+  // Показать дом (и его экран; без экрана — первый).
+  setActive(id: string, screen = '') {
+    if (id !== this.state.active || (screen && screen !== this.state.screen)) this.set({ active: id, screen });
   }
 
-  setMainHome(id: string) {
-    try { localStorage.setItem(MAIN_KEY, id); } catch (e) { /* ignore */ }
+  // Все экраны всех домов подряд: свайп листает их по кругу, переходя от дома к дому.
+  step(dir: number) {
+    const all: Array<{ home: string; screen: string }> = [];
+    this.state.homes.forEach((h) => (this.state.screens[h.id] || []).forEach((x) => all.push({ home: h.id, screen: x.id })));
+    if (all.length < 2) return;
+    let i = 0;
+    all.forEach((x, k) => { if (x.home === this.state.active && x.screen === this.state.screen) i = k; });
+    const next = all[(i + dir + all.length) % all.length];
+    this.set({ active: next.home, screen: next.screen });
+  }
+
+  // Стартовый экран этого устройства — сюда рамка возвращается, когда её оставили в покое.
+  setStart(home: string, screen: string) {
+    try {
+      localStorage.setItem(MAIN_KEY, home);
+      localStorage.setItem(START_KEY, screen);
+    } catch (e) { /* ignore */ }
     this.listeners.forEach((l) => l());
+  }
+
+  goStart() {
+    this.setActive(mainHome(), startScreen());
+  }
+
+  // Карточки всех экранов дома — информеры на фото собираются со всех.
+  homeCards(home = this.state.active) {
+    return (this.state.screens[home] || []).reduce<Layout['cards']>((all, x) => all.concat(x.cards), []);
   }
 
   // Фото, вшитые в сборку PWA (src/photos). Задаёт точка входа PWA; в карточке HA их нет.
   bundled: string[] = [];
 
   get photoUrls(): string[] {
-    return this.bundled.concat(this.state.photos.map((p) => absolute(p.url)));
+    return this.bundled.concat(this.state.photos.map((p) => p.url));
   }
 
+  // PWA: пока работаем из браузера и, если вход в HA есть, подключаемся — хранилище переедет в HA.
   start() {
-    if (this.card) return;
-    this.pull().then(() => this.listen(), () => this.goLocal());
+    if (this.card || this.state.sync !== 'connecting') return;
+    this.set({ sync: 'local' });
+    this.reloadLocalPhotos();
+    this.connectHa();
   }
 
   // Режим карточки дашборда: источник данных — конфиг карточки, его HA присылает заново при каждом сохранении.
@@ -172,25 +225,25 @@ class Store {
   applyCardConfig(cfg: CardConfig) {
     // В карточке все дома живут в этом же HA: адреса и токены из конфига (если они там остались) не берём.
     const homes = cfg.homes && cfg.homes.length
-      ? cfg.homes.map((h) => ({ id: h.id, name: h.name, haUrl: '' }))
-      : [{ id: MAIN_HOME, name: t('home.default_name'), haUrl: '' }];
-    const layouts: Record<string, Layout> = {};
+      ? cfg.homes.map((h) => ({ id: h.id, name: h.name }))
+      : [{ id: MAIN_HOME, name: t('home.default_name') }];
+    const screens: Record<string, Screen[]> = {};
     homes.forEach((h) => {
       const l = cfg.layouts && cfg.layouts[h.id];
-      layouts[h.id] = l ? normalize(l) : h.id === MAIN_HOME ? defaultLayout() : emptyLayout();
+      screens[h.id] = l ? normalizeScreens(l) : h.id === MAIN_HOME ? mainScreens() : normalizeScreens(null);
     });
     // Из настроек берём только слайдшоу — подключение к HA карточке не нужно.
     const cs = cfg.settings || {};
     const settings = { ...this.state.settings };
     if (typeof cs.slideIntervalMs === 'number') settings.slideIntervalMs = cs.slideIntervalMs;
     if (typeof cs.idleSec === 'number') settings.idleSec = cs.idleSec;
-    this.set({ sync: 'card', homes, layouts, settings });
+    this.set({ sync: 'card', homes, screens, settings });
   }
 
   // Последняя ошибка с фото (нет папки, нет прав) — показывается во вкладке «Фото».
   photoError = '';
 
-  private reloadCardPhotos() {
+  reloadCardPhotos() {
     if (!this.card) return Promise.resolve();
     return this.card.listPhotos().then(
       (photos) => { this.photoError = ''; this.set({ photos }); },
@@ -209,65 +262,131 @@ class Store {
 
   cardError = '';
 
-  private pull() {
-    return request<{
-      settings: Stored<Partial<Settings>> | null;
-      homes?: Home[];
-      layouts?: Record<string, Stored<Layout> | null>;
-      layout: Stored<Layout> | null;
-      photos: Photo[];
-    }>('GET', '/api/state')
-      .then((s) => {
-        const homes = s.homes || [{ id: MAIN_HOME, name: t('home.default_name'), haUrl: '' }];
-        const stored = s.layouts || { [MAIN_HOME]: s.layout };
-        const layouts: Record<string, Layout> = {};
-        homes.forEach((h) => {
-          const l = stored[h.id];
-          layouts[h.id] = l ? normalize(l.value) : h.id === MAIN_HOME ? this.state.layouts[MAIN_HOME] || defaultLayout() : emptyLayout();
+
+  // ── PWA без сервиса: хранилище в HA ─────────────────────
+  // Подключение к HA (через него же — хранилище: карточка на дашборде photo-frame, общая с карточкой HA).
+  haClient: HAClient | null = null;
+  haLink: HaLink = 'none';
+  // Данные из браузера, которые можно перенести в HA: свои экраны и/или N фото.
+  migration: { screens: boolean; photos: number } | null = null;
+
+  private notify() { this.listeners.forEach((l) => l()); }
+
+  private connectHa() {
+    const session = haSession();
+    if (!session || this.haClient) return;
+    const client = new HAClient(session.hassUrl, accessToken);
+    this.haClient = client;
+    this.haLink = 'connecting';
+    let was = '';
+    client.subscribe(() => {
+      if (client.status === was) return;
+      was = client.status;
+      if (client.status === 'connected') {
+        // При каждом (пере)подключении: свежий конфиг и подписка на его изменения
+        // (HA шлёт lovelace_updated после каждого сохранения дашборда — из карточки или с другой рамки).
+        this.loadHaCard();
+        client.subscribeMessage({ type: 'subscribe_events', event_type: 'lovelace_updated' }, (ev) => {
+          if (ev && ev.data && ev.data.url_path === DASHBOARD_PATH) this.loadHaCard();
         });
-        const patch: Partial<State> = { photos: s.photos, homes, layouts, sync: 'synced' };
-        if (s.settings) patch.settings = { ...this.state.settings, ...s.settings.value, token: '' };
-        this.set(patch);
-        // Сервис пустой (первый запуск) или раскладка главного дома старого формата — сохраняем актуальную.
-        const main = stored[MAIN_HOME];
-        if (!main || main.value.cols !== layouts[MAIN_HOME].cols) request('PUT', '/api/layout', layouts[MAIN_HOME]).catch(() => {});
-        // Сервис пустой, а на рамке остался токен от автономной работы — переносим его в сервис.
-        if (!s.settings || (!s.settings.value.hasToken && this.state.settings.token)) {
-          request('PUT', '/api/settings', this.state.settings).catch(() => {});
-        }
-        forgetLocalToken();
-        if (this.state.settings.token) this.set({ settings: { ...this.state.settings, token: '', hasToken: true } });
-      });
-  }
-
-  private listen() {
-    if (typeof EventSource === 'undefined' || this.events) return;
-    const es = new EventSource(absolute('/api/events'));
-    this.events = es;
-    es.onmessage = (ev) => {
-      const msg = JSON.parse(ev.data);
-      if (msg.type === 'hello') {
-        // Переподключились — могли пропустить изменения, забираем всё заново.
-        if (this.state.sync !== 'synced') this.pull().catch(() => {});
-        this.set({ sync: 'synced' });
-      } else if (msg.source === clientId) {
-        // своё же изменение
-      } else if (msg.type === 'settings') {
-        this.set({ settings: { ...this.state.settings, ...msg.value, token: '' } });
-      } else if (msg.type === 'layout') {
-        this.set({ layouts: { ...this.state.layouts, [msg.home || MAIN_HOME]: normalize(msg.value) } });
-      } else if (msg.type === 'homes') {
-        this.applyHomes(msg.homes);
-      } else if (msg.type === 'photos') {
-        this.set({ photos: msg.photos });
+      } else if (client.status === 'auth_invalid') {
+        this.haLink = 'error';
+        this.notify();
       }
-    };
-    es.onerror = () => { if (this.state.sync === 'synced') this.set({ sync: 'offline' }); };
+    });
+    client.connect();
+    this.notify();
   }
 
-  private goLocal() {
-    this.set({ sync: 'local' });
-    this.reloadLocalPhotos();
+  private loadHaCard() {
+    const client = this.haClient;
+    if (!client) return;
+    // Своё же сохранение ещё в пути — дождёмся события от последнего, иначе раскладка мигнёт назад.
+    if (this.card && this.card.busy) return;
+    loadCardConfig(client, DASHBOARD_PATH).then((cfg) => {
+      if (!cfg) { this.haLink = 'missing'; this.notify(); return; }
+      this.haLink = 'ready';
+      if (this.card) {
+        this.card.config = cfg;
+        this.applyCardConfig(cfg);
+        return;
+      }
+      this.offerMigration();
+      this.attachCard(new CardBackend(client, cfg, DASHBOARD_PATH, true));
+    }, () => { this.haLink = 'error'; this.notify(); });
+  }
+
+  // Создать в HA дашборд «Фоторамка» с карточкой (нужен администратор HA).
+  createHaDashboard(): Promise<void> {
+    const client = this.haClient;
+    if (!client) return Promise.reject(new Error('not connected'));
+    return createDashboard((msg) => client.call(msg)).then(() => this.loadHaCard());
+  }
+
+  // Первый переход на HA: запоминаем свои экраны (если их меняли) и считаем фото в браузере.
+  private offerMigration() {
+    let done = '';
+    try { done = localStorage.getItem(MIGRATED_KEY) || ''; } catch (e) { /* ignore */ }
+    if (done === 'done') return;
+    if (!done) {
+      const { homes, screens } = this.state;
+      const custom = homes.length > 1 || JSON.stringify(packHome(screens[MAIN_HOME] || [])) !== JSON.stringify(packHome(mainScreens()));
+      try {
+        if (custom) localStorage.setItem(BACKUP_KEY, JSON.stringify({ homes, screens }));
+        localStorage.setItem(MIGRATED_KEY, 'pending');
+      } catch (e) { /* ignore */ }
+    }
+    const backup = this.backup();
+    local.listPhotos().then((list) => list.length, () => 0).then((photos) => {
+      if (backup || photos) { this.migration = { screens: !!backup, photos }; this.notify(); } else this.finishMigration();
+    });
+  }
+
+  private backup(): LocalBackup | null {
+    try { const raw = localStorage.getItem(BACKUP_KEY); return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
+  }
+
+  // Заменить экраны в HA теми, что были в браузере.
+  migrateScreens() {
+    const b = this.backup();
+    if (!b || !this.card) return;
+    const homes = b.homes.map((h) => ({ id: h.id, name: h.name }));
+    const screens: Record<string, Screen[]> = {};
+    homes.forEach((h) => { screens[h.id] = normalizeScreens({ screens: b.screens[h.id] || [] }); });
+    this.set({ homes, screens });
+    this.saveCard({ homes, layouts: this.packAll() });
+    try { localStorage.removeItem(BACKUP_KEY); } catch (e) { /* ignore */ }
+    this.updateMigration({ screens: false });
+  }
+
+  // Фото из браузера — в медиатеку HA; после загрузки из браузера их убираем.
+  migratePhotos(onProgress?: (done: number, total: number) => void): Promise<void> {
+    const card = this.card;
+    if (!card) return Promise.resolve();
+    return local.listPhotos().then((list) => list.reduce<Promise<unknown>>(
+      (p, ph, i) => p.then(() => card.addPhotoData(ph.data, 'frame-' + ph.id + '.jpg')).then(() => { if (onProgress) onProgress(i + 1, list.length); }),
+      Promise.resolve(),
+    )).then(() => local.clearPhotos()).then(() => {
+      this.updateMigration({ photos: 0 });
+      return this.reloadCardPhotos();
+    });
+  }
+
+  dismissMigration() {
+    try { localStorage.removeItem(BACKUP_KEY); } catch (e) { /* ignore */ }
+    this.finishMigration();
+  }
+
+  private updateMigration(patch: Partial<{ screens: boolean; photos: number }>) {
+    const next = { ...(this.migration || { screens: false, photos: 0 }), ...patch };
+    if (!next.screens && !next.photos) this.finishMigration();
+    else { this.migration = next; this.notify(); }
+  }
+
+  private finishMigration() {
+    try { localStorage.setItem(MIGRATED_KEY, 'done'); } catch (e) { /* ignore */ }
+    this.migration = null;
+    this.notify();
   }
 
   private reloadLocalPhotos() {
@@ -276,69 +395,101 @@ class Store {
       .catch(() => this.set({ photos: [] }));
   }
 
-  private push(path: string, value: unknown) {
-    if (this.state.sync === 'local') return;
-    request('PUT', path, value).catch(() => this.set({ sync: 'offline' }));
-  }
-
   private applyHomes(homes: Home[]) {
-    const layouts: Record<string, Layout> = {};
-    homes.forEach((h) => { layouts[h.id] = this.state.layouts[h.id] || emptyLayout(); });
-    this.set({ homes, layouts });
+    const screens: Record<string, Screen[]> = {};
+    homes.forEach((h) => { screens[h.id] = this.state.screens[h.id] || normalizeScreens(null); });
+    this.set({ homes, screens });
   }
 
-  // Список домов с токенами (если их ввели) уходит в сервис; на рамке остаются без токенов.
   saveHomes(homes: Home[]) {
-    if (this.card) {
-      // В конфиг дашборда — только имена: никаких адресов и токенов.
-      const plain = homes.map((h) => ({ id: h.id, name: h.name, haUrl: '' }));
-      this.applyHomes(plain);
-      this.saveCard({ homes: plain, layouts: this.state.layouts });
-      return;
-    }
-    this.applyHomes(homes.map((h) => ({ id: h.id, name: h.name, haUrl: h.haUrl, hasToken: h.hasToken || !!h.token })));
-    if (this.state.sync === 'local') return;
-    request<Home[]>('PUT', '/api/homes', homes).then((saved) => this.applyHomes(saved), () => this.set({ sync: 'offline' }));
+    const plain = homes.map((h) => ({ id: h.id, name: h.name }));
+    this.applyHomes(plain);
+    if (this.card) this.saveCard({ homes: plain, layouts: this.packAll() });
   }
 
+  // Адрес HA — только этого устройства; слайдшоу — общее (в карточке HA).
   saveSettings(settings: Settings) {
-    if (this.card) {
-      this.set({ settings });
-      this.saveCard({ settings: { slideIntervalMs: settings.slideIntervalMs, idleSec: settings.idleSec } });
-      return;
-    }
-    if (this.state.sync === 'local') {
-      this.set({ settings });
-      return;
-    }
-    // Новый токен уходит в сервис и на рамке не остаётся; пустой — «не менять».
-    this.set({ settings: { ...settings, token: '', hasToken: settings.hasToken || !!settings.token } });
-    this.push('/api/settings', settings);
+    this.set({ settings });
+    if (this.card) this.saveCard({ settings: { slideIntervalMs: settings.slideIntervalMs, idleSec: settings.idleSec } });
   }
 
-  // Раскладка активного дома.
+  // Раскладка показанного экрана.
   saveLayout(layout: Layout) {
-    const home = this.state.active;
-    this.set({ layouts: { ...this.state.layouts, [home]: layout } });
-    if (this.card) { this.saveCard({ layouts: this.state.layouts }); return; }
-    this.push('/api/layout' + (home === MAIN_HOME ? '' : '?home=' + encodeURIComponent(home)), layout);
+    const id = this.state.screen;
+    this.saveScreens(this.state.active, this.screensOf().map((x) => (x.id === id ? { ...x, cols: layout.cols, cards: layout.cards } : x)));
   }
 
-  addPhotos(files: File[]): Promise<void> {
-    if (this.card) return this.card.addPhotos(files).then(() => this.reloadCardPhotos());
-    if (this.state.sync === 'local') return local.addPhotos(files).then(() => this.reloadLocalPhotos());
-    // По одному: рамка ужимает кадр и отправляет в общий альбом.
+  private screensOf(home = this.state.active) {
+    return this.state.screens[home] || normalizeScreens(null);
+  }
+
+  private packAll(): Record<string, HomeScreens> {
+    const out: Record<string, HomeScreens> = {};
+    Object.keys(this.state.screens).forEach((id) => { out[id] = packHome(this.state.screens[id]); });
+    return out;
+  }
+
+  // Экраны дома целиком: в конфиг карточки HA (без неё — только в этот браузер, через кэш).
+  private saveScreens(home: string, list: Screen[], show?: string) {
+    const patch: Partial<State> = { screens: { ...this.state.screens, [home]: list } };
+    if (show) patch.screen = show;
+    this.set(patch);
+    if (this.card) this.saveCard({ layouts: this.packAll() });
+  }
+
+  // Новый пустой экран в конце списка показанного дома — сразу на него и переходим.
+  addScreen(name: string) {
+    const screen: Screen = { id: newScreenId(), name, cols: 12, cards: [] };
+    this.saveScreens(this.state.active, this.screensOf().concat(screen), screen.id);
+  }
+
+  renameScreen(id: string, name: string) {
+    this.saveScreens(this.state.active, this.screensOf().map((x) => (x.id === id ? { ...x, name } : x)));
+  }
+
+  // Последний экран дома не удаляется — у дома всегда есть хотя бы один.
+  removeScreen(id: string) {
+    const list = this.screensOf();
+    if (list.length < 2) return;
+    const i = list.map((x) => x.id).indexOf(id);
+    const rest = list.filter((x) => x.id !== id);
+    this.saveScreens(this.state.active, rest, rest[Math.max(0, i - 1)].id);
+  }
+
+  // Сдвинуть экран в списке (dir −1 — левее, +1 — правее).
+  moveScreen(id: string, dir: number) {
+    const list = this.screensOf().slice();
+    const i = list.map((x) => x.id).indexOf(id);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= list.length) return;
+    const tmp = list[i]; list[i] = list[j]; list[j] = tmp;
+    this.saveScreens(this.state.active, list);
+  }
+
+  // Пачка фото — строго по одному, чтобы не держать в памяти все исходники разом.
+  // Ошибка одного файла не останавливает остальные; в конце сообщаем, сколько не загрузилось.
+  addPhotos(files: File[], onProgress?: (done: number, total: number) => void): Promise<void> {
+    const card = this.card;
+    const one: (f: File) => Promise<unknown> = card ? (f) => card.addPhoto(f) : (f) => local.addPhoto(f);
+    const reload = (): Promise<unknown> => (card ? this.reloadCardPhotos() : this.reloadLocalPhotos());
+    const errors: string[] = [];
+    let done = 0;
     return files.reduce<Promise<unknown>>(
-      (p, f) => p.then(() => local.resize(f)).then((data) => request('POST', '/api/photos', { data })),
+      (p, f) => p
+        .then(() => one(f))
+        .catch((e: Error) => { errors.push((e && e.message) || String(e)); })
+        .then(() => { done++; if (onProgress) onProgress(done, files.length); }),
       Promise.resolve(),
-    ).then(() => request<{ photos: Photo[] }>('GET', '/api/state')).then((s) => this.set({ photos: s.photos }));
+    ).then(() => (done > errors.length ? reload() : undefined)).then(() => {
+      if (!errors.length) return;
+      if (errors.length === files.length) throw new Error(errors[0]);
+      throw new Error(t('errors.upload_some', { failed: errors.length, total: files.length }) + ' — ' + errors[0]);
+    });
   }
 
   deletePhoto(id: number | string): Promise<void> {
     if (this.card) return this.card.deletePhoto(String(id)).then(() => this.reloadCardPhotos());
-    if (this.state.sync === 'local') return local.deletePhoto(Number(id)).then(() => this.reloadLocalPhotos());
-    this.set({ photos: this.state.photos.filter((p) => p.id !== id) });
-    return request('DELETE', '/api/photos/' + id).then(() => undefined);
+    return local.deletePhoto(Number(id)).then(() => this.reloadLocalPhotos());
   }
 
   clearPhotos(): Promise<void> {
@@ -346,9 +497,7 @@ class Store {
       return this.state.photos.reduce<Promise<unknown>>((p, ph) => p.then(() => this.card!.deletePhoto(String(ph.id))), Promise.resolve())
         .then(() => this.reloadCardPhotos());
     }
-    if (this.state.sync === 'local') return local.clearPhotos().then(() => this.reloadLocalPhotos());
-    return this.state.photos.reduce<Promise<unknown>>((p, ph) => p.then(() => this.deletePhoto(ph.id)), Promise.resolve())
-      .then(() => undefined);
+    return local.clearPhotos().then(() => this.reloadLocalPhotos());
   }
 }
 

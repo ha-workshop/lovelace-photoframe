@@ -14,6 +14,11 @@ export interface Item {
   temp?: string;
   // Устройство целиком: в карточке раскрывается в подходящие его сущности (entity — запасная, пока нет реестра).
   device?: string;
+  // Сущности устройства, которые в карточке не показывать (например, «Всего энергия» у счётчика).
+  skip?: string[];
+  // Порядок сущностей устройства (id; новых тут нет — они в конце) и свои имена для них.
+  order?: string[];
+  names?: Record<string, string>;
 }
 
 export interface Card {
@@ -31,6 +36,9 @@ export interface Card {
   // Камеры: как вписать кадр. cover — заполнить с обрезкой (по умолчанию),
   // width — во всю ширину, height — во всю высоту; пропорции сохраняются, пустое место — тёмные поля.
   fit?: CameraFit;
+  // Место и размер в узком (телефонном) виде — своя сетка MOBILE_COLS колонок; hide — не показывать там.
+  // Нет — карточка встаёт сама по порядку широкой сетки (см. mobileView).
+  m?: MobileBox;
   items: Item[];
 }
 
@@ -42,9 +50,24 @@ export interface Layout {
   cards: Card[];
 }
 
+// Экран дома: своя сетка карточек («Гостиная», «Камеры», «Климат»). Экраны листаются свайпом.
+export interface Screen extends Layout {
+  id: string;
+  name: string;
+}
+
+// Как дом хранится в сервисе и в конфиге карточки HA.
+export interface HomeScreens {
+  screens: Screen[];
+}
+
 export const GRID_COLS = 12;
 export const MIN_W = 2;
 export const MIN_H = 2;
+// Узкий экран (телефон): своя сетка на 4 колонки с квадратными клетками.
+export const MOBILE_COLS = 4;
+
+export interface MobileBox { x: number; y: number; w: number; h: number; hide?: boolean }
 
 // Названия и подсказки — в переводах: card.<тип>.title / card.<тип>.hint (см. cardTypeTitle).
 export const CARD_TYPES: Record<CardType, { icon: string; domains: string[] }> = {
@@ -149,6 +172,26 @@ export function bottom(cards: Box[]) {
 
 // Старые раскладки: размеры 1|2 в сетке на 4 колонки, без координат.
 // Раскладываем их по-старому и переводим в клетки 12-колоночной сетки (×3).
+// Экраны дома из любого сохранённого вида: { screens: [...] } или старая одна раскладка (станет одним экраном).
+// Пусто — один экран из fallback (по умолчанию пустой).
+export function normalizeScreens(value: unknown, fallback?: () => Layout): Screen[] {
+  const v = value as { screens?: unknown; cards?: unknown } | null;
+  const list: any[] = v && Array.isArray(v.screens) ? v.screens : v && Array.isArray(v.cards) ? [v] : [];
+  const out: Screen[] = list
+    .filter((x) => x && Array.isArray(x.cards))
+    .map((x, i) => ({ ...normalize(x), id: String(x.id || (i ? 's' + i : 'main')), name: String(x.name || '') }));
+  return out.length ? out : [{ ...(fallback ? fallback() : { cols: GRID_COLS, cards: [] }), id: 'main', name: '' }];
+}
+
+export function newScreenId() {
+  return 's' + Date.now().toString(36) + (seq++).toString(36);
+}
+
+// Имя экрана для показа: своё или «Экран 2».
+export function screenTitle(screen: Screen, index: number) {
+  return screen.name || t('screen.default', { n: index + 1 });
+}
+
 export function normalize(layout: Layout): Layout {
   if (layout.cols === GRID_COLS) return repair(layout);
   const taken: boolean[][] = [];
@@ -188,4 +231,27 @@ function repair(layout: Layout): Layout {
     return placed;
   });
   return { ...layout, cols: GRID_COLS, cards: settle(cards) };
+}
+
+// Раскладка узкого экрана: карточки со своими местами (m) — на них, остальные — в конец по порядку широкой
+// сетки, во всю ширину, высотой по высоте карточки. Скрытые на телефоне не показываются.
+export function mobileView(cards: Card[]): Card[] {
+  const sorted = cards.slice().sort(byPosition);
+  const own = sorted.filter((c) => c.m && !c.m.hide).map((c) => clampBox({ ...c, x: c.m!.x, y: c.m!.y, w: c.m!.w, h: c.m!.h }, MOBILE_COLS));
+  let floor = bottom(own);
+  const auto = sorted.filter((c) => !c.m).map((c) => {
+    const h = Math.max(MIN_H, Math.min(MOBILE_COLS, Math.round(c.h * 2 / 3)));
+    const placed = { ...c, x: 0, y: floor, w: MOBILE_COLS, h };
+    floor += h;
+    return placed;
+  });
+  return settle(own.concat(auto));
+}
+
+// Места из узкого вида — обратно в карточки (m), широкая раскладка не меняется.
+export function withMobile(cards: Card[], view: Card[]): Card[] {
+  return cards.map((c) => {
+    const v = view.filter((x) => x.id === c.id)[0];
+    return v ? { ...c, m: { x: v.x, y: v.y, w: v.w, h: v.h } } : c;
+  });
 }

@@ -23,7 +23,7 @@ export class HassClient extends HAClient {
   private hass: Hass | null = null;
 
   constructor() {
-    super('', '', false, 'main');
+    super('', () => Promise.resolve(''));
   }
 
   // HA присылает новый hass при каждом изменении любого состояния — просто перерисовываемся.

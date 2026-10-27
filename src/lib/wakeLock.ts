@@ -27,6 +27,8 @@ let started = false;
 export function keepScreenOn() {
   if (started) return;
   started = true;
+  // APK-оболочка (UA «SmartFrame/») держит экран сама — видео-фолбэк на слабой рамке лишний.
+  if (/SmartFrame\//.test(navigator.userAgent)) return;
   requestNative();
 
   // Блокировка снимается, когда вкладка скрыта, — берём заново при возврате.

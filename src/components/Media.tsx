@@ -16,7 +16,10 @@ const F = {
 const KNOWN_STATES = ['playing', 'paused', 'idle', 'on', 'off', 'standby', 'buffering'];
 const stateText = (s: string) => (KNOWN_STATES.indexOf(s) !== -1 ? t('media.state.' + s) : s);
 
-function Player({ it, tv, size }: { it: Item; tv: boolean; size: Size }) {
+// tv — показывать как телевизор (выключен — крупная заглушка); sources — переключатель источника.
+// Источники только в карточке «Телевизор»: Яндекс Станция тоже помечена как TV и отдаёт в source_list
+// чужие устройства (EShare, media_player.android_tv…) — в «Колонках» это мусор.
+function Player({ it, tv, sources, size }: { it: Item; tv: boolean; sources: boolean; size: Size }) {
   const ha = useHA();
   const s = ha.states[it.entity];
   const a = s ? s.attributes : {};
@@ -50,6 +53,8 @@ function Player({ it, tv, size }: { it: Item; tv: boolean; size: Size }) {
   const title = a.media_title || a.app_name || a.source || stateText(state);
   const sub = a.media_artist || a.media_album_name || (a.media_title ? stateText(state) : '') || '';
   const big = size.h >= 300 && size.w >= 300;
+  // Низкая карточка — обложка и кнопки поменьше, чтобы плеер помещался без прокрутки.
+  const short = size.h < 250;
   const Placeholder = tv ? Tv : off ? Speaker : Music;
 
   if (off && tv) {
@@ -66,7 +71,7 @@ function Player({ it, tv, size }: { it: Item; tv: boolean; size: Size }) {
   }
 
   return (
-    <div class={'media' + (big ? ' big' : '')}>
+    <div class={'media' + (big ? ' big' : '') + (short ? ' short' : '')}>
       <div class="media-top">
         {art && !off
           ? <div class="media-art" style={{ backgroundImage: 'url(' + art + ')' }} />
@@ -105,7 +110,7 @@ function Player({ it, tv, size }: { it: Item; tv: boolean; size: Size }) {
         </div>
       )}
 
-      {tv && has(F.SELECT_SOURCE) && a.source_list && (
+      {sources && has(F.SELECT_SOURCE) && a.source_list && (
         <div class="chips media-sources">
           {(a.source_list as string[]).map((src) => (
             <button key={src} class={'chip' + (a.source === src ? ' active' : '')} onClick={() => call('select_source', { source: src })}>{src}</button>
@@ -126,7 +131,7 @@ export function Media({ card, size }: { card: Card; size: Size }) {
   return (
     <div class="media-wrap">
       {card.items.length > 1 && (
-        <div class="seg seg-inline">
+        <div class="seg seg-inline seg-full">
           {card.items.map((c, i) => {
             const st = ha.states[c.entity];
             return (
@@ -137,7 +142,7 @@ export function Media({ card, size }: { card: Card; size: Size }) {
           })}
         </div>
       )}
-      {isAvailable(ha, it.entity) && <Player key={it.entity} it={it} tv={tv} size={size} />}
+      {isAvailable(ha, it.entity) && <Player key={it.entity} it={it} tv={tv} sources={card.type === 'tv'} size={size} />}
     </div>
   );
 }

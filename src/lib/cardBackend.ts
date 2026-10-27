@@ -1,8 +1,10 @@
-// Хранилище рамки в режиме карточки дашборда HA.
-// Раскладки, дома и настройки лежат в конфиге самой карточки: HA хранит их и раздаёт всем устройствам.
+// Хранилище рамки в Home Assistant.
+// Раскладки, дома и настройки лежат в конфиге карточки на дашборде: HA хранит их и раздаёт всем устройствам.
 // Фото — из медиатеки HA (по умолчанию /media/photoframe).
-import type { HassClient } from './hassClient';
-import type { Layout } from './layout';
+// Работает и в самой карточке (через hass фронтенда), и в PWA без сервиса — через её подключение к HA
+// (standalone): тогда PWA и карточка на дашборде photo-frame — одна и та же рамка.
+import type { HAClient } from './ha';
+import type { HomeScreens, Layout } from './layout';
 import type { Home, Photo, Settings } from './store';
 import { resize } from './photos';
 import { t } from '../i18n';
@@ -17,7 +19,8 @@ export interface CardConfig {
   kiosk?: boolean;
   settings?: Partial<Settings>;
   homes?: Home[];
-  layouts?: Record<string, Layout>;
+  // Экраны каждого дома ({ screens }); у старых конфигов — одна раскладка на дом.
+  layouts?: Record<string, HomeScreens | Layout>;
 }
 
 interface Lovelace { views?: Array<Record<string, any>> }
@@ -43,8 +46,22 @@ function dashboardPath(): string | null {
   return first === 'lovelace' ? null : first;
 }
 
+// Конфиг карточки с дашборда (url_path = null — дашборд по умолчанию). null — карточки там нет.
+export function loadCardConfig(client: HAClient, url_path: string | null): Promise<CardConfig | null> {
+  return client.call<Lovelace>({ type: 'lovelace/config', url_path }).then(
+    (cfg) => findCard(cfg) as CardConfig | null,
+    (e: Error) => {
+      // Дашборда нет или он пустой — это «карточки нет», а не сбой связи.
+      if (/not found|config_not_found|No config/i.test(e.message)) return null;
+      throw e;
+    },
+  );
+}
+
 export class CardBackend {
-  constructor(readonly client: HassClient, public config: CardConfig) {}
+  // dashboard — путь дашборда с карточкой; не задан — тот, на котором открыта карточка.
+  // standalone — это PWA со своим подключением к HA, а не карточка внутри фронтенда HA.
+  constructor(readonly client: HAClient, public config: CardConfig, private dashboard?: string | null, readonly standalone = false) {}
 
   get folder() {
     return (this.config.media_folder || 'photoframe').replace(/^\/+|\/+$/g, '');
@@ -63,9 +80,14 @@ export class CardBackend {
   private queue: Promise<unknown> = Promise.resolve();
 
   // Записываем изменения в конфиг дашборда. Нужны права администратора и дашборд в режиме UI (не YAML).
+  // Сколько сохранений ещё в пути.
+  private saving = 0;
+  get busy() { return this.saving > 0; }
+
   save(patch: Partial<CardConfig>): Promise<void> {
+    this.saving++;
     const run = () => {
-      const url_path = dashboardPath();
+      const url_path = this.dashboard !== undefined ? this.dashboard : dashboardPath();
       return this.client.call<Lovelace>({ type: 'lovelace/config', url_path }).then((cfg) => {
         const card = findCard(cfg);
         if (!card) throw new Error(t('errors.card_not_found', { type: CARD_TYPE }));
@@ -75,6 +97,8 @@ export class CardBackend {
       });
     };
     const next = this.queue.then(run, run);
+    const done = () => { this.saving--; };
+    next.then(done, done);
     this.queue = next.catch(() => {});
     return next;
   }
@@ -91,18 +115,23 @@ export class CardBackend {
         type: 'media_source/resolve_media',
         media_content_id: c.media_content_id,
         expires: 86400,
-      }).then((r): Photo => ({ id: c.media_content_id, url: r.url }))));
+      }).then((r): Photo => ({ id: c.media_content_id, url: this.client.resolveUrl(r.url) }))));
     }, () => { throw new Error(t('errors.upload_folder', { folder: this.folder })); });
   }
 
-  addPhotos(files: File[]): Promise<void> {
-    return files.reduce<Promise<unknown>>((p, f) => p.then(() => resize(f)).then((dataUrl) => {
+  addPhoto(f: File): Promise<void> {
+    return resize(f).then((dataUrl) => this.addPhotoData(dataUrl, f.name.replace(/\.[^.]+$/, '') + '.jpg'));
+  }
+
+  // Уже уменьшенный кадр (dataURL JPEG) — так же лежат фото, загруженные в браузер до перехода на HA.
+  addPhotoData(dataUrl: string, name: string): Promise<void> {
+    return Promise.resolve().then(() => {
       const bin = atob(dataUrl.split(',')[1]);
       const bytes = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
       const form = new FormData();
       form.append('media_content_id', this.folderId);
-      form.append('file', new Blob([bytes], { type: 'image/jpeg' }), f.name.replace(/\.[^.]+$/, '') + '.jpg');
+      form.append('file', new Blob([bytes], { type: 'image/jpeg' }), name);
       return this.client.fetch('/api/media_source/local_source/upload', { method: 'POST', body: form }).then((r) => {
         if (r.ok) return;
         // Понятные причины вместо голого кода ответа.
@@ -110,7 +139,7 @@ export class CardBackend {
         if (r.status === 400 || r.status === 404) throw new Error(t('errors.upload_folder', { folder: this.folder }));
         throw new Error(t('errors.upload', { status: r.status }));
       });
-    }), Promise.resolve()).then(() => undefined);
+    });
   }
 
   deletePhoto(id: string): Promise<void> {

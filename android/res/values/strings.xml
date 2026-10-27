@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Фоторамка</string>
+    <string name="url_title">Адрес Home Assistant</string>
+    <string name="url_hint">Сервер Home Assistant, например http://192.168.1.10:8123. Рамка откроет на нём /local/photoframe/index.html</string>
+    <string name="url_default">http://</string>
+    <string name="open">Открыть</string>
+    <string name="retry">Повторить</string>
+    <string name="change_url">Сменить адрес</string>
+    <string name="load_error">Не удалось открыть рамку</string>
+</resources>
