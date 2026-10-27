@@ -45,9 +45,25 @@ function frameModel(): string {
   return 'Browser';
 }
 
+// APK-оболочка (MainActivity): своя версия и обновление по команде из HA.
+interface ApkBridge { getApkVersion?: () => string; updateApk?: (url: string) => void }
+const apk = () => (window as unknown as { SmartFrame?: ApkBridge }).SmartFrame;
+
+function apkVersion(): string {
+  const b = apk();
+  try { return b && b.getApkVersion ? b.getApkVersion() : ''; } catch (e) { return ''; }
+}
+
+// «Установить» у обновления рамки в HA: APK берём у этой же интеграции (/photoframe/photoframe.apk).
+export function updateApk() {
+  const b = apk();
+  try { if (b && b.updateApk) b.updateApk(location.protocol + '//' + location.host + '/photoframe/photoframe.apk'); } catch (e) { /* ignore */ }
+}
+
 export function connectFrame(client: HAClient, onEvent: (event: FrameState | FrameCommand) => void): () => void {
   const msg: Record<string, unknown> = { type: 'photoframe/frame/connect', frame_id: frameId(), model: frameModel(), version: __VERSION__ };
   if (frameName()) msg.name = frameName();
+  if (apkVersion()) msg.apk = apkVersion();
   return client.subscribeMessage(msg, onEvent);
 }
 

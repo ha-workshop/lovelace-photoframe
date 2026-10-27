@@ -14,8 +14,16 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 SDK="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
-BT="$SDK/build-tools/$(ls "$SDK/build-tools" | sort -V | tail -1)"
-JAR="$SDK/platforms/$(ls "$SDK/platforms" | sort -V | tail -1)/android.jar"
+# Только стабильные версии SDK: на раннерах GitHub бывают предварительные (android-37 «DEV», build-tools *-rc*).
+# ANDROID_PLATFORM=android-36 — выбрать платформу явно.
+BT="$SDK/build-tools/$(ls "$SDK/build-tools" | grep -E '^[0-9.]+$' | sort -V | tail -1)"
+stable_platform() {
+  for p in $(ls "$SDK/platforms" | sort -V -r); do
+    grep -qE '^(Platform|AndroidVersion).CodeName=.+$' "$SDK/platforms/$p/source.properties" 2>/dev/null || { echo "$p"; return; }
+  done
+}
+JAR="$SDK/platforms/${ANDROID_PLATFORM:-$(stable_platform)}/android.jar"
+[[ -f "$JAR" ]] || { echo "Нет платформы Android SDK: $JAR" >&2; exit 1; }
 VERSION="${APK_VERSION:-$(node -p "require('../package.json').version")}"
 KEYSTORE="${KEYSTORE:-$HOME/.android/debug.keystore}"
 [[ -f "$KEYSTORE" ]] || { echo "Нет ключа подписи $KEYSTORE" >&2; exit 1; }
@@ -36,7 +44,7 @@ javac --release 8 -nowarn -Xlint:-options -classpath "$JAR" -d "$OUT/classes" \
 "$BT/zipalign" -f 4 "$OUT/unsigned.apk" "$OUT/aligned.apk"
 "$BT/apksigner" sign --ks "$KEYSTORE" --ks-pass "pass:${KS_PASS:-android}" --key-pass "pass:${KEY_PASS:-android}" \
   --out "$OUT/photoframe.apk" "$OUT/aligned.apk"
-echo "✓ $(pwd)/$OUT/photoframe.apk ($VERSION)"
+echo "✓ $(pwd)/$OUT/photoframe.apk ($VERSION, $(basename "$(dirname "$JAR")"), build-tools $(basename "$BT"))"
 
 if [[ "${1:-}" == install ]]; then
   adb install -r "$OUT/photoframe.apk"
