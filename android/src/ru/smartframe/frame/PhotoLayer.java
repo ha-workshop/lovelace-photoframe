@@ -53,7 +53,11 @@ public class PhotoLayer extends FrameLayout {
     public void show(final String url, final String fit, final boolean lite) {
         if (url == null || url.isEmpty()) {
             currentUrl = "";
-            removeAllViews();
+            while (getChildCount() > 0) {
+                View v = getChildAt(0);
+                removeViewAt(0);
+                recycle(v);
+            }
             return;
         }
         if (url.equals(currentUrl)) return;
@@ -112,11 +116,19 @@ public class PhotoLayer extends FrameLayout {
             c.setConnectTimeout(15000);
             c.setReadTimeout(30000);
             if (c.getResponseCode() != 200) return null;
+            // Размер известен — читаем сразу в массив нужной длины, без лишних копий (память рамки — 1 ГБ на всё).
             InputStream in = c.getInputStream();
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            byte[] buf = new byte[16384];
-            for (int n; (n = in.read(buf)) > 0;) out.write(buf, 0, n);
-            byte[] data = out.toByteArray();
+            int length = c.getContentLength();
+            byte[] data;
+            if (length > 0) {
+                data = new byte[length];
+                for (int off = 0, n; off < length && (n = in.read(data, off, length - off)) > 0;) off += n;
+            } else {
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                byte[] buf = new byte[16384];
+                for (int n; (n = in.read(buf)) > 0;) out.write(buf, 0, n);
+                data = out.toByteArray();
+            }
             // Сервер присылает кадр под экран; если больше (без интеграции) — уменьшаем при декодировании.
             BitmapFactory.Options o = new BitmapFactory.Options();
             o.inJustDecodeBounds = true;
@@ -133,6 +145,22 @@ public class PhotoLayer extends FrameLayout {
             return null;
         } finally {
             if (c != null) c.disconnect();
+        }
+    }
+
+    // Картинки ушедшего кадра (фото и подсветка) — сразу в утиль, не дожидаясь сборщика мусора.
+    private static void recycle(View slide) {
+        if (!(slide instanceof FrameLayout)) return;
+        FrameLayout f = (FrameLayout) slide;
+        for (int i = 0; i < f.getChildCount(); i++) {
+            View v = f.getChildAt(i);
+            if (!(v instanceof ImageView)) continue;
+            android.graphics.drawable.Drawable d = ((ImageView) v).getDrawable();
+            ((ImageView) v).setImageDrawable(null);
+            if (d instanceof android.graphics.drawable.BitmapDrawable) {
+                Bitmap b = ((android.graphics.drawable.BitmapDrawable) d).getBitmap();
+                if (b != null && !b.isRecycled()) b.recycle();
+            }
         }
     }
 
@@ -189,6 +217,7 @@ public class PhotoLayer extends FrameLayout {
                     View v = getChildAt(0);
                     v.animate().cancel();
                     removeViewAt(0);
+                    recycle(v);
                 }
             }
         });

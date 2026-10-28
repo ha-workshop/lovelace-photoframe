@@ -57,10 +57,20 @@ export class HAClient {
   // Датчики шлют события потоком (у большого HA — десятки в секунду). Перерисовываемся пачкой,
   // не чаще updateIntervalMs(): на слабых устройствах это главная экономия. Статус связи — сразу.
   private emitTimer = 0;
+  // Изменения состояний между перерисовками: states копируется один раз на пачку, а не на каждое событие —
+  // у большого HA это тысячи сущностей, и копия на каждое событие нагружала слабую рамку и сборщик мусора.
+  private changed: Record<string, HassState> | null = null;
 
   protected emitNow() {
     clearTimeout(this.emitTimer);
     this.emitTimer = 0;
+    if (this.changed) {
+      const next: Record<string, HassState> = {};
+      for (const id in this.states) next[id] = this.states[id];
+      for (const id in this.changed) next[id] = this.changed[id];
+      this.states = next;
+      this.changed = null;
+    }
     this.listeners.forEach((l) => l());
   }
 
@@ -105,6 +115,7 @@ export class HAClient {
           const next: Record<string, HassState> = {};
           list.forEach((s) => { next[s.entity_id] = s; });
           this.states = next;
+          this.changed = null;
           this.loaded = true;
           this.emit();
           this.loadRegistry();
@@ -121,7 +132,7 @@ export class HAClient {
       } else if (data.type === 'event' && data.event.event_type === 'state_changed') {
         const s: HassState | null = data.event.data.new_state;
         if (s) {
-          this.states = { ...this.states, [s.entity_id]: s };
+          (this.changed || (this.changed = {}))[s.entity_id] = s;
           this.emit();
         }
       }
