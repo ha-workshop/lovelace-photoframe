@@ -60,11 +60,17 @@ Photo Frame is **one dashboard card** (`custom:photoframe-card`) — not an add-
 
 ## Installation
 
-1. HACS → ⋮ → **Custom repositories** → `https://github.com/ha-workshop/lovelace-photoframe`,
-   category **Dashboard**.
+> **Tip:** the [Photo Frame integration](https://github.com/ha-workshop/ha-photoframe) brings this card *and*
+> the standalone app, makes every frame a device in Home Assistant and processes photos on the server.
+> Install the integration instead of the card if you want frames on tablets or old Android devices.
+
+1. Open the card in HACS:
 
    [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ha-workshop&repository=lovelace-photoframe&category=plugin)
-2. Find **Photo Frame** in HACS and install it. HACS adds the resource
+
+   Or by hand: HACS → search **Photo Frame Card**. Not in the list yet? HACS → ⋮ → **Custom repositories** →
+   `https://github.com/ha-workshop/lovelace-photoframe`, type **Dashboard**.
+2. Download **Photo Frame Card**. HACS adds the resource
    `/hacsfiles/lovelace-photoframe/dist/photoframe-card.js` (if not: *Settings → Dashboards → Resources*,
    type *JavaScript module*).
 3. Create a folder for photos: `/media/photoframe` (Samba, File editor or terminal).
@@ -111,15 +117,15 @@ The same interface runs two ways — both without tokens or extra servers. Every
 
 | | HACS card | Standalone app (PWA / Android frame) |
 |---|---|---|
-| Runs in | an HA dashboard / the HA app | a browser, *Add to Home Screen*, an old Android frame (APK shell) |
+| Runs in | an HA dashboard / the HA app | a browser, *Add to Home Screen*, an Android frame (APK) |
 | Access to HA | as the signed-in user | signs in to HA through its own login page, like the HA frontend |
-| Homes & screens | in the card config on the dashboard | the same card config on the *Photo Frame* dashboard |
+| Homes & screens | in the card config on the dashboard | the same configuration |
 | Photos | HA media library (`/media/photoframe`) | the same media library |
 
-The app is served by HA itself: `./deploy.sh pwa` puts it into `<config>/www/photoframe`, so it opens at
-`http://<HA>:8123/local/photoframe/index.html`. Opened from the same domain (or inside HA as a *Webpage*
-dashboard) it picks up your HA sign-in; otherwise *Settings → Home Assistant → Sign in with Home Assistant*.
-A change on the card or on any frame shows up everywhere at once.
+The standalone app and the Android frame app (APK) come with the
+[Photo Frame integration](https://github.com/ha-workshop/ha-photoframe): Home Assistant serves the app at
+`http://<HA>/photoframe/` and the APK at `http://<HA>/photoframe/photoframe.apk`. The app signs in through
+Home Assistant's own login page. A change on the card or on any frame shows up everywhere at once.
 
 ## Development
 
