@@ -362,6 +362,14 @@ public class MainActivity extends Activity {
             photos.preload(url);
         }
 
+        // Панель управления открыта и закрыла фото целиком — слой фото не рисуем вовсе (и наезд не считаем).
+        @JavascriptInterface
+        public void setPhotosVisible(final boolean visible) {
+            runOnUiThread(new Runnable() {
+                public void run() { photos.setVisibility(visible ? View.VISIBLE : View.INVISIBLE); }
+            });
+        }
+
         // Версия APK — HA показывает обновление, когда интеграция раздаёт новее.
         @JavascriptInterface
         public String getApkVersion() {

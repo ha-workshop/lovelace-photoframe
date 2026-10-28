@@ -102,7 +102,7 @@ svg { display: block; flex-shrink: 0; }
 .glance.alert svg, .glance.warn svg { color: #fff; }
 .glance.warn { background: rgba(217, 119, 6, 0.5); }
 
-.ambient { transition: -webkit-transform 0.5s var(--ease); transition: transform 0.5s var(--ease); }
+.ambient { transition: -webkit-transform 0.5s var(--ease), opacity 0.4s ease; transition: transform 0.5s var(--ease), opacity 0.4s ease; }
 
 
 /* Стрелка к управлению домом внизу по центру, где начинается смахивание: без плашки, с мягкой тенью.
@@ -116,11 +116,26 @@ svg { display: block; flex-shrink: 0; }
 .home-hint.visible { opacity: 1; pointer-events: auto; }
 .home-hint svg { -webkit-filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.55)); filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.55));
   -webkit-animation: nudge 2.4s ease-in-out infinite; animation: nudge 2.4s ease-in-out infinite; }
-.text-contrast .home-hint.ink-dark svg { -webkit-filter: drop-shadow(0 1px 6px rgba(255, 255, 255, 0.6)); filter: drop-shadow(0 1px 6px rgba(255, 255, 255, 0.6)); }
+.home-hint.text-contrast.ink-dark svg { -webkit-filter: drop-shadow(0 1px 6px rgba(255, 255, 255, 0.6)); filter: drop-shadow(0 1px 6px rgba(255, 255, 255, 0.6)); }
 .ambient.customizing .home-hint { display: none; }
 .q-lite .home-hint svg { -webkit-animation: none; animation: none; }
 @-webkit-keyframes nudge { 0%, 60%, 100% { -webkit-transform: translateY(0); } 30% { -webkit-transform: translateY(-5px); } }
 @keyframes nudge { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
+
+/* Фото листнулось свайпом: стрелка вспыхивает у края, с которого пришло фото — справа (следующее)
+   или слева (предыдущее) — и уходит */
+.photo-step {
+  position: absolute; top: 50%; width: 72px; height: 72px; margin-top: -36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; pointer-events: none; color: #fff;
+  background: rgba(0, 0, 0, 0.35); opacity: 0;
+  -webkit-animation: photo-step 0.7s ease-out; animation: photo-step 0.7s ease-out;
+}
+.photo-step.next { right: 3vw; }
+.photo-step.prev { left: 3vw; -webkit-animation-name: photo-step-prev; animation-name: photo-step-prev; }
+@-webkit-keyframes photo-step { 0% { opacity: 0; -webkit-transform: translateX(16px) scale(0.8); } 30% { opacity: 1; -webkit-transform: translateX(0) scale(1); } 100% { opacity: 0; -webkit-transform: translateX(-8px) scale(1); } }
+@keyframes photo-step { 0% { opacity: 0; transform: translateX(16px) scale(0.8); } 30% { opacity: 1; transform: translateX(0) scale(1); } 100% { opacity: 0; transform: translateX(-8px) scale(1); } }
+@-webkit-keyframes photo-step-prev { 0% { opacity: 0; -webkit-transform: translateX(-16px) scale(0.8); } 30% { opacity: 1; -webkit-transform: translateX(0) scale(1); } 100% { opacity: 0; -webkit-transform: translateX(8px) scale(1); } }
+@keyframes photo-step-prev { 0% { opacity: 0; transform: translateX(-16px) scale(0.8); } 30% { opacity: 1; transform: translateX(0) scale(1); } 100% { opacity: 0; transform: translateX(8px) scale(1); } }
 
 /* Во время жеста — без анимаций, элементы идут за пальцем */
 .dragging .ambient, .dragging .controls, .dragging .soft { transition: none; }
@@ -258,7 +273,9 @@ svg { display: block; flex-shrink: 0; }
 .editing .cell { -webkit-animation: jiggle 0.9s ease-in-out infinite; animation: jiggle 0.9s ease-in-out infinite; }
 .editing div:nth-child(2n) > .cell { -webkit-animation-delay: -0.45s; animation-delay: -0.45s; }
 .editing .cell .panel { border: 1px dashed rgba(255, 255, 255, 0.35); }
-.editing .cell .panel-body { pointer-events: none; opacity: 0.45; }
+.editing .cell .panel-body { pointer-events: none; opacity: 0.45; overflow: hidden; }
+/* Редактирование на телефоне: палец на карточке листает страницу (перенос — после удержания), без выделения текста */
+.editing .cell { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: pan-y; }
 @-webkit-keyframes jiggle { 0%, 100% { -webkit-transform: rotate(-0.35deg); } 50% { -webkit-transform: rotate(0.35deg); } }
 @keyframes jiggle { 0%, 100% { transform: rotate(-0.35deg); } 50% { transform: rotate(0.35deg); } }
 .icon-btn.danger { color: var(--red); }
@@ -779,11 +796,6 @@ svg { display: block; flex-shrink: 0; }
 
 /* Режим настройки: экран чуть отъезжает, часы и виджеты обведены и нажимаются */
 .ambient.customizing { -webkit-transform: scale(0.9); transform: scale(0.9); }
-/* Открыта панель снизу — весь экран уменьшается и встаёт над ней (как на iPhone), ничего не уезжает за край */
-.ambient.customizing.panel-up {
-  -webkit-transform-origin: 50% 0; transform-origin: 50% 0;
-  -webkit-transform: translateY(2vh) scale(0.5); transform: translateY(2vh) scale(0.5);
-}
 .ambient.customizing .ambient-clock, .ambient.customizing .glances {
   pointer-events: auto; cursor: pointer; border-radius: 18px; padding: 10px 14px;
   border: 1.5px dashed rgba(255, 255, 255, 0.55); background: rgba(255, 255, 255, 0.06);
@@ -796,9 +808,13 @@ svg { display: block; flex-shrink: 0; }
   padding: 16px 20px; padding-top: max(16px, env(safe-area-inset-top)); pointer-events: auto;
   font-size: 14px; color: var(--ink-2); text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
 }
+/* Настройки блока — окно по центру поверх экрана с фото (экран под ним не двигается) */
+.lock-modal {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: auto;
+  display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.35);
+}
 .lock-panel {
-  position: absolute; left: 50%; bottom: 16px; width: 420px; max-width: calc(100% - 24px); max-height: 70%; overflow-y: auto;
-  -webkit-transform: translateX(-50%); transform: translateX(-50%);
+  position: relative; width: 420px; max-width: calc(100% - 24px); max-height: 80%; overflow-y: auto;
   padding: 16px 18px 10px; border-radius: 24px; pointer-events: auto;
   background: rgba(20, 22, 32, 0.92); border: 1px solid var(--panel-line); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
@@ -806,7 +822,13 @@ svg { display: block; flex-shrink: 0; }
 .lock-fonts { display: flex; margin: 0 -4px 12px; }
 .lock-font { -webkit-flex: 1; flex: 1; margin: 0 4px; height: 64px; border-radius: 14px; font-size: 34px; background: rgba(255, 255, 255, 0.06); border: 1.5px solid transparent; }
 .lock-font.on { border-color: #7dd3fc; background: rgba(125, 211, 252, 0.12); }
-.lock-colors { display: flex; margin: 0 0 6px; }
+/* Палитра — одной строкой; не влезает — листается вбок (полосы прокрутки не видно) */
+.lock-colors {
+  display: flex; -webkit-flex-wrap: nowrap; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; margin: 0 -18px 6px; padding: 4px 18px;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.lock-colors::-webkit-scrollbar { display: none; }
+.lock-colors .lock-color { -webkit-flex-shrink: 0; flex-shrink: 0; }
 .lock-color { width: 34px; height: 34px; margin-right: 10px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.15); }
 .lock-color.on { border-color: #fff; box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25); }
 .lock-widget { display: flex; align-items: center; border-top: 1px solid var(--panel-line); }
@@ -849,17 +871,93 @@ svg { display: block; flex-shrink: 0; }
 .text-contrast .aw-desc { opacity: 0.8; }
 .text-contrast .aw-desc small { opacity: 0.8; }
 .text-contrast .glance.lit svg { color: var(--warm); }
-.text-contrast .ink-dark, .text-contrast .ink-dark .ambient-time { text-shadow: 0 1px 24px rgba(255, 255, 255, 0.45); }
-.text-contrast .glances.ink-dark .glance { background: rgba(255, 255, 255, 0.5); border-color: rgba(0, 0, 0, 0.1); }
-.text-contrast .glances.ink-dark .glance.alert { color: #fff; }
+.text-contrast.ink-dark, .text-contrast.ink-dark .ambient-time { text-shadow: 0 1px 24px rgba(255, 255, 255, 0.45); }
+.glances.text-contrast.ink-dark .glance { background: rgba(255, 255, 255, 0.5); border-color: rgba(0, 0, 0, 0.1); }
+.glances.text-contrast.ink-dark .glance.alert { color: #fff; }
+/* Свой цвет часов — на весь блок: время, дата и погода (второстепенное чуть приглушено) */
+.ambient-clock.ink-fixed .ambient-time, .ambient-clock.ink-fixed .ambient-date, .ambient-clock.ink-fixed .ambient-weather,
+.ambient-clock.ink-fixed .aw-desc, .ambient-clock.ink-fixed .aw-desc small, .ambient-clock.ink-fixed .ambient-weather svg { color: inherit; }
+.ambient-clock.ink-fixed .ambient-date { opacity: 0.85; }
+.ambient-clock.ink-fixed .aw-desc { opacity: 0.8; }
+.ambient-clock.ink-fixed .aw-desc small { opacity: 0.8; }
+/* Свой цвет виджетов: текст и значки одним цветом; горящий свет — тёплым, тревога — как была */
+.glances.ink-fixed .glance, .glances.ink-fixed .glance svg { color: inherit; }
+.glances.ink-fixed .glance.lit svg { color: var(--warm); }
+.glances.ink-fixed .glance.alert, .glances.ink-fixed .glance.alert svg, .glances.ink-fixed .glance.warn, .glances.ink-fixed .glance.warn svg { color: #fff; }
+.lock-color-custom { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;
+  background: conic-gradient(#f87171, #fbbf24, #4ade80, #22d3ee, #818cf8, #f472b6, #f87171); background-color: #888; }
+.lock-color-custom input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: 0; padding: 0; }
+.lock-color-custom span { color: #fff; font-weight: 800; font-size: 14px; text-shadow: 0 0 4px rgba(0, 0, 0, 0.6); pointer-events: none; }
+.hex-input { width: 110px; height: 36px; padding: 0 10px; border-radius: 10px; background: rgba(255, 255, 255, 0.08); font-family: monospace; font-size: 15px; }
+.hex-input.invalid { box-shadow: inset 0 0 0 1.5px #f87171; }
+.lock-color-same { width: auto; padding: 0 12px; border-radius: 17px; font-size: 13px; white-space: nowrap; -webkit-flex-shrink: 0; flex-shrink: 0; color: #fff; background: rgba(255, 255, 255, 0.1); }
 .lock-color-contrast { background: linear-gradient(135deg, #ffffff 50%, #111111 50%); }
-/* Буква «А» (авто) на бело-чёрном кружке: белая с тёмной обводкой — читается на обеих половинах */
+/* Буква «А» (авто) на бело-чёрном кружке: серая — читается на обеих половинах; обводка давала тёмные пятна */
 .lock-color-contrast { padding: 0; }
-.lock-color-contrast span { display: block; color: #fff; font-size: 16px; font-weight: 800; line-height: 30px; text-align: center;
-  text-shadow: -1px -1px 0 #111, 1px -1px 0 #111, -1px 1px 0 #111, 1px 1px 0 #111; }
+.lock-color-contrast span { display: block; color: #8c8c8c; font-size: 15px; font-weight: 800; line-height: 30px; text-align: center; }
 
 
 /* Экран рамки из HA: затемнение (яркость в браузере) и сон — чёрный экран, касание будит (lib/screen) */
 .screen-dim { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9000; background: #000; pointer-events: none;
   transition: opacity 0.8s ease; }
 .screen-dim.asleep { pointer-events: auto; }
+
+/* ── Экран с фото на сетке (Настроить → «Сетка»): блоки часов и виджетов стоят по ячейкам 12×12 ── */
+.ambient.lock-grid { display: block; padding: 0; }
+.ambient.lock-grid .ambient-clock, .ambient.lock-grid .glances {
+  position: absolute; display: flex; flex-direction: column; box-sizing: border-box; max-width: none; margin: 0; overflow: hidden;
+}
+.ambient.lock-grid .glances { flex-direction: row; flex-wrap: wrap; align-content: flex-start; }
+.ambient.lock-grid .glance { margin: 4px; }
+/* Выравнивание — к ближней стороне блока */
+.ambient.lock-grid .ambient-clock.g-left { align-items: flex-start; text-align: left; }
+.ambient.lock-grid .ambient-clock.g-center { align-items: center; text-align: center; }
+.ambient.lock-grid .ambient-clock.g-right { align-items: flex-end; text-align: right; }
+.ambient.lock-grid .ambient-clock.g-top { justify-content: flex-start; }
+.ambient.lock-grid .ambient-clock.g-middle { justify-content: center; }
+.ambient.lock-grid .ambient-clock.g-bottom { justify-content: flex-end; }
+.ambient.lock-grid .g-left .ambient-weather { justify-content: flex-start; }
+.ambient.lock-grid .g-center .ambient-weather { justify-content: center; }
+.ambient.lock-grid .g-right .ambient-weather { justify-content: flex-end; }
+.ambient.lock-grid .glances.g-left { justify-content: flex-start; }
+.ambient.lock-grid .glances.g-center { justify-content: center; }
+.ambient.lock-grid .glances.g-right { justify-content: flex-end; }
+.ambient.lock-grid .glances.g-middle { align-content: center; }
+.ambient.lock-grid .glances.g-bottom { align-content: flex-end; }
+/* Редактор: линии ячеек и рамки блоков поверх (рамки самих блоков не нужны) */
+.ambient.customizing.lock-grid .ambient-clock, .ambient.customizing.lock-grid .glances {
+  border-color: transparent; background: none; padding: 0; min-height: 0; min-width: 0;
+}
+.grid-editor {
+  position: absolute; z-index: 5; pointer-events: none;
+  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.14) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.14) 1px, transparent 1px);
+  background-size: 8.3333% 8.3333%; outline: 1px solid rgba(255, 255, 255, 0.14);
+}
+.grid-box {
+  position: absolute; box-sizing: border-box; pointer-events: auto; cursor: move; border-radius: 12px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.7); background: rgba(125, 211, 252, 0.10);
+}
+.grid-widgets { background: rgba(252, 211, 77, 0.10); }
+.grid-label {
+  position: absolute; top: 6px; left: 8px; font-size: 12px; color: #fff; padding: 2px 8px; border-radius: 8px;
+  background: rgba(0, 0, 0, 0.45);
+}
+.grid-resize {
+  position: absolute; right: -2px; bottom: -2px; width: 28px; height: 28px; cursor: nwse-resize; border-radius: 0 0 12px 0;
+  background: linear-gradient(135deg, transparent 50%, rgba(255, 255, 255, 0.85) 50%);
+}
+.lock-top-btns { display: flex; align-items: center; }
+.lock-top-btns .pill-btn { margin-left: 8px; display: inline-flex; align-items: center; }
+.lock-top-btns .pill-btn svg { margin-right: 6px; }
+.lock-top-btns .pill-btn:not(.accent-bg) { background: rgba(255, 255, 255, 0.14); color: #fff; }
+.lock-top-btns .pill-btn.on:not(.accent-bg) { background: #7dd3fc; color: #0b0d14; }
+
+/* Настройки разделами: заголовок мелким и тонкая линия между блоками */
+.settings-section { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--panel-line); }
+.settings-section:first-child, .migration + .settings-section { margin-top: 0; padding-top: 0; border-top: 0; }
+.section-title { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 10px; }
+
+/* Окна часов и виджетов разделами: «Вид», «Цвет», «Расположение», «Показывать» / «Какие виджеты» */
+.lock-sec { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); margin: 14px 0 8px; }
+.lock-panel-head + .lock-sec { margin-top: 0; }

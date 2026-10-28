@@ -8,7 +8,9 @@ import { useSize } from '../lib/useSize';
 import { t } from '../i18n';
 
 // Сетка на 12 колонок с квадратными клетками: высота ряда = ширине колонки.
-// В режиме редактирования карточку тянут пальцем (перенос) или за уголок (размер) — с привязкой к клеткам.
+// В режиме редактирования карточку тянут (перенос) или за уголок (размер) — с привязкой к клеткам.
+// Пальцем перенос — только после удержания: иначе на телефоне, где карточки занимают весь экран,
+// страницу было бы не прокрутить. Повели пальцем сразу — это прокрутка страницы, а не перенос.
 // На узком экране (телефон) — своя сетка на MOBILE_COLS колонок: места и размеры карточек там свои (card.m),
 // а содержимое общее; × там прячет карточку только на телефоне.
 
@@ -17,6 +19,7 @@ const GAP = 12;
 const PAD = 16;
 const NARROW = 700;     // уже — телефонная сетка
 const DRAG_START = 6;   // px, после которых касание считается перетаскиванием
+const HOLD = 350;       // мс удержания пальца, после которых карточку можно тащить
 // Место под шапку и поля панели: содержимому достаётся меньше, чем размер карточки.
 const BODY_PAD_X = 44;
 const BODY_PAD_Y = 84;
@@ -71,16 +74,39 @@ export function Grid({ editing, onCamera, onEdit }: Props) {
     if (!editing) return;
     if ('button' in e && e.button !== 0) return;
     e.stopPropagation();
+    const touch = 'touches' in e;
+    // Палец на карточке: перенос — после удержания; уголок размера — сразу.
+    const hold = touch && mode === 'move';
     const p = point(e);
     const d: Drag = { id: card.id, mode, x0: p.x, y0: p.y, orig: card, dx: 0, dy: 0, active: mode === 'resize', preview: cards };
     dragRef.current = d;
-    setDrag(d);
+    let picked = !hold;
+    let holdTimer = 0;
+    if (hold) {
+      holdTimer = window.setTimeout(() => {
+        const cur = dragRef.current;
+        if (!cur) return;
+        picked = true;
+        // Карточка «поднялась» — теперь её можно тащить; лёгкий отклик вибрацией, где она есть.
+        const next = { ...cur, active: true };
+        dragRef.current = next;
+        setDrag(next);
+        try { if (navigator.vibrate) navigator.vibrate(15); } catch (_) { /* нет вибрации */ }
+      }, HOLD);
+    } else {
+      setDrag(d);
+    }
 
     const move = (ev: TouchEvent | MouseEvent) => {
       const cur = dragRef.current;
       if (!cur) return;
       const q = point(ev);
       const dx = q.x - cur.x0, dy = q.y - cur.y0;
+      if (!picked) {
+        // Повели пальцем до удержания — это прокрутка страницы: карточку не трогаем.
+        if (Math.abs(dx) > DRAG_START || Math.abs(dy) > DRAG_START) up();
+        return;
+      }
       const active = cur.active || Math.abs(dx) > DRAG_START || Math.abs(dy) > DRAG_START;
       if (!active) return;
       if (ev.cancelable) ev.preventDefault();
@@ -93,6 +119,7 @@ export function Grid({ editing, onCamera, onEdit }: Props) {
       setDrag(next);
     };
     const up = () => {
+      clearTimeout(holdTimer);
       const cur = dragRef.current;
       dragRef.current = null;
       setDrag(null);

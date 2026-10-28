@@ -6,9 +6,11 @@ import { useQuality } from './lib/quality';
 import { useStore } from './lib/store';
 import { reportFrame, updateApk } from './lib/frame';
 import { applyBacklight, dimOpacity, onHardwareWake } from './lib/screen';
+import { setNativeVisible } from './lib/nativePhoto';
 import { ACCENTS, clampBox, settle, type Card } from './lib/layout';
 import { useTone } from './lib/photoTone';
 import { useSwipe } from './lib/swipe';
+import { ChevronLeft, ChevronRight } from 'lucide-preact';
 import { Backdrop } from './components/Backdrop';
 import { Ambient } from './components/Ambient';
 import { Controls } from './components/Controls';
@@ -126,17 +128,42 @@ export function App() {
   useEffect(() => applyBacklight(awake, store.brightness), [awake, store.brightness]);
   useEffect(() => onHardwareWake(() => store.wakeScreen()), []);
 
-  // Слайдшоу идёт всегда — и под панелью управления, просто «размытое». Листнули вручную —
-  // отсчёт до следующего фото начинается заново.
+  // Слайдшоу — только на экране с фото: пока открыта панель управления, фон стоит (не тратим силы рамки
+  // на смену кадров под панелью). Вернулись к фото или листнули вручную — отсчёт начинается заново.
   useEffect(() => {
-    if (n < 2 || !awake) return;
+    if (n < 2 || !awake || controls) return;
     const t = setInterval(() => setIndex((i) => (i + 1) % n), settings.slideIntervalMs);
     return () => clearInterval(t);
-  }, [n, settings.slideIntervalMs, awake, index]);
+  }, [n, settings.slideIntervalMs, awake, index, controls]);
+  // Панель открылась — когда размытие закрыло фото целиком (после перехода), APK перестаёт его рисовать;
+  // начали возвращаться к фото — показываем сразу.
+  // Палец на панели (может тянуть её вниз к фото) — фото под размытием снова рисуется.
+  useEffect(() => {
+    if (!controls) { setNativeVisible(true); return; }
+    const el = rootRef.current;
+    let t = 0;
+    const hide = () => { clearTimeout(t); t = window.setTimeout(() => setNativeVisible(false), 800); };
+    const show = () => { clearTimeout(t); setNativeVisible(true); };
+    hide();
+    if (el) { el.addEventListener('touchstart', show); el.addEventListener('mousedown', show); el.addEventListener('touchend', hide); el.addEventListener('mouseup', hide); }
+    return () => {
+      clearTimeout(t);
+      if (el) { el.removeEventListener('touchstart', show); el.removeEventListener('mousedown', show); el.removeEventListener('touchend', hide); el.removeEventListener('mouseup', hide); }
+    };
+  }, [controls]);
   // Смахнули по фото влево — следующее, вправо — предыдущее.
+  // Вспышка стрелки у края — фото листнулось (key — чтобы анимация шла заново на каждый взмах).
+  const [flash, setFlash] = useState<{ dir: number; key: number } | null>(null);
   const stepPhoto = useCallback((dir: number) => {
-    if (n > 1) setIndex((i) => ((i % n) + dir + n) % n);
+    if (n < 2) return;
+    setIndex((i) => ((i % n) + dir + n) % n);
+    setFlash((f) => ({ dir, key: f ? f.key + 1 : 1 }));
   }, [n]);
+  useEffect(() => {
+    if (!flash) return;
+    const t = setTimeout(() => setFlash(null), 700);
+    return () => clearTimeout(t);
+  }, [flash]);
 
   // Стрелка к управлению домом: при запуске и после каждого касания фото — на несколько секунд.
   useEffect(() => {
@@ -175,6 +202,25 @@ export function App() {
   // Настройка экрана с фото (как на iPhone): долгое нажатие на фото или «Настроить» в настройках.
   const [customizing, setCustomizing] = useState(false);
   useSwipe({ root: rootRef, controls: controlsRef, ambient: ambientRef, soft: softRef }, controls, setControls, !busy && !customizing, () => setCustomizing(true), stepPhoto);
+
+  // С клавиатуры — то же, что свайпы: ← → листают фото, ↑ открывает панель, ↓ и Esc — обратно к фото.
+  // Пока открыто окно, редактор или идёт ввод текста — клавиши не перехватываем.
+  useEffect(() => {
+    if (busy || customizing) return;
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
+      const k = e.key || '';
+      if (!controls && (k === 'ArrowLeft' || k === 'Left')) stepPhoto(-1);
+      else if (!controls && (k === 'ArrowRight' || k === 'Right')) stepPhoto(1);
+      else if (!controls && (k === 'ArrowUp' || k === 'Up')) setControls(true);
+      else if (controls && !editing && (k === 'ArrowDown' || k === 'Down' || k === 'Escape' || k === 'Esc')) setControls(false);
+      else return;
+      e.preventDefault();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [busy, customizing, controls, editing, stepPhoto]);
 
   // Без касаний — прячем управление/карточку и возвращаемся к фото (вместо сна экрана).
   // Во время редактирования раскладки не прячем.
@@ -225,6 +271,11 @@ export function App() {
           onDone={() => setCustomizing(false)}
         />
         </LiveContext.Provider>
+        {flash && (
+          <div key={flash.key} class={'photo-step ' + (flash.dir > 0 ? 'next' : 'prev')}>
+            {flash.dir > 0 ? <ChevronRight size={40} strokeWidth={1.6} /> : <ChevronLeft size={40} strokeWidth={1.6} />}
+          </div>
+        )}
         <LiveContext.Provider value={controls}>
         <Controls
           innerRef={controlsRef}
@@ -251,7 +302,6 @@ export function App() {
       {showSettings && (
         <SettingsModal
           onClose={() => setShowSettings(false)}
-          onCustomize={() => { setShowSettings(false); setControls(false); setCustomizing(true); }}
         />
       )}
       {adding && <AddCardModal onClose={() => setAdding(false)} onPick={(card) => { setAdding(false); setEditCard({ card, isNew: true }); }} />}

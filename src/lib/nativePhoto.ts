@@ -4,6 +4,7 @@
 interface Bridge {
   showPhoto?: (url: string, fit: string, lite: boolean) => void;
   preloadPhoto?: (url: string) => void;
+  setPhotosVisible?: (visible: boolean) => void;
 }
 
 function bridge(): Bridge | null {
@@ -33,4 +34,10 @@ export function preloadNative(url: string) {
 // Кадр на экране: thumb — миниатюра 48 px (data:), по ней цвет интерфейса и «размытие» под панелью.
 export function onNativeShown(fn: (thumb: string) => void) {
   (window as unknown as { SmartFramePhoto?: (url: string, thumb: string) => void }).SmartFramePhoto = (_url, thumb) => fn(thumb);
+}
+
+// Панель управления открыта — фото под ней закрыто размытием целиком, и APK его не рисует.
+export function setNativeVisible(visible: boolean) {
+  const b = bridge();
+  try { if (b && b.setPhotosVisible) b.setPhotosVisible(visible); } catch (e) { /* старый APK */ }
 }

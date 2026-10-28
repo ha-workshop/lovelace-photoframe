@@ -68,6 +68,6 @@ export function connectFrame(client: HAClient, onEvent: (event: FrameState | Fra
 }
 
 // Сообщить HA, что рамка сейчас показывает (фото, экран). Без ответа — это не важно для работы рамки.
-export function reportFrame(client: HAClient, data: { photo?: string | null; photo_url?: string | null; screen?: string | null; screen_on?: boolean }) {
+export function reportFrame(client: HAClient, data: { photo?: string | null; photo_url?: string | null; screen?: string | null; screen_on?: boolean; grid?: unknown }) {
   client.call({ type: 'photoframe/frame/report', frame_id: frameId(), ...data }).catch(() => {});
 }

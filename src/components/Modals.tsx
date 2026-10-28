@@ -2,7 +2,9 @@ import { useEffect, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import { CloudUpload, Copy, ImagePlus, LogIn, LogOut, RotateCcw, Trash2, X } from 'lucide-preact';
 import { haSession, login, logout } from '../lib/haAuth';
-import { frameName as currentFrameName } from '../lib/frame';
+import { frameId, frameName as currentFrameName } from '../lib/frame';
+import { setLockPrefs, validGrid, type LockGrid } from '../lib/lockscreen';
+import type { HAClient } from '../lib/ha';
 import { defaultLayout, screenTitle, type Layout } from '../lib/layout';
 import { kioskPref, setKioskPref, type KioskPref } from '../lib/kiosk';
 import { autostart, setAutostart } from '../lib/screen';
@@ -100,7 +102,7 @@ function Migration() {
   );
 }
 
-export function SettingsModal(props: { onClose: () => void; onCustomize: () => void }) {
+export function SettingsModal(props: { onClose: () => void }) {
   const store = useStore();
   const { settings, photos } = store.state;
   // inCard — карточка внутри фронтенда HA: входить некуда, вкладки HA нет. Иначе это PWA, она входит в HA сама
@@ -186,124 +188,154 @@ export function SettingsModal(props: { onClose: () => void; onCustomize: () => v
       )}
 
       {tab === 'photos' && (
-        <div>
-          {store.migration && <Migration />}
-          <p class="hint">{store.card ? t('photos.card_hint', { folder: store.card.folder }) : t('photos.local_hint')}</p>
-          <label
-            class={'drop-zone' + (busy ? ' busy' : '') + (dragOver ? ' over' : '')}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={(e) => { e.preventDefault(); setDragOver(false); if (!busy) upload(e.dataTransfer && e.dataTransfer.files); }}
-          >
-            <input type="file" multiple accept="image/*,.heic,.heif" onChange={(e) => upload(e.currentTarget.files, e.currentTarget)} disabled={busy} />
-            <CloudUpload size={40} class="muted" />
-            <p class="drop-title">{busy ? t('photos.uploading') + (progress ? ' ' + progress : '') : t('photos.pick')}</p>
-            <p class="hint small">{t(integration ? 'photos.formats_server' : 'photos.formats')}</p>
-          </label>
-          {(uploadError || store.photoError) && <div class="c-red small upload-error">{uploadError || store.photoError}</div>}
+          <div>
+            {store.migration && <Migration/>}
+            <Section title={t('settings.section.photos')}>
+            <p class="hint">{store.card ? t('photos.card_hint', {folder: store.card.folder}) : t('photos.local_hint')}</p>
+            <label
+                class={'drop-zone' + (busy ? ' busy' : '') + (dragOver ? ' over' : '')}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragOver(true);
+                }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragOver(false);
+                  if (!busy) upload(e.dataTransfer && e.dataTransfer.files);
+                }}
+            >
+              <input type="file" multiple accept="image/*,.heic,.heif"
+                     onChange={(e) => upload(e.currentTarget.files, e.currentTarget)} disabled={busy}/>
+              <CloudUpload size={40} class="muted"/>
+              <p class="drop-title">{busy ? t('photos.uploading') + (progress ? ' ' + progress : '') : t('photos.pick')}</p>
+              <p class="hint small">{t(integration ? 'photos.formats_server' : 'photos.formats')}</p>
+            </label>
+            {(uploadError || store.photoError) &&
+                <div className="c-red small upload-error">{uploadError || store.photoError}</div>}
 
-          {integration && albums.length > 0 && (
-            <div class="option">
-              <label>{t('photos.album')}</label>
-              <select value={uploadAlbum} onChange={(e) => setUploadAlbum(e.currentTarget.value)}>
-                <option value="">{t('photos.album_root')}</option>
-                {albums.map((a) => <option key={a} value={a}>{a}</option>)}
-              </select>
-            </div>
-          )}
-          {store.card && (
-            <div class="photos-count">
-              <span>{t('photos.count', { n: photos.length })}</span>
-              {mediaUrl && <a href={mediaUrl} target="_blank" rel="noopener">{t('photos.open_media')}</a>}
-            </div>
-          )}
-
-          {!store.card && photos.length > 0 && (
-            <div class="thumbs thumbs-small">
-              {photos.map((p) => (
-                <div key={p.id} class="thumb" style={{ backgroundImage: 'url(' + p.url + ')' }}>
-                  <button class="thumb-del" onClick={() => store.deletePhoto(p.id)}><X size={14} /></button>
+            {integration && albums.length > 0 && (
+                <div className="option">
+                  <label>{t('photos.album')}</label>
+                  <select value={uploadAlbum} onChange={(e) => setUploadAlbum(e.currentTarget.value)}>
+                    <option value="">{t('photos.album_root')}</option>
+                    {albums.map((a) => <option key={a} value={a}>{a}</option>)}
+                  </select>
                 </div>
-              ))}
-            </div>
-          )}
+            )}
+            {store.card && (
+                <div className="photos-count">
+                  <span>{t('photos.count', {n: photos.length})}</span>
+                  {mediaUrl && <a href={mediaUrl} target="_blank" rel="noopener">{t('photos.open_media')}</a>}
+                </div>
+            )}
 
-          <div class="option">
-            <label>{t('settings.slide_interval')}</label>
-            <select value={draft.slideIntervalMs} onChange={(e) => set({ slideIntervalMs: +e.currentTarget.value })}>
-              {INTERVALS.map((v) => <option key={v} value={v}>{t('settings.interval.' + v)}</option>)}
-            </select>
-          </div>
-          <div class="option">
-            <label>{t('settings.idle_return')}</label>
-            <select value={draft.idleSec} onChange={(e) => set({ idleSec: +e.currentTarget.value })}>
-              {IDLE.map((v) => <option key={v} value={v}>{t('settings.idle.' + v)}</option>)}
-            </select>
-          </div>
-          <div class="option">
-            <label>{t('settings.language')}</label>
-            <select value={language} onChange={(e) => { setLanguage(e.currentTarget.value); setPreferredLanguage(e.currentTarget.value); applyLanguage(); }}>
-              <option value="">{t('settings.language_auto')}</option>
-              {languages().map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
-            </select>
-          </div>
-          <div class="option">
-            <label>{t('settings.quality')}</label>
-            <select value={qPref} onChange={(e) => { const v = e.currentTarget.value as QualityPref; setQPref(v); setQualityPref(v); }}>
-              <option value="auto">{t('settings.quality_auto', { mode: t(autoQuality() === 'lite' ? 'settings.quality_lite' : 'settings.quality_full') })}</option>
-              <option value="full">{t('settings.quality_full')}</option>
-              <option value="lite">{t('settings.quality_lite')}</option>
-            </select>
-          </div>
-          <div class="option">
-            <label>{t('settings.fit')}</label>
-            <select value={fit} onChange={(e) => { const v = e.currentTarget.value as PhotoFit; setFit(v); setPhotoFit(v); }}>
-              <option value="auto">{t('settings.fit_auto')}</option>
-              <option value="contain">{t('settings.fit_contain')}</option>
-              <option value="cover">{t('settings.fit_cover')}</option>
-            </select>
-          </div>
-          {boot !== null && (
-            <div class="option">
-              <label>{t('settings.autostart')}</label>
-              <select value={boot ? 'on' : 'off'} onChange={(e) => { const v = e.currentTarget.value === 'on'; setBoot(v); setAutostart(v); }}>
-                <option value="on">{t('settings.autostart_on')}</option>
-                <option value="off">{t('settings.autostart_off')}</option>
+            {!store.card && photos.length > 0 && (
+                <div className="thumbs thumbs-small">
+                  {photos.map((p) => (
+                      <div key={p.id} className="thumb" style={{backgroundImage: 'url(' + p.url + ')'}}>
+                        <button class="thumb-del" onClick={() => store.deletePhoto(p.id)}><X size={14}/></button>
+                      </div>
+                  ))}
+                </div>
+            )}
+            </Section>
+            <Section title={t('settings.section.slideshow')}>
+            <div className="option">
+              <label>{t('settings.slide_interval')}</label>
+              <select value={draft.slideIntervalMs} onChange={(e) => set({slideIntervalMs: +e.currentTarget.value})}>
+                {INTERVALS.map((v) => <option key={v} value={v}>{t('settings.interval.' + v)}</option>)}
               </select>
             </div>
-          )}
-          {/* Экран с фото настраивается прямо на нём — как экран блокировки iPhone. */}
-          <div class="option">
-            <label>{t('lock.title')}<small class="option-hint">{t('lock.long_press')}</small></label>
-            <button class="btn btn-ghost" onClick={props.onCustomize}>{t('lock.customize')}</button>
-          </div>
-          {inCard && (
-            <div class="option">
-              <label>{t('settings.kiosk')}</label>
-              <select value={kiosk} onChange={(e) => { const v = e.currentTarget.value as KioskPref; setKiosk(v); setKioskPref(v); }}>
-                <option value="">{t('settings.kiosk_auto')}</option>
-                <option value="on">{t('settings.kiosk_on')}</option>
-                <option value="off">{t('settings.kiosk_off')}</option>
+            <div className="option">
+              <label>{t('settings.idle_return')}</label>
+              <select value={draft.idleSec} onChange={(e) => set({idleSec: +e.currentTarget.value})}>
+                {IDLE.map((v) => <option key={v} value={v}>{t('settings.idle.' + v)}</option>)}
               </select>
             </div>
-          )}
-        </div>
+            <div className="option">
+              <label>{t('settings.fit')}</label>
+              <select value={fit} onChange={(e) => {
+                const v = e.currentTarget.value as PhotoFit;
+                setFit(v);
+                setPhotoFit(v);
+              }}>
+                <option value="auto">{t('settings.fit_auto')}</option>
+                <option value="contain">{t('settings.fit_contain')}</option>
+                <option value="cover">{t('settings.fit_cover')}</option>
+              </select>
+            </div>
+            </Section>
+            <Section title={t('settings.section.device')}>
+            <div className="option">
+              <label>{t('settings.quality')}</label>
+              <select value={qPref} onChange={(e) => {
+                const v = e.currentTarget.value as QualityPref;
+                setQPref(v);
+                setQualityPref(v);
+              }}>
+                <option
+                    value="auto">{t('settings.quality_auto', {mode: t(autoQuality() === 'lite' ? 'settings.quality_lite' : 'settings.quality_full')})}</option>
+                <option value="full">{t('settings.quality_full')}</option>
+                <option value="lite">{t('settings.quality_lite')}</option>
+              </select>
+            </div>
+            {boot !== null && (
+                <div className="option">
+                  <label>{t('settings.autostart')}</label>
+                  <select value={boot ? 'on' : 'off'} onChange={(e) => {
+                    const v = e.currentTarget.value === 'on';
+                    setBoot(v);
+                    setAutostart(v);
+                  }}>
+                    <option value="on">{t('settings.autostart_on')}</option>
+                    <option value="off">{t('settings.autostart_off')}</option>
+                  </select>
+                </div>
+            )}
+            {inCard && (
+                <div className="option">
+                  <label>{t('settings.kiosk')}</label>
+                  <select value={kiosk} onChange={(e) => {
+                    const v = e.currentTarget.value as KioskPref;
+                    setKiosk(v);
+                    setKioskPref(v);
+                  }}>
+                    <option value="">{t('settings.kiosk_auto')}</option>
+                    <option value="on">{t('settings.kiosk_on')}</option>
+                    <option value="off">{t('settings.kiosk_off')}</option>
+                  </select>
+                </div>
+            )}
+            <div className="option">
+              <label>{t('settings.language')}</label>
+              <select value={language} onChange={(e) => {
+                setLanguage(e.currentTarget.value);
+                setPreferredLanguage(e.currentTarget.value);
+                applyLanguage();
+              }}>
+                <option value="">{t('settings.language_auto')}</option>
+                {languages().map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
+              </select>
+            </div>
+            </Section>
+          </div>
       )}
 
       {tab === 'ha' && inCard && (
-        <div>
-          <p class="hint">{t('ha.card_hint')}</p>
-        </div>
+          <div>
+            <p class="hint">{t('ha.card_hint')}</p>
+          </div>
       )}
 
       {tab === 'ha' && !inCard && (
-        <div>
-          {/* Авторизация: адрес HA и вход через его страницу входа — вход хранится на этом устройстве. */}
-          <div class="auth">
-            <div class="auth-title">{t('ha.auth')}</div>
-            <label class="field">
-              <span>{t('ha.url')}</span>
-              <input value={draft.haUrl} placeholder={session ? session.hassUrl : location.protocol + '//' + location.host} onInput={(e) => set({ haUrl: e.currentTarget.value.trim() })} />
+          <div>
+            {/* Авторизация: адрес HA и вход через его страницу входа — вход хранится на этом устройстве. */}
+            <div class="auth">
+              <div class="auth-title">{t('ha.auth')}</div>
+              <label class="field">
+                <span>{t('ha.url')}</span>
+                <input value={draft.haUrl} placeholder={session ? session.hassUrl : location.protocol + '//' + location.host} onInput={(e) => set({ haUrl: e.currentTarget.value.trim() })} />
             </label>
             {session ? (
               <div class="auth-session">
@@ -365,6 +397,7 @@ export function SettingsModal(props: { onClose: () => void; onCustomize: () => v
       {tab === 'layout' && (
         <div>
           {store.card && store.cardError && <div class="c-red small">{t('sync.save_failed', { error: store.cardError })}</div>}
+          {integration && <GridImport client={store.card!.client} />}
 
           <div class="field">
             <span>{t('layout.title')}</span>
@@ -390,5 +423,54 @@ export function SettingsModal(props: { onClose: () => void; onCustomize: () => v
         <button class="btn btn-accent" onClick={save}>{t('common.done')}</button>
       </div>
     </Modal>
+  );
+}
+
+// Сетка экрана с фото с другой рамки: рамки сообщают свою сетку в HA (интеграция Photo Frame), здесь её можно
+// взять себе — дальше она своя на этом устройстве и меняется независимо.
+interface FrameInfo { frame_id: string; name?: string; online: boolean; grid?: LockGrid | null }
+
+function GridImport(props: { client: HAClient }) {
+  const [frames, setFrames] = useState<FrameInfo[] | null>(null);
+  const [pick, setPick] = useState('');
+  const [done, setDone] = useState(false);
+  useEffect(() => {
+    props.client.call<{ frames: FrameInfo[] }>({ type: 'photoframe/frames' }).then(
+      (r) => {
+        const list = r.frames.filter((f) => f.frame_id !== frameId() && validGrid(f.grid));
+        setFrames(list);
+        if (list.length) setPick(list[0].frame_id);
+      },
+      () => setFrames([]),
+    );
+  }, [props.client]);
+  if (!frames) return null;
+  const chosen = frames.filter((f) => f.frame_id === pick)[0];
+  return (
+    <div class="field">
+      <span>{t('layout.grid_title')}</span>
+      {frames.length === 0 ? <p class="hint small">{t('layout.grid_none')}</p> : (
+        <>
+          <select value={pick} onChange={(e) => { setPick(e.currentTarget.value); setDone(false); }}>
+            {frames.map((f) => (
+              <option key={f.frame_id} value={f.frame_id}>{(f.name || f.frame_id) + (f.online ? '' : ' · ' + t('layout.grid_offline'))}</option>
+            ))}
+          </select>
+          <button class="btn btn-ghost" disabled={!chosen} onClick={() => { setLockPrefs({ grid: validGrid(chosen.grid) }); setDone(true); }}>
+            <span>{t(done ? 'layout.grid_done' : 'layout.grid_take')}</span>
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+// Раздел настроек с заголовком — чтобы длинный список читался блоками.
+function Section(props: { title: string; children: ComponentChildren }) {
+  return (
+    <div class="settings-section">
+      <div class="section-title">{props.title}</div>
+      {props.children}
+    </div>
   );
 }
