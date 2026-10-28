@@ -1,14 +1,26 @@
 import { createContext } from 'preact';
-import { useContext, useEffect, useState } from 'preact/hooks';
+import { useContext, useEffect, useRef, useState } from 'preact/hooks';
 import type { HAClient } from './ha';
 
 export const HAContext = createContext<HAClient | null>(null);
 
-// Перерисовка компонента при любом обновлении состояний HA.
+// Виден ли этот слой. Скрытая панель управления (пока на экране фото) и экран с фото (пока открыта панель)
+// не перерисовываются от каждого датчика в доме — на слабой рамке это главная фоновая нагрузка.
+// Слой показали — он сразу обновляется до свежих состояний.
+export const LiveContext = createContext(true);
+
+// Перерисовка компонента при любом обновлении состояний HA (пока его слой виден).
 export function useHA(): HAClient {
   const client = useContext(HAContext)!;
+  const live = useContext(LiveContext);
   const [, tick] = useState(0);
-  useEffect(() => client.subscribe(() => tick((n) => n + 1)), [client]);
+  const hidden = useRef(false);
+  useEffect(() => {
+    if (!live) { hidden.current = true; return; }
+    // Слой снова виден — догоняем изменения, пропущенные, пока он был скрыт.
+    if (hidden.current) { hidden.current = false; tick((n) => n + 1); }
+    return client.subscribe(() => tick((n) => n + 1));
+  }, [client, live]);
   return client;
 }
 

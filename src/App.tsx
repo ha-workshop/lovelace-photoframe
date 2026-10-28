@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { HAClient } from './lib/ha';
-import { DetailContext, HAContext } from './lib/hooks';
+import { DetailContext, HAContext, LiveContext } from './lib/hooks';
 import { useLanguage } from './i18n';
 import { useQuality } from './lib/quality';
 import { useStore } from './lib/store';
@@ -212,6 +212,7 @@ export function App() {
       <style>{TINTS + (tone ? accentCss('', tone.accent, tone.accentSoft) : '')}</style>
       <div class="app" ref={rootRef} lang={language}>
         <Backdrop urls={urls} index={index % Math.max(n, 1)} tone={tone} soft={controls} softRef={softRef} onShow={setShown} />
+        <LiveContext.Provider value={!controls}>
         <Ambient
           visible={!controls}
           innerRef={ambientRef}
@@ -223,6 +224,8 @@ export function App() {
           customizing={customizing}
           onDone={() => setCustomizing(false)}
         />
+        </LiveContext.Provider>
+        <LiveContext.Provider value={controls}>
         <Controls
           innerRef={controlsRef}
           visible={controls}
@@ -239,6 +242,7 @@ export function App() {
           onStep={step}
           onAddCard={() => setAdding(true)}
         />
+        </LiveContext.Provider>
       </div>
       {sheet && <Sheet card={sheet} tone={tone} onCamera={setCameraUrl} onClose={() => setSheetId(null)} />}
       <div class={'screen-dim' + (awake ? '' : ' asleep')} style={{ opacity: dimOpacity(awake, store.brightness) }}
