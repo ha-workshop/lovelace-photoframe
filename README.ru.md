@@ -65,11 +65,17 @@ Photo Frame — это **одна карточка дашборда** (`custom:p
 
 ## Установка
 
-1. HACS → три точки → **Пользовательские репозитории** → `https://github.com/ha-workshop/lovelace-photoframe`,
-   категория **Dashboard**.
+> **Совет:** [интеграция Photo Frame](https://github.com/ha-workshop/ha-photoframe) приносит и эту карточку,
+> и отдельное приложение, делает каждую рамку устройством в Home Assistant и обрабатывает фото на сервере.
+> Нужны рамки на планшетах или старых Android-устройствах — ставьте интеграцию вместо карточки.
+
+1. Откройте карточку в HACS:
 
    [![Открыть в HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ha-workshop&repository=lovelace-photoframe&category=plugin)
-2. Найдите **Photo Frame** в HACS и установите. Ресурс `/hacsfiles/lovelace-photoframe/dist/photoframe-card.js`
+
+   Или вручную: HACS → поиск **Photo Frame Card**. Ещё нет в списке? HACS → три точки →
+   **Пользовательские репозитории** → `https://github.com/ha-workshop/lovelace-photoframe`, тип **Dashboard**.
+2. Скачайте **Photo Frame Card**. Ресурс `/hacsfiles/lovelace-photoframe/dist/photoframe-card.js`
    HACS добавит сам (если нет — «Настройки → Дашборды → Ресурсы», тип *JavaScript-модуль*).
 3. Создайте папку для фото: `/media/photoframe` (через Samba, File editor или терминал).
 4. Обновите страницу и откройте любой дашборд администратором: Photo Frame предложит
@@ -115,15 +121,15 @@ views:
 
 | | Карточка HACS | Отдельное приложение (PWA / Android-рамка) |
 |---|---|---|
-| Где работает | дашборд в HA или приложении HA | браузер, «на экран Домой», старая Android-рамка (APK-оболочка) |
+| Где работает | дашборд в HA или приложении HA | браузер, «на экран Домой», Android-рамка (APK) |
 | Доступ к HA | от вошедшего пользователя | вход через страницу входа HA, как у самого фронтенда HA |
-| Дома и экраны | в конфиге карточки на дашборде | в той же карточке на дашборде «Фоторамка» |
+| Дома и экраны | в конфиге карточки на дашборде | та же настройка |
 | Фото | медиатека HA (`/media/photoframe`) | та же медиатека |
 
-Приложение раздаёт сам HA: `./deploy.sh pwa` кладёт его в `<config>/www/photoframe`, и оно открывается по
-`http://<HA>:8123/local/photoframe/index.html`. Открытое с того же домена (или внутри HA как дашборд
-«Веб-страница») оно подхватывает ваш вход в HA, иначе — «Настройки → Home Assistant → Войти через Home Assistant».
-Правка в карточке или на любой рамке сразу видна везде.
+Отдельное приложение и приложение Android-рамки (APK) приходят с
+[интеграцией Photo Frame](https://github.com/ha-workshop/ha-photoframe): Home Assistant раздаёт приложение по
+`http://<HA>/photoframe/`, а APK — по `http://<HA>/photoframe/photoframe.apk`. Вход — через страницу входа
+Home Assistant. Правка в карточке или на любой рамке сразу видна везде.
 
 ## Разработка
 

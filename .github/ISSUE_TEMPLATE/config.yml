@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Devices, entities, services, Android app updates
+    url: https://github.com/ha-workshop/ha-photoframe/issues
+    about: Things that come from the Photo Frame integration are tracked in ha-photoframe.
