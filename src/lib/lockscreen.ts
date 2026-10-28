@@ -44,7 +44,11 @@ export interface LockPrefs {
   // Виджеты: какие спрятаны и в каком порядке остальные (id карточек). Новых карточек в order нет — они в конце.
   hidden: string[];
   order: string[];
+  // Сетка своя для каждой ориентации экрана: grid — горизонтальная, gridPortrait — вертикальная.
   grid: LockGrid | null;
+  gridPortrait: LockGrid | null;
+  // Последняя сетка, присланная из HA (редактор «Фоторамки»): номер правки — чтобы не затереть своё старым.
+  gridRev: number;
 }
 
 export const FONT_WEIGHT: Record<ClockFont, number> = { thin: 200, light: 300, regular: 500, bold: 700 };
@@ -65,7 +69,7 @@ const OLD_HIDDEN_KEY = 'photoframe.hiddenChips';
 const listeners: Array<() => void> = [];
 
 function defaults(): LockPrefs {
-  return { font: 'thin', color: 'white', widgetsColor: '', customColor: '#ffb86b', widgetsCustomColor: '#ffb86b', size: 'm', layout: 'auto', date: true, datePos: 'auto', weather: true, chipStyle: 'auto', widgetsPos: 'clock', hidden: [], order: [], grid: null };
+  return { font: 'thin', color: 'white', widgetsColor: '', customColor: '#ffb86b', widgetsCustomColor: '#ffb86b', size: 'm', layout: 'auto', date: true, datePos: 'auto', weather: true, chipStyle: 'auto', widgetsPos: 'clock', hidden: [], order: [], grid: null, gridPortrait: null, gridRev: 0 };
 }
 
 export function lockPrefs(): LockPrefs {
@@ -132,4 +136,31 @@ export function validGrid(g: unknown): LockGrid | null {
   const v = g as LockGrid;
   const ok = (r: GridRect) => r && [r.x, r.y, r.w, r.h].every((n) => typeof n === 'number' && isFinite(n));
   return v && ok(v.clock) && ok(v.widgets) ? { clock: clampRect(v.clock), widgets: clampRect(v.widgets) } : null;
+}
+
+// ── Ориентация ────────────────────────────────────────
+export type Orientation = 'landscape' | 'portrait';
+
+export function orientationNow(): Orientation {
+  return window.innerHeight > window.innerWidth ? 'portrait' : 'landscape';
+}
+
+// Повернули рамку — перерисоваться с сеткой другой ориентации.
+export function useOrientation(): Orientation {
+  const [o, setO] = useState(orientationNow());
+  useEffect(() => {
+    const fn = () => setO(orientationNow());
+    window.addEventListener('resize', fn);
+    window.addEventListener('orientationchange', fn);
+    return () => { window.removeEventListener('resize', fn); window.removeEventListener('orientationchange', fn); };
+  }, []);
+  return o;
+}
+
+export function activeGrid(p: LockPrefs, o: Orientation): LockGrid | null {
+  return o === 'portrait' ? p.gridPortrait : p.grid;
+}
+
+export function gridPatch(o: Orientation, g: LockGrid | null): Partial<LockPrefs> {
+  return o === 'portrait' ? { gridPortrait: g } : { grid: g };
 }

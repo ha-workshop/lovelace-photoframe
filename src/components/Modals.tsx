@@ -428,7 +428,7 @@ export function SettingsModal(props: { onClose: () => void }) {
 
 // Сетка экрана с фото с другой рамки: рамки сообщают свою сетку в HA (интеграция Photo Frame), здесь её можно
 // взять себе — дальше она своя на этом устройстве и меняется независимо.
-interface FrameInfo { frame_id: string; name?: string; online: boolean; grid?: LockGrid | null }
+interface FrameInfo { frame_id: string; name?: string; online: boolean; grid?: LockGrid | null; grid_portrait?: LockGrid | null }
 
 function GridImport(props: { client: HAClient }) {
   const [frames, setFrames] = useState<FrameInfo[] | null>(null);
@@ -437,7 +437,7 @@ function GridImport(props: { client: HAClient }) {
   useEffect(() => {
     props.client.call<{ frames: FrameInfo[] }>({ type: 'photoframe/frames' }).then(
       (r) => {
-        const list = r.frames.filter((f) => f.frame_id !== frameId() && validGrid(f.grid));
+        const list = r.frames.filter((f) => f.frame_id !== frameId() && (validGrid(f.grid) || validGrid(f.grid_portrait)));
         setFrames(list);
         if (list.length) setPick(list[0].frame_id);
       },
@@ -456,7 +456,7 @@ function GridImport(props: { client: HAClient }) {
               <option key={f.frame_id} value={f.frame_id}>{(f.name || f.frame_id) + (f.online ? '' : ' · ' + t('layout.grid_offline'))}</option>
             ))}
           </select>
-          <button class="btn btn-ghost" disabled={!chosen} onClick={() => { setLockPrefs({ grid: validGrid(chosen.grid) }); setDone(true); }}>
+          <button class="btn btn-ghost" disabled={!chosen} onClick={() => { setLockPrefs({ grid: validGrid(chosen.grid), gridPortrait: validGrid(chosen.grid_portrait) }); setDone(true); }}>
             <span>{t(done ? 'layout.grid_done' : 'layout.grid_take')}</span>
           </button>
         </>

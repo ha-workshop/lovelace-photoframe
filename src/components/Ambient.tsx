@@ -7,7 +7,8 @@ import { iconFor } from '../lib/icons';
 import { formatDate, formatTime, useNow } from '../lib/time';
 import { cardTypeTitle, type Card } from '../lib/layout';
 import {
-  CLOCK_COLOR, FONT_WEIGHT, HEX, colorValue, GRID, clampRect, defaultGrid, setLockPrefs, sortWidgets, useLockPrefs,
+  CLOCK_COLOR, FONT_WEIGHT, HEX, colorValue, GRID, activeGrid, clampRect, defaultGrid, gridPatch, setLockPrefs, sortWidgets, useLockPrefs, useOrientation,
+  type Orientation,
   type GridRect, type HAlign, type LockGrid, type VAlign, type ChipStyle, type ClockColor, type ClockFont, type ClockSize, type DatePos, type LockLayout, type LockPrefs, type WidgetsPos,
 } from '../lib/lockscreen';
 import { summary } from './CardView';
@@ -25,8 +26,8 @@ function layoutOf(prefs: LockPrefs) {
 }
 
 // Сетка занимает экран с отступом — блоки не прилипают к краям.
-const INSET = 3; // % по каждой стороне
-const SPAN = 100 - INSET * 2;
+export const INSET = 3; // % по каждой стороне
+export const SPAN = 100 - INSET * 2;
 
 function rectRegion(r: GridRect): Region {
   const f = (v: number) => (INSET + (v / GRID) * SPAN) / 100;
@@ -48,8 +49,8 @@ function rectAlign(r: GridRect) {
 }
 
 // Где на экране часы и где виджеты — оттуда и берём фон для цвета «в обратку» (доли ширины и высоты кадра).
-function clockRegion(prefs: LockPrefs): Region {
-  if (prefs.grid) return rectRegion(prefs.grid.clock);
+function clockRegion(prefs: LockPrefs, grid: LockGrid | null): Region {
+  if (grid) return rectRegion(grid.clock);
   const layout = layoutOf(prefs);
   if (layout === 'top') return [0.2, 0.05, 0.8, 0.35];
   if (layout === 'corner') return [0, 0.55, 0.55, 0.95];
@@ -58,11 +59,11 @@ function clockRegion(prefs: LockPrefs): Region {
 
 const HINT_REGION: Region = [0.4, 0.88, 0.6, 1];
 
-function widgetsRegion(prefs: LockPrefs): Region {
-  if (prefs.grid) return rectRegion(prefs.grid.widgets);
+function widgetsRegion(prefs: LockPrefs, grid: LockGrid | null): Region {
+  if (grid) return rectRegion(grid.widgets);
   if (prefs.widgetsPos === 'top') return [0.15, 0, 0.85, 0.2];
   if (prefs.widgetsPos === 'bottom') return [0.15, 0.78, 0.85, 0.96];
-  return layoutOf(prefs) === 'corner' ? [0.5, 0.7, 1, 0.96] : clockRegion(prefs);
+  return layoutOf(prefs) === 'corner' ? [0.5, 0.7, 1, 0.96] : clockRegion(prefs, null);
 }
 
 function luminance([r, g, b]: number[]) {
@@ -152,8 +153,11 @@ export function Ambient(props: Props) {
   const done = () => { setPanel(''); props.onDone(); };
   // Сетка: пока блок тянут, его место — черновик (сохраняется, когда отпустили).
   const [draft, setDraft] = useState<LockGrid | null>(null);
-  const grid = draft || prefs.grid;
-  const toggleGrid = () => setLockPrefs({ grid: prefs.grid ? null : defaultGrid(prefs, window.innerWidth > 700) });
+  // Сетка — своя для горизонтального и вертикального положения рамки.
+  const orient = useOrientation();
+  const saved = activeGrid(prefs, orient);
+  const grid = draft || saved;
+  const toggleGrid = () => setLockPrefs(gridPatch(orient, saved ? null : defaultGrid(prefs, orient === 'landscape' && window.innerWidth > 700)));
 
   // «В обратку» к фото — надписи блока по своему участку кадра: часы с датой и погодой (и подсказка) — по цвету
   // часов, виджеты — по своему цвету (или как у часов).
@@ -166,8 +170,8 @@ export function Ambient(props: Props) {
   // Свой цвет часов (не белый и не «авто») — для всего блока: время, дата и погода.
   const cFixed = !contrast && prefs.color !== 'white';
   const cValue = colorValue(prefs.color, prefs.customColor);
-  const clockInk = useContrastColor(props.photoThumb, clockRegion(prefs), contrast);
-  const widgetsInk = useContrastColor(props.photoThumb, widgetsRegion(prefs), wContrast);
+  const clockInk = useContrastColor(props.photoThumb, clockRegion(prefs, grid), contrast);
+  const widgetsInk = useContrastColor(props.photoThumb, widgetsRegion(prefs, grid), wContrast);
   const hintInk = useContrastColor(props.photoThumb, HINT_REGION, contrast);
   const cls = 'ambient' + (props.visible ? ' visible' : '')
     + (grid ? ' lock-grid' : ' lock-' + prefs.layout + ' widgets-' + prefs.widgetsPos) + ' lock-size-' + prefs.size
@@ -208,7 +212,7 @@ export function Ambient(props: Props) {
           <ChevronUp size={36} strokeWidth={1.8} />
         </button>
         {edit && grid && !panel && (
-          <GridEditor grid={grid} onDraft={setDraft} onDone={(g) => { setDraft(null); setLockPrefs({ grid: g }); }} onTap={setPanel} />
+          <GridEditor grid={grid} onDraft={setDraft} onDone={(g) => { setDraft(null); setLockPrefs(gridPatch(orient, g)); }} onTap={setPanel} />
         )}
       </div>
 
@@ -217,7 +221,7 @@ export function Ambient(props: Props) {
           <div class="lock-top">
             <span>{t(grid ? 'lock.grid_hint' : 'lock.hint')}</span>
             <span class="lock-top-btns">
-              <button class={'pill-btn' + (prefs.grid ? ' on' : '')} onClick={toggleGrid} title={t('lock.grid')}>
+              <button class={'pill-btn' + (saved ? ' on' : '')} onClick={toggleGrid} title={t('lock.grid')}>
                 <Grid3x3 size={16} /><span>{t('lock.grid')}</span>
               </button>
               <button class="pill-btn accent-bg" onClick={done}>{t('common.done')}</button>
@@ -239,7 +243,7 @@ export function Ambient(props: Props) {
 // нажатие без движения открывает настройки блока. Касание и мышь (на Android 5 нет Pointer Events).
 const KINDS: Array<'clock' | 'widgets'> = ['clock', 'widgets'];
 
-function GridEditor(props: { grid: LockGrid; onDraft: (g: LockGrid) => void; onDone: (g: LockGrid) => void; onTap: (k: 'clock' | 'widgets') => void }) {
+export function GridEditor(props: { grid: LockGrid; onDraft: (g: LockGrid) => void; onDone: (g: LockGrid) => void; onTap: (k: 'clock' | 'widgets') => void }) {
   const area = useRef<HTMLDivElement>(null);
   const start = (e: TouchEvent | MouseEvent, kind: 'clock' | 'widgets', resize: boolean) => {
     const el = area.current;
@@ -374,13 +378,13 @@ const H_ALIGN: Array<HAlign | ''> = ['', 'left', 'center', 'right'];
 const V_ALIGN: Array<VAlign | ''> = ['', 'top', 'middle', 'bottom'];
 
 // На сетке «расположение» — это выравнивание внутри самого блока (место блока задаёт сетка).
-function BlockAlign(props: { kind: 'clock' | 'widgets'; grid: LockGrid }) {
+function BlockAlign(props: { kind: 'clock' | 'widgets'; grid: LockGrid; orient: Orientation }) {
   const r = props.grid[props.kind];
   const set = (patch: Partial<GridRect>) => {
     const next: GridRect = { ...r, ...patch };
     if (!next.ha) delete next.ha;
     if (!next.va) delete next.va;
-    setLockPrefs({ grid: { ...props.grid, [props.kind]: next } });
+    setLockPrefs(gridPatch(props.orient, { ...props.grid, [props.kind]: next }));
   };
   return (
     <>
@@ -405,6 +409,8 @@ const CHIP_STYLES: ChipStyle[] = ['auto', 'text', 'icons'];
 // «Виджеты» — какие плашки показывать, в каком порядке и как (текстом или значками).
 function LockPanel(props: { kind: 'clock' | 'widgets'; widgets: Card[]; hasWeather: boolean; onClose: () => void }) {
   const p = useLockPrefs();
+  const orient = useOrientation();
+  const g = activeGrid(p, orient);
   const move = (i: number, dir: number) => {
     const ids = props.widgets.map((c) => c.id);
     const j = i + dir;
@@ -439,7 +445,7 @@ function LockPanel(props: { kind: 'clock' | 'widgets'; widgets: Card[]; hasWeath
           <ColorRow value={p.color} custom={p.customColor} onPick={(c) => setLockPrefs({ color: c as ClockColor })}
             onCustom={(hex) => setLockPrefs({ color: 'custom', customColor: hex })} />
           <div class="lock-sec">{t('lock.sec.place')}</div>
-          {p.grid ? <BlockAlign kind="clock" grid={p.grid} /> : (
+          {g ? <BlockAlign kind="clock" grid={g} orient={orient} /> : (
             <div class="option">
               <label>{t('lock.layout')}</label>
               <select value={p.layout} onChange={(e) => setLockPrefs({ layout: e.currentTarget.value as LockLayout })}>
@@ -467,7 +473,7 @@ function LockPanel(props: { kind: 'clock' | 'widgets'; widgets: Card[]; hasWeath
           <ColorRow value={p.widgetsColor} custom={p.widgetsCustomColor} same onPick={(c) => setLockPrefs({ widgetsColor: c })}
             onCustom={(hex) => setLockPrefs({ widgetsColor: 'custom', widgetsCustomColor: hex })} />
           <div class="lock-sec">{t('lock.sec.place')}</div>
-          {p.grid ? <BlockAlign kind="widgets" grid={p.grid} /> : (
+          {g ? <BlockAlign kind="widgets" grid={g} orient={orient} /> : (
             <div class="option">
               <label>{t('lock.widgets_pos')}</label>
               <div class="seg">

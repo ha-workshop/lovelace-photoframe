@@ -9,7 +9,7 @@ import { CardBackend, loadCardConfig, loadIntegration, type CardConfig, type Int
 import { HAClient } from './ha';
 import { accessToken, haSession } from './haAuth';
 import { createDashboard, DASHBOARD_PATH } from './setup';
-import { lockPrefs, onLockPrefs } from './lockscreen';
+import { lockPrefs, onLockPrefs, setLockPrefs, validGrid } from './lockscreen';
 import { connectFrame, frameName, reportFrame, setFrameName, type FrameCommand, type FrameState } from './frame';
 import { t } from '../i18n';
 
@@ -358,14 +358,24 @@ class Store {
     if (!client) return;
     if (this.frameOff) this.frameOff();
     this.frameOff = connectFrame(client, (ev) => (ev.type === 'state' ? this.applyFrameState(ev) : this.commandListeners.forEach((l) => l(ev))));
-    // Сетка экрана с фото этой рамки — в HA (другая рамка может её взять); дальше — при каждом изменении.
-    let sent = JSON.stringify(lockPrefs().grid);
-    reportFrame(client, { grid: lockPrefs().grid });
+    // Сетки экрана с фото (обе ориентации) и размер экрана — в HA: другая рамка может взять сетку,
+    // редактор «Фоторамки» в HA показывает экран этой рамки в её пропорциях. Дальше — при каждом изменении.
+    const layout = () => {
+      const p = lockPrefs();
+      return { grid: p.grid, grid_portrait: p.gridPortrait, display: { w: window.innerWidth, h: window.innerHeight } };
+    };
+    let sent = JSON.stringify(layout());
+    reportFrame(client, layout());
+    const resend = () => {
+      const now = JSON.stringify(layout());
+      if (now !== sent && client.status === 'connected') { sent = now; reportFrame(client, layout()); }
+    };
     if (this.gridOff) this.gridOff();
-    this.gridOff = onLockPrefs(() => {
-      const now = JSON.stringify(lockPrefs().grid);
-      if (now !== sent && client.status === 'connected') { sent = now; reportFrame(client, { grid: lockPrefs().grid }); }
-    });
+    const offPrefs = onLockPrefs(resend);
+    let t = 0;
+    const onResize = () => { clearTimeout(t); t = window.setTimeout(resend, 1500); };
+    window.addEventListener('resize', onResize);
+    this.gridOff = () => { offPrefs(); clearTimeout(t); window.removeEventListener('resize', onResize); };
   }
 
   // ── Рамка как устройство в HA ───────────────────────
@@ -384,6 +394,10 @@ class Store {
   private applyFrameState(s: FrameState) {
     // Имя рамки в HA главнее — переименовали устройство, рамка знает своё новое имя.
     if (s.name && s.name !== frameName()) setFrameName(s.name);
+    // Сетку поменяли в HA (редактор «Фоторамки») — берём, если это правка новее уже взятой.
+    if (s.layout && s.layout.rev > lockPrefs().gridRev) {
+      setLockPrefs({ grid: validGrid(s.layout.grid), gridPortrait: validGrid(s.layout.grid_portrait), gridRev: s.layout.rev });
+    }
     if (s.start_screen) {
       const [home, screen] = s.start_screen.split('/');
       if (home !== mainHome() || screen !== startScreen()) this.setStart(home, screen);

@@ -7,6 +7,8 @@ import { CardBackend, loadIntegration, type CardConfig } from './lib/cardBackend
 import { keepScreenOn } from './lib/wakeLock';
 import { enterKiosk, kioskWanted, onKioskPref } from './lib/kiosk';
 import { offerSetup } from './lib/setup';
+// Раздел «Фоторамки» в меню HA (редактор сеток рамок) — в том же файле: HA его уже загружает.
+import './admin';
 
 // Рамка как карточка дашборда Home Assistant (HACS → Dashboard).
 // Кладётся в панельный вид дашборда — занимает весь экран под шапкой HA (или весь экран в режиме киоска).
