@@ -9,6 +9,7 @@ import { CardBackend, loadCardConfig, loadIntegration, type CardConfig, type Int
 import { HAClient } from './ha';
 import { accessToken, haSession } from './haAuth';
 import { createDashboard, DASHBOARD_PATH } from './setup';
+import { lockPrefs, onLockPrefs } from './lockscreen';
 import { connectFrame, frameName, reportFrame, setFrameName, type FrameCommand, type FrameState } from './frame';
 import { t } from '../i18n';
 
@@ -350,12 +351,21 @@ class Store {
   }
 
   private frameOff: (() => void) | null = null;
+  private gridOff: (() => void) | null = null;
 
   private connectThisFrame() {
     const client = this.frameClient;
     if (!client) return;
     if (this.frameOff) this.frameOff();
     this.frameOff = connectFrame(client, (ev) => (ev.type === 'state' ? this.applyFrameState(ev) : this.commandListeners.forEach((l) => l(ev))));
+    // Сетка экрана с фото этой рамки — в HA (другая рамка может её взять); дальше — при каждом изменении.
+    let sent = JSON.stringify(lockPrefs().grid);
+    reportFrame(client, { grid: lockPrefs().grid });
+    if (this.gridOff) this.gridOff();
+    this.gridOff = onLockPrefs(() => {
+      const now = JSON.stringify(lockPrefs().grid);
+      if (now !== sent && client.status === 'connected') { sent = now; reportFrame(client, { grid: lockPrefs().grid }); }
+    });
   }
 
   // ── Рамка как устройство в HA ───────────────────────

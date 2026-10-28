@@ -89,6 +89,13 @@ export function useSwipe(t: Targets, open: boolean, setOpen: (v: boolean) => voi
         axis = !open && onPhoto && Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
       }
       if (axis === 'x') {
+        // Часы и виджеты слегка едут за пальцем и бледнеют — видно, что жест пошёл.
+        const a = t.ambient.current;
+        const w = root.clientWidth || 1;
+        if (a) {
+          a.style.transform = 'translateX(' + Math.round(dx * 0.25) + 'px)';
+          a.style.opacity = String(1 - Math.min(1, Math.abs(dx) / w) * 0.6);
+        }
         if (e.cancelable) e.preventDefault();
         return;
       }
@@ -104,6 +111,7 @@ export function useSwipe(t: Targets, open: boolean, setOpen: (v: boolean) => voi
       active = false;
       root.classList.remove('dragging');
       if (axis === 'x') {
+        clear();
         const fast = Math.abs(dx) / Math.max(1, Date.now() - startT) > FLICK_SPEED && Math.abs(dx) > 30;
         if (onPhoto && (Math.abs(dx) > root.clientWidth * PHOTO_DISTANCE || fast)) onPhoto(dx < 0 ? 1 : -1);
         return;
