@@ -60,7 +60,9 @@ function dashboardPath(): string | null {
 export interface IntegrationConfig extends CardConfig { can_edit?: boolean }
 
 export function loadIntegration(client: HAClient): Promise<IntegrationConfig | null> {
-  return client.call<IntegrationConfig>({ type: 'photoframe/config' }).then((c) => ({ ...c, type: CARD_TYPE }), () => null);
+  // frame_id — у каждого устройства своя раскладка дашборда (дома и настройки общие).
+  return client.call<IntegrationConfig>({ type: 'photoframe/config', frame_id: frameId() })
+    .then((c) => ({ ...c, type: CARD_TYPE }), () => null);
 }
 
 // Конфиг карточки с дашборда (url_path = null — дашборд по умолчанию). null — карточки там нет.
@@ -151,7 +153,7 @@ export class CardBackend {
   // Пока свои сохранения в пути — пропускаем, иначе раскладка мигнёт назад.
   watch(onChange: (config: IntegrationConfig) => void): () => void {
     if (!this.integration) return () => {};
-    return this.client.subscribeMessage({ type: 'photoframe/config/subscribe' }, (c: IntegrationConfig) => {
+    return this.client.subscribeMessage({ type: 'photoframe/config/subscribe', frame_id: frameId() }, (c: IntegrationConfig) => {
       if (this.busy) return;
       this.config = { ...c, type: CARD_TYPE };
       onChange(this.config);
@@ -171,7 +173,8 @@ export class CardBackend {
     this.saving++;
     const run = () => {
       if (this.integration) {
-        const msg: Record<string, unknown> = { type: 'photoframe/config/save' };
+        // Раскладки сохраняются для этого устройства (frame_id); дома и настройки — общие.
+        const msg: Record<string, unknown> = { type: 'photoframe/config/save', frame_id: frameId() };
         (['homes', 'layouts', 'settings'] as const).forEach((k) => { if (k in patch) msg[k] = patch[k]; });
         this.config = { ...this.config, ...patch };
         return this.client.call<void>(msg);
