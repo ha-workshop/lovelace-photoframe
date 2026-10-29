@@ -1,21 +1,46 @@
 import { render } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
-import { Monitor, RefreshCw, Smartphone } from 'lucide-preact';
+import { useEffect, useRef, useState } from 'preact/hooks';
+import { Image, LayoutGrid, Monitor, RefreshCw, Smartphone } from 'lucide-preact';
 import css from './styles.css?inline';
 import { GridEditor, INSET, SPAN } from './components/Ambient';
-import { GRID, defaultGrid, lockPrefs, validGrid, type GridRect, type HAlign, type LockGrid, type Orientation, type VAlign } from './lib/lockscreen';
+import { GRID, cleanLook, defaultGrid, lockPrefs, validGrid, type GridRect, type HAlign, type LockGrid, type Orientation, type VAlign } from './lib/lockscreen';
 import { t } from './i18n';
 
 // Раздел «Фоторамки» в боковом меню HA (только администраторам; регистрирует интеграция Photo Frame).
 // Список рамок и редактор сетки экрана с фото каждой из них: экран рамки — в её пропорциях (рамка сообщает
 // свой размер для каждой ориентации), сетка — своя для горизонтального и вертикального положения.
 // «Сохранить на рамку» — рамка берёт сетку сразу, а если она не в сети — при подключении.
+// «Дашборд» — само приложение рамки (/photoframe/?preview=1) в размере её экрана: экраны и карточки домов
+// правятся тем же редактором, что на рамке, и видно, как они лягут на этот экран. Раскладка общая для дома
+// (на узких экранах — своя телефонная), предпросмотр рамкой в HA не считается.
+
+// Предпросмотр в настоящем размере экрана рамки, уменьшенный под ширину окна.
+function DashboardPreview(props: { disp: Display }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [room, setRoom] = useState(900);
+  useEffect(() => {
+    const measure = () => { if (box.current) setRoom(box.current.clientWidth); };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
+  const { w, h } = props.disp;
+  const scale = Math.min(1, room / w, (window.innerHeight * 0.72) / h);
+  return (
+    <div class="admin-screen-wrap" ref={box}>
+      <div class="admin-iframe-box" style={{ width: Math.round(w * scale) + 'px', height: Math.round(h * scale) + 'px' }}>
+        <iframe key={w + 'x' + h} src="/photoframe/index.html?preview=1" title="preview"
+          style={{ width: w + 'px', height: h + 'px', transform: 'scale(' + scale + ')' }} />
+      </div>
+    </div>
+  );
+}
 
 interface Hass { callWS<T>(msg: Record<string, unknown>): Promise<T> }
 interface Display { w: number; h: number }
 interface FrameInfo {
   frame_id: string; name?: string; model?: string; online: boolean;
-  grid?: LockGrid | null; grid_portrait?: LockGrid | null; displays?: Partial<Record<Orientation, Display>>;
+  grid?: LockGrid | null; grid_portrait?: LockGrid | null; displays?: Partial<Record<Orientation, Display>>; lockscreen?: unknown;
 }
 
 // Размер экрана рамки в этой ориентации: известный; известен только другой — повёрнутый; ничего — 16:10.
@@ -38,6 +63,7 @@ function AdminApp(props: { hass: Hass }) {
   const [moving, setMoving] = useState<LockGrid | null>(null);
   const [block, setBlock] = useState<'clock' | 'widgets'>('clock');
   const [status, setStatus] = useState('');
+  const [mode, setMode] = useState<'photo' | 'dashboard'>('photo');
 
   const load = () => {
     setError('');
@@ -59,13 +85,35 @@ function AdminApp(props: { hass: Hass }) {
   const grid = moving || draft[orient];
   const setGrid = (g: LockGrid | null) => { setDraft({ ...draft, [orient]: g }); setStatus(''); };
 
+  // Отправить рамкам экран с фото: в сети — сразу, остальным — при подключении.
+  const push = (ids: string[], patch: Record<string, unknown>) =>
+    props.hass.callWS<{ online: string[] }>({ type: 'photoframe/frame/set_lockscreen', frame_ids: ids, patch });
+
   const save = () => {
     if (!frame) return;
     setStatus(t('admin.saving'));
-    props.hass.callWS({ type: 'photoframe/frame/set_layout', frame_id: frame.frame_id, grid: draft.landscape, grid_portrait: draft.portrait }).then(
+    push([frame.frame_id], { grid: draft.landscape, gridPortrait: draft.portrait }).then(
       () => { setStatus(t(frame.online ? 'admin.saved_online' : 'admin.saved_offline')); load(); },
       (e: Error) => setStatus(e.message || String(e)),
     );
+  };
+
+  // «Скопировать на…»: экран с фото этой рамки (всё или только сетки, как сейчас в редакторе) — на выбранные рамки.
+  const [copyOpen, setCopyOpen] = useState(false);
+  const [targets, setTargets] = useState<string[]>([]);
+  const [what, setWhat] = useState<'all' | 'grid'>('all');
+  const others = (frames || []).filter((f) => f.frame_id !== pick);
+  const copy = () => {
+    if (!frame || !targets.length) return;
+    const grids = { grid: draft.landscape, gridPortrait: draft.portrait };
+    const patch = what === 'all' ? { ...cleanLook(frame.lockscreen), ...grids } : grids;
+    setStatus(t('admin.saving'));
+    push(targets, patch).then((r) => {
+      setStatus(t('admin.copied', { n: targets.length, online: r.online.length }));
+      setCopyOpen(false);
+      setTargets([]);
+      load();
+    }, (e: Error) => setStatus(e.message || String(e)));
   };
 
   const disp = frame ? displayOf(frame, orient) : { w: 1280, h: 800 };
@@ -101,17 +149,28 @@ function AdminApp(props: { hass: Hass }) {
           <section class="admin-editor">
             <div class="admin-tools">
               <div class="seg">
+                <button class={mode === 'photo' ? 'active' : ''} onClick={() => setMode('photo')}><Image size={14} /> {t('admin.mode_photo')}</button>
+                <button class={mode === 'dashboard' ? 'active' : ''} onClick={() => setMode('dashboard')}><LayoutGrid size={14} /> {t('admin.mode_dashboard')}</button>
+              </div>
+              <div class="seg">
                 <button class={orient === 'landscape' ? 'active' : ''} onClick={() => setOrient('landscape')}><Monitor size={14} /> {t('admin.landscape')}</button>
                 <button class={orient === 'portrait' ? 'active' : ''} onClick={() => setOrient('portrait')}><Smartphone size={14} /> {t('admin.portrait')}</button>
               </div>
-              <label class="check">
+              {mode === 'photo' && <label class="check">
                 <input type="checkbox" checked={!!draft[orient]}
                   onChange={(e) => setGrid(e.currentTarget.checked ? defaultGrid(lockPrefs(), orient === 'landscape') : null)} />
                 {t('admin.use_grid')}
-              </label>
+              </label>}
               <span class="hint small">{disp.w}×{disp.h}{known ? '' : ' · ' + t('admin.size_guess')}</span>
             </div>
 
+            {mode === 'dashboard' && (
+              <>
+                <p class="hint small">{t('admin.dashboard_hint')}</p>
+                <DashboardPreview disp={disp} />
+              </>
+            )}
+            {mode === 'photo' && <>
             {/* Экран рамки в её пропорциях */}
             <div class="admin-screen-wrap">
               <div class="admin-screen" style={{ aspectRatio: disp.w + ' / ' + disp.h, ...(disp.h > disp.w ? { height: '60vh' } : { width: '100%' }) }}>
@@ -158,10 +217,33 @@ function AdminApp(props: { hass: Hass }) {
               </div>
             )}
 
+            {copyOpen && (
+              <div class="admin-copy">
+                <div class="seg">
+                  <button class={what === 'all' ? 'active' : ''} onClick={() => setWhat('all')}>{t('admin.copy_all')}</button>
+                  <button class={what === 'grid' ? 'active' : ''} onClick={() => setWhat('grid')}>{t('admin.copy_grid')}</button>
+                </div>
+                {what === 'all' && !frame.lockscreen && <p class="hint small">{t('admin.copy_no_look')}</p>}
+                {others.map((f) => (
+                  <label key={f.frame_id} class="check">
+                    <input type="checkbox" checked={targets.indexOf(f.frame_id) !== -1}
+                      onChange={(e) => setTargets(e.currentTarget.checked ? targets.concat(f.frame_id) : targets.filter((x) => x !== f.frame_id))} />
+                    {(f.name || f.frame_id) + (f.online ? '' : ' · ' + t('layout.grid_offline'))}
+                  </label>
+                ))}
+                {!others.length && <p class="hint small">{t('admin.copy_none')}</p>}
+                <div class="row-btns">
+                  <button class="btn btn-ghost" onClick={() => setCopyOpen(false)}><span>{t('common.cancel')}</span></button>
+                  <button class="pill-btn accent-bg" disabled={!targets.length} onClick={copy}>{t('admin.copy_go', { n: targets.length })}</button>
+                </div>
+              </div>
+            )}
             <div class="admin-foot">
               <span class="hint small">{status}</span>
+              <button class="btn btn-ghost" onClick={() => setCopyOpen(!copyOpen)}><span>{t('admin.copy_to')}</span></button>
               <button class="pill-btn accent-bg" onClick={save}>{t('admin.save')}</button>
             </div>
+            </>}
           </section>
         )}
       </div>
@@ -191,8 +273,15 @@ const ADMIN_CSS = ':host{display:block;min-height:100vh;background:#0b0d14;color
   + '.admin-block{position:absolute;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.75);font-size:20px;pointer-events:none}'
   + '.admin-off{position:absolute;top:50%;left:0;right:0;text-align:center;color:rgba(255,255,255,0.6)}'
   + '.admin-align{margin-top:14px;max-width:560px}'
+  + '.admin-iframe-box{position:relative;overflow:hidden;border-radius:14px;box-shadow:0 0 0 1px rgba(255,255,255,0.15);background:#000}'
+  + '.admin-iframe-box iframe{position:absolute;top:0;left:0;border:0;transform-origin:0 0}'
   + '.admin-foot{display:flex;align-items:center;justify-content:flex-end;margin-top:16px}'
   + '.admin-foot .hint{margin-right:12px}'
+  + '.admin-foot .btn{margin-right:10px}'
+  + '.admin-copy{margin-top:16px;padding:14px 16px;border-radius:14px;background:rgba(255,255,255,0.05);max-width:560px}'
+  + '.admin-copy .check{display:flex;margin:8px 0}'
+  + '.admin-copy .row-btns{display:flex;justify-content:flex-end;margin-top:10px}'
+  + '.admin-copy .row-btns > *{margin-left:8px}'
   + '@media (max-width:700px){.admin-body{flex-direction:column}.admin-list{width:100%;margin:0 0 14px}}';
 
 // Элемент панели HA: получает hass (и narrow, panel) от фронтенда HA.

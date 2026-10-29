@@ -3,7 +3,7 @@ import type { ComponentChildren } from 'preact';
 import { CloudUpload, Copy, ImagePlus, LogIn, LogOut, RotateCcw, Trash2, X } from 'lucide-preact';
 import { haSession, login, logout } from '../lib/haAuth';
 import { frameId, frameName as currentFrameName } from '../lib/frame';
-import { setLockPrefs, validGrid, type LockGrid } from '../lib/lockscreen';
+import { cleanLook, setLockPrefs, validGrid, type LockGrid } from '../lib/lockscreen';
 import type { HAClient } from '../lib/ha';
 import { defaultLayout, screenTitle, type Layout } from '../lib/layout';
 import { kioskPref, setKioskPref, type KioskPref } from '../lib/kiosk';
@@ -426,18 +426,20 @@ export function SettingsModal(props: { onClose: () => void }) {
   );
 }
 
-// Сетка экрана с фото с другой рамки: рамки сообщают свою сетку в HA (интеграция Photo Frame), здесь её можно
-// взять себе — дальше она своя на этом устройстве и меняется независимо.
-interface FrameInfo { frame_id: string; name?: string; online: boolean; grid?: LockGrid | null; grid_portrait?: LockGrid | null }
+// Экран с фото с другой рамки: рамки сообщают свой вид в HA (интеграция Photo Frame), здесь его можно взять
+// целиком (часы, цвета, виджеты, сетки) или только сетку — дальше он свой на этом устройстве.
+interface FrameInfo {
+  frame_id: string; name?: string; online: boolean; grid?: LockGrid | null; grid_portrait?: LockGrid | null; lockscreen?: unknown;
+}
 
 function GridImport(props: { client: HAClient }) {
   const [frames, setFrames] = useState<FrameInfo[] | null>(null);
   const [pick, setPick] = useState('');
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState<'' | 'all' | 'grid'>('');
   useEffect(() => {
     props.client.call<{ frames: FrameInfo[] }>({ type: 'photoframe/frames' }).then(
       (r) => {
-        const list = r.frames.filter((f) => f.frame_id !== frameId() && (validGrid(f.grid) || validGrid(f.grid_portrait)));
+        const list = r.frames.filter((f) => f.frame_id !== frameId() && (!!f.lockscreen || validGrid(f.grid) || validGrid(f.grid_portrait)));
         setFrames(list);
         if (list.length) setPick(list[0].frame_id);
       },
@@ -451,14 +453,19 @@ function GridImport(props: { client: HAClient }) {
       <span>{t('layout.grid_title')}</span>
       {frames.length === 0 ? <p class="hint small">{t('layout.grid_none')}</p> : (
         <>
-          <select value={pick} onChange={(e) => { setPick(e.currentTarget.value); setDone(false); }}>
+          <select value={pick} onChange={(e) => { setPick(e.currentTarget.value); setDone(''); }}>
             {frames.map((f) => (
               <option key={f.frame_id} value={f.frame_id}>{(f.name || f.frame_id) + (f.online ? '' : ' · ' + t('layout.grid_offline'))}</option>
             ))}
           </select>
-          <button class="btn btn-ghost" disabled={!chosen} onClick={() => { setLockPrefs({ grid: validGrid(chosen.grid), gridPortrait: validGrid(chosen.grid_portrait) }); setDone(true); }}>
-            <span>{t(done ? 'layout.grid_done' : 'layout.grid_take')}</span>
-          </button>
+          <div class="row-btns">
+            <button class="btn btn-ghost" disabled={!chosen || !chosen.lockscreen} onClick={() => { setLockPrefs(cleanLook(chosen.lockscreen)); setDone('all'); }}>
+              <span>{t(done === 'all' ? 'layout.grid_done' : 'layout.look_take')}</span>
+            </button>
+            <button class="btn btn-ghost" disabled={!chosen} onClick={() => { setLockPrefs({ grid: validGrid(chosen.grid), gridPortrait: validGrid(chosen.grid_portrait) }); setDone('grid'); }}>
+              <span>{t(done === 'grid' ? 'layout.grid_done' : 'layout.grid_take')}</span>
+            </button>
+          </div>
         </>
       )}
     </div>

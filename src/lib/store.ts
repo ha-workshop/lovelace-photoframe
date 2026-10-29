@@ -9,8 +9,9 @@ import { CardBackend, loadCardConfig, loadIntegration, type CardConfig, type Int
 import { HAClient } from './ha';
 import { accessToken, haSession } from './haAuth';
 import { createDashboard, DASHBOARD_PATH } from './setup';
-import { lockPrefs, onLockPrefs, setLockPrefs, validGrid } from './lockscreen';
-import { connectFrame, frameName, reportFrame, setFrameName, type FrameCommand, type FrameState } from './frame';
+import { PREVIEW } from './preview';
+import { cleanLook, lockPrefs, lookOf, onLockPrefs, setLockPrefs } from './lockscreen';
+import { connectFrame, frameId, frameName, reportFrame, setFrameName, type FrameCommand, type FrameState } from './frame';
 import { t } from '../i18n';
 
 export interface Settings {
@@ -136,13 +137,16 @@ function rememberIntegration(on: boolean) {
   try { if (on) localStorage.setItem(INTEGRATION_KEY, '1'); else localStorage.removeItem(INTEGRATION_KEY); } catch (e) { /* ignore */ }
 }
 
+// Новое имя рамки, ещё не отправленное в HA.
+const RENAME_KEY = 'photoframe.renamePending';
+
 class Store {
   state: State = readCache();
   private listeners: Array<() => void> = [];
   card: CardBackend | null = null;
   // Состояние экрана, которое должно пережить пересоздание карточки: HA создаёт карточку заново
   // после каждого сохранения дашборда (перенос карточки в редакторе) — без этого рамка «схлопывалась» на фото.
-  ui = { controls: false, editing: false };
+  ui = { controls: PREVIEW, editing: false };
   private photoTimer = 0;
 
   subscribe(fn: () => void) {
@@ -355,15 +359,15 @@ class Store {
 
   private connectThisFrame() {
     const client = this.frameClient;
-    if (!client) return;
+    // Предпросмотр в разделе «Фоторамки» — не рамка: в устройства HA не попадает.
+    if (!client || PREVIEW) return;
+    // Переименовали, пока не было связи, — сначала имя, иначе HA вернёт старое.
+    this.sendRename();
     if (this.frameOff) this.frameOff();
     this.frameOff = connectFrame(client, (ev) => (ev.type === 'state' ? this.applyFrameState(ev) : this.commandListeners.forEach((l) => l(ev))));
     // Сетки экрана с фото (обе ориентации) и размер экрана — в HA: другая рамка может взять сетку,
     // редактор «Фоторамки» в HA показывает экран этой рамки в её пропорциях. Дальше — при каждом изменении.
-    const layout = () => {
-      const p = lockPrefs();
-      return { grid: p.grid, grid_portrait: p.gridPortrait, display: { w: window.innerWidth, h: window.innerHeight } };
-    };
+    const layout = () => ({ lockscreen: lookOf(lockPrefs()), display: { w: window.innerWidth, h: window.innerHeight } });
     let sent = JSON.stringify(layout());
     reportFrame(client, layout());
     const resend = () => {
@@ -392,12 +396,15 @@ class Store {
   }
 
   private applyFrameState(s: FrameState) {
-    // Имя рамки в HA главнее — переименовали устройство, рамка знает своё новое имя.
-    if (s.name && s.name !== frameName()) setFrameName(s.name);
-    // Сетку поменяли в HA (редактор «Фоторамки») — берём, если это правка новее уже взятой.
-    if (s.layout && s.layout.rev > lockPrefs().gridRev) {
-      setLockPrefs({ grid: validGrid(s.layout.grid), gridPortrait: validGrid(s.layout.grid_portrait), gridRev: s.layout.rev });
-    }
+    // Имя рамки в HA главнее — переименовали устройство, рамка знает своё новое имя
+    // (если только своё переименование ещё не дошло до HA).
+    let pending = '';
+    try { pending = localStorage.getItem(RENAME_KEY) || ''; } catch (e) { /* ignore */ }
+    if (s.name && s.name !== frameName() && !pending) setFrameName(s.name);
+    // Экран с фото задали в HA (редактор или «Скопировать на…» в разделе «Фоторамки») — берём, если это правка
+    // новее уже взятой.
+    const push = s.lockscreen_push;
+    if (push && push.rev > lockPrefs().gridRev) setLockPrefs({ ...cleanLook(push.patch), gridRev: push.rev });
     if (s.start_screen) {
       const [home, screen] = s.start_screen.split('/');
       if (home !== mainHome() || screen !== startScreen()) this.setStart(home, screen);
@@ -421,9 +428,24 @@ class Store {
   }
 
   // Имя рамки поменяли на ней самой — переподключаемся, HA узнает новое имя.
+  // Это имя устройства в HA: при обычном подключении главное — имя из HA, поэтому переименование — отдельным
+  // запросом (иначе HA тут же вернул бы старое имя).
   renameFrame(name: string) {
+    if (!name || name === frameName()) return;
     setFrameName(name);
-    if (this.frameClient && this.frameClient.status === 'connected') this.connectThisFrame();
+    // Не в сети — отправим при подключении (до него HA имя не перезапишет: см. connectThisFrame).
+    try { localStorage.setItem(RENAME_KEY, name); } catch (e) { /* ignore */ }
+    this.sendRename();
+  }
+
+  private sendRename() {
+    const client = this.frameClient;
+    let name = '';
+    try { name = localStorage.getItem(RENAME_KEY) || ''; } catch (e) { /* ignore */ }
+    if (!name || !client || client.status !== 'connected') return;
+    client.call({ type: 'photoframe/frame/rename', frame_id: frameId(), name }).then(() => {
+      try { localStorage.removeItem(RENAME_KEY); } catch (e) { /* ignore */ }
+    }, () => {});
   }
 
   private loadHaCard() {

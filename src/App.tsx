@@ -7,6 +7,7 @@ import { useStore } from './lib/store';
 import { reportFrame, updateApk } from './lib/frame';
 import { applyBacklight, dimOpacity, onHardwareWake } from './lib/screen';
 import { setNativeVisible } from './lib/nativePhoto';
+import { PREVIEW } from './lib/preview';
 import { ACCENTS, clampBox, settle, type Card } from './lib/layout';
 import { useTone } from './lib/photoTone';
 import { useSwipe } from './lib/swipe';
@@ -226,7 +227,8 @@ export function App() {
   // Во время редактирования раскладки не прячем.
   const away = (controls || !!sheet) && !modal && !editing;
   useEffect(() => {
-    if (!away || !settings.idleSec) return;
+    // В предпросмотре (раздел «Фоторамки» HA) к фото сам не уходит — там редактируют.
+    if (!away || !settings.idleSec || PREVIEW) return;
     let timer = 0;
     const arm = () => {
       clearTimeout(timer);
