@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
-import { CloudUpload, Copy, ImagePlus, LogIn, LogOut, RotateCcw, Trash2, X } from 'lucide-preact';
+import { CloudUpload, Copy, Folder, ImagePlus, LogIn, LogOut, RotateCcw, Trash2, X } from 'lucide-preact';
 import { haSession, login, logout } from '../lib/haAuth';
+import { useHA } from '../lib/hooks';
 import { frameId, frameName as currentFrameName } from '../lib/frame';
 import { cleanLook, setLockPrefs, validGrid, type LockGrid } from '../lib/lockscreen';
 import type { HAClient } from '../lib/ha';
@@ -10,26 +11,60 @@ import { kioskPref, setKioskPref, type KioskPref } from '../lib/kiosk';
 import { autostart, setAutostart } from '../lib/screen';
 import { autoQuality, photoFit, qualityPref, setPhotoFit, setQualityPref, type PhotoFit, type QualityPref } from '../lib/quality';
 import { applyLanguage, languages, preferredLanguage, setPreferredLanguage, t } from '../i18n';
+import { NO_STREAM, stepCamera, useStreamState, type CameraFeed } from '../lib/camera';
+import { cameraDisplayPref, setCameraDisplayPref, type CameraDisplayPref } from '../lib/cameraPrefs';
+import { useSwipeStep } from '../lib/gestures';
 import { MAIN_HOME, mainHome, startScreen, store as frame, useStore, type Home, type Settings } from '../lib/store';
+import { FolderPicker } from './FolderPicker';
+import { CameraStream } from './CameraStream';
 
-export function Modal(props: { title: ComponentChildren; onClose: () => void; wide?: boolean; children: ComponentChildren }) {
+export function Modal(props: { title: ComponentChildren; onClose: () => void; wide?: boolean; footer?: ComponentChildren; children: ComponentChildren }) {
   return (
     <div class="modal" onClick={props.onClose}>
-      <div class={'modal-box' + (props.wide ? ' modal-wide' : '')} onClick={(e) => e.stopPropagation()}>
+      <div class={'modal-box' + (props.wide ? ' modal-wide' : '') + (props.footer ? ' has-foot' : '')} onClick={(e) => e.stopPropagation()}>
         <div class="modal-head">
           <h2>{props.title}</h2>
           <button class="icon-btn" onClick={props.onClose}><X size={24} /></button>
         </div>
-        {props.children}
+        <div class="modal-body">{props.children}</div>
+        {props.footer && <div class="modal-foot">{props.footer}</div>}
       </div>
     </div>
   );
 }
 
-export function CameraModal(props: { url: string; onClose: () => void }) {
+export function CameraModal(props: { feeds: CameraFeed[]; index: number; onIndex: (index: number) => void; onClose: () => void }) {
+  const ha = useHA();
+  // В полноэкранной камере видео идёт сразу — это осознанное открытие камеры;
+  // настройка «с паузы/снимок» относится к карточке на панели.
+  const count = props.feeds.length;
+  const index = Math.min(Math.max(0, props.index), Math.max(0, count - 1));
+  const current = props.feeds[index];
+  // Адрес и элемент img — только для текущей камеры. Сменили камеру — старый узел снимается,
+  // браузер закрывает его поток, новый открывается поверх.
+  const entity = current ? current.entity : '';
+  const url = current ? ha.cameraStreamUrl(current.entity) : '';
+  const stream = useStreamState(entity);
+  const swipe = useSwipeStep((dir) => { if (count > 1) props.onIndex(stepCamera(index, dir, count)); });
   return (
-    <Modal title={t('camera.live_title')} onClose={props.onClose} wide>
-      <div class="cam-full"><img src={props.url} alt="" /></div>
+    <Modal title={current ? current.name : t('camera.live_title')} onClose={props.onClose} wide>
+      <div class="cam-full cam-swipe" {...swipe}>
+        <CameraStream src={url || NO_STREAM} {...stream.img} />
+        {(!url || stream.state === 'error') && (
+          <div class="cam-empty"><span>{t('camera.no_stream')}</span></div>
+        )}
+        {stream.state === 'loading' && (
+          <div class="cam-loading"><i class="cam-spinner" /><span>{t('camera.loading')}</span></div>
+        )}
+      </div>
+      {count > 1 && (
+        <div class="cam-dots">
+          {props.feeds.map((c, i) => (
+            <button key={c.entity + i} class={i === index ? 'active' : ''} title={c.name} aria-label={c.name}
+              onClick={() => props.onIndex(i)} />
+          ))}
+        </div>
+      )}
     </Modal>
   );
 }
@@ -140,6 +175,7 @@ export function SettingsModal(props: { onClose: () => void }) {
   const [language, setLanguage] = useState(preferredLanguage());
   const [kiosk, setKiosk] = useState<KioskPref>(kioskPref());
   const [qPref, setQPref] = useState<QualityPref>(qualityPref());
+  const [camPref, setCamPref] = useState<CameraDisplayPref>(cameraDisplayPref());
   const [fit, setFit] = useState<PhotoFit>(photoFit());
   // Только в APK: открывать рамку сама после включения.
   const [boot, setBoot] = useState(autostart());
@@ -148,6 +184,8 @@ export function SettingsModal(props: { onClose: () => void }) {
   const integration = !!store.card && store.card.integration;
   const albums = (store.card && store.card.config.albums) || [];
   const [uploadAlbum, setUploadAlbum] = useState(store.card && store.card.album && store.card.album !== 'all' ? store.card.album : '');
+  // Дерево папок медиатеки — какую папку показывает эта рамка.
+  const [folderPick, setFolderPick] = useState(false);
   const [mediaUrl, setMediaUrl] = useState('');
   useEffect(() => {
     if (store.card) store.card.mediaBrowserUrl(uploadAlbum).then(setMediaUrl, () => setMediaUrl(''));
@@ -176,7 +214,16 @@ export function SettingsModal(props: { onClose: () => void }) {
   };
 
   return (
-    <Modal title={<span class="modal-title"><ImagePlus size={20} class="accent-text" /><span>{t('settings.title')}</span></span>} onClose={props.onClose}>
+    <>
+    <Modal
+      title={<span class="modal-title"><ImagePlus size={20} class="accent-text" /><span>{t('settings.title')}</span></span>}
+      onClose={props.onClose}
+      footer={<>
+        {tab === 'photos' && !store.card && photos.length > 0
+          ? <button class="btn btn-danger" onClick={() => store.clearPhotos()}><Trash2 size={14} /><span>{t('photos.delete_all')}</span></button>
+          : <span />}
+        <button class="btn btn-accent" onClick={save}>{t('common.done')}</button>
+      </>}>
       {signedIn && (
         <div class="tabs">
           <button class={tab === 'photos' ? 'active' : ''} onClick={() => setTab('photos')}>{t('settings.tab.photos')}</button>
@@ -221,6 +268,16 @@ export function SettingsModal(props: { onClose: () => void }) {
                     <option value="">{t('photos.album_root')}</option>
                     {albums.map((a) => <option key={a} value={a}>{a}</option>)}
                   </select>
+                </div>
+            )}
+            {/* Папка, которую показывает рамка: дерево подпапок папки фото, выбор хранится у устройства. */}
+            {integration && store.card && (
+                <div className="option">
+                  <label>{t('photos.folder')}</label>
+                  <button class="folder-choose" onClick={() => setFolderPick(true)}>
+                    <Folder size={16} />
+                    <span>{store.card.album && store.card.album !== 'all' ? store.card.album : t('photos.folder_all')}</span>
+                  </button>
                 </div>
             )}
             {store.card && (
@@ -278,6 +335,19 @@ export function SettingsModal(props: { onClose: () => void }) {
                     value="auto">{t('settings.quality_auto', {mode: t(autoQuality() === 'lite' ? 'settings.quality_lite' : 'settings.quality_full')})}</option>
                 <option value="full">{t('settings.quality_full')}</option>
                 <option value="lite">{t('settings.quality_lite')}</option>
+              </select>
+            </div>
+            <div className="option">
+              <label>{t('settings.cameras')}</label>
+              <select value={camPref} onChange={(e) => {
+                const v = e.currentTarget.value as CameraDisplayPref;
+                setCamPref(v);
+                setCameraDisplayPref(v);
+              }}>
+                <option value="auto">{t('settings.cameras_auto', {mode: t(autoQuality() === 'lite' ? 'settings.cameras_paused' : 'settings.cameras_live')})}</option>
+                <option value="live">{t('settings.cameras_live')}</option>
+                <option value="paused">{t('settings.cameras_paused')}</option>
+                <option value="snapshot">{t('settings.cameras_snapshot')}</option>
               </select>
             </div>
             {boot !== null && (
@@ -415,14 +485,17 @@ export function SettingsModal(props: { onClose: () => void }) {
           </div>
         </div>
       )}
-
-      <div class="modal-foot">
-        {tab === 'photos' && !store.card && photos.length > 0
-          ? <button class="btn btn-danger" onClick={() => store.clearPhotos()}><Trash2 size={14} /><span>{t('photos.delete_all')}</span></button>
-          : <span />}
-        <button class="btn btn-accent" onClick={save}>{t('common.done')}</button>
-      </div>
     </Modal>
+    {folderPick && (
+      <FolderPicker
+        onPick={(path) => {
+          setFolderPick(false);
+          store.setAlbum(path).then(() => setUploadAlbum(path === 'all' ? '' : path), () => {});
+        }}
+        onClose={() => setFolderPick(false)}
+      />
+    )}
+    </>
   );
 }
 

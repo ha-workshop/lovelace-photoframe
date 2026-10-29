@@ -3,6 +3,7 @@ import { EyeOff, Pencil, Plus, X } from 'lucide-preact';
 import { useHA } from '../lib/hooks';
 import { useStore } from '../lib/store';
 import { GRID_COLS, MOBILE_COLS, bottom, clampBox, mobileView, settle, withMobile, type Card } from '../lib/layout';
+import type { CameraFeed } from '../lib/camera';
 import { CardAside, CardBody, Panel, cardTitle } from './CardView';
 import { useSize } from '../lib/useSize';
 import { t } from '../i18n';
@@ -43,11 +44,13 @@ function point(e: TouchEvent | MouseEvent) {
 
 interface Props {
   editing: boolean;
-  onCamera: (url: string) => void;
+  // Открыто окно поверх сетки — потоки камер на карточках не нужны, пока их не видно.
+  paused?: boolean;
+  onCamera: (feeds: CameraFeed[], index: number) => void;
   onEdit: (card: Card) => void;
 }
 
-export function Grid({ editing, onCamera, onEdit }: Props) {
+export function Grid({ editing, paused, onCamera, onEdit }: Props) {
   const ha = useHA();
   const store = useStore();
   const ref = useRef<HTMLDivElement>(null);
@@ -198,6 +201,7 @@ export function Grid({ editing, onCamera, onEdit }: Props) {
                 onCamera={onCamera}
                 onEdit={onEdit}
                 onRemove={remove}
+                paused={paused}
                 narrow={narrow}
                 onStart={start}
                 ha={ha}
@@ -226,14 +230,15 @@ interface CellProps {
   editing: boolean;
   dragged?: boolean;
   ha: ReturnType<typeof useHA>;
-  onCamera: (url: string) => void;
+  onCamera: (feeds: CameraFeed[], index: number) => void;
   onEdit: (card: Card) => void;
   onRemove: (card: Card) => void;
+  paused?: boolean;
   narrow?: boolean;
   onStart?: (e: TouchEvent | MouseEvent, card: Card, mode: 'move' | 'resize') => void;
 }
 
-function Cell({ card, style, editing, dragged, ha, onCamera, onEdit, onRemove, narrow, onStart }: CellProps) {
+function Cell({ card, style, editing, dragged, ha, onCamera, onEdit, onRemove, paused, narrow, onStart }: CellProps) {
   const tint = card.color ? ' tint-' + card.color : '';
   return (
     <div
@@ -242,8 +247,8 @@ function Cell({ card, style, editing, dragged, ha, onCamera, onEdit, onRemove, n
       onMouseDown={onStart ? (e) => onStart(e as unknown as MouseEvent, card, 'move') : undefined}
       onTouchStart={onStart ? (e) => onStart(e as unknown as TouchEvent, card, 'move') : undefined}
     >
-      <Panel title={cardTitle(ha, card)} aside={!editing && <CardAside card={card} />} class={'card-' + card.type}>
-        <div class="panel-body"><CardBody card={card} onCamera={onCamera} size={{ w: style.width - BODY_PAD_X, h: style.height - BODY_PAD_Y }} /></div>
+      <Panel title={cardTitle(ha, card)} icon={card.icon} aside={!editing && <CardAside card={card} />} class={'card-' + card.type}>
+        <div class="panel-body"><CardBody card={card} paused={paused} onCamera={onCamera} size={{ w: style.width - BODY_PAD_X, h: style.height - BODY_PAD_Y }} /></div>
       </Panel>
       {editing && (
         <>

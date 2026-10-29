@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { ChevronDown, ChevronUp, Grid3x3, Plus, WifiOff, X } from 'lucide-preact';
 import { useHA } from '../lib/hooks';
 import { useStore } from '../lib/store';
-import { iconFor } from '../lib/icons';
+import { Icon } from '../lib/icons';
 import { formatDate, formatTime, useNow } from '../lib/time';
 import { cardTypeTitle, type Card } from '../lib/layout';
 import {
@@ -13,6 +13,7 @@ import {
 } from '../lib/lockscreen';
 import { summary } from './CardView';
 import { AmbientWeather } from './Weather';
+import { useLinger } from '../lib/visibility';
 import { t } from '../i18n';
 
 // Режим покоя — как экран блокировки iPhone: фото на весь экран, большие часы и виджеты (плашки) карточек
@@ -173,12 +174,15 @@ export function Ambient(props: Props) {
   const clockInk = useContrastColor(props.photoThumb, clockRegion(prefs, grid), contrast);
   const widgetsInk = useContrastColor(props.photoThumb, widgetsRegion(prefs, grid), wContrast);
   const hintInk = useContrastColor(props.photoThumb, HINT_REGION, contrast);
+  // Редактор сетки: пока идёт настройка, экран виден — содержимое не выгружаем.
+  const alive = useLinger(props.visible || edit);
   const cls = 'ambient' + (props.visible ? ' visible' : '')
     + (grid ? ' lock-grid' : ' lock-' + prefs.layout + ' widgets-' + prefs.widgetsPos) + ' lock-size-' + prefs.size
     + ' chips-' + prefs.chipStyle + (edit ? ' customizing' : '');
   return (
     <>
       <div ref={props.innerRef} class={cls}>
+        {alive && <>
         <div class={'ambient-clock' + (contrast ? ' text-contrast' : '') + (cFixed ? ' ink-fixed' + (prefs.color === 'accent' ? ' accent-text' : '') : '')
             + (clockInk.dark ? ' ink-dark' : '') + (grid ? rectAlign(grid.clock) : '')}
           style={{ ...(grid ? rectStyle(grid.clock) : {}), ...(contrast ? { color: clockInk.color } : cFixed && cValue ? { color: cValue } : {}) }} onClick={edit ? () => setPanel('clock') : undefined}>
@@ -196,11 +200,10 @@ export function Ambient(props: Props) {
           {/* Тревоги — первыми */}
           {alerts.concat(chips.filter((c) => alerts.indexOf(c) === -1)).map((card) => {
             const s = summary(ha, card);
-            const Icon = iconFor(card.icon);
             return (
               <button key={card.id} class={'glance' + (s.lit ? ' lit' : '') + (s.alert ? ' alert' : '')} title={s.text}
                 onClick={edit ? undefined : () => props.onSheet(card)}>
-                <Icon size={18} /><span>{s.text}</span>
+                <Icon name={card.icon} size={18} /><span>{s.text}</span>
               </button>
             );
           })}
@@ -214,9 +217,10 @@ export function Ambient(props: Props) {
         {edit && grid && !panel && (
           <GridEditor grid={grid} onDraft={setDraft} onDone={(g) => { setDraft(null); setLockPrefs(gridPatch(orient, g)); }} onTap={setPanel} />
         )}
+        </>}
       </div>
 
-      {edit && (
+      {alive && edit && (
         <div class="lock-ui">
           <div class="lock-top">
             <span>{t(grid ? 'lock.grid_hint' : 'lock.hint')}</span>
@@ -491,12 +495,11 @@ function LockPanel(props: { kind: 'clock' | 'widgets'; widgets: Card[]; hasWeath
           <div class="lock-sec">{t('lock.sec.which')}</div>
           {!props.widgets.length && <p class="hint">{t('lock.no_widgets')}</p>}
           {props.widgets.map((c, i) => {
-            const Icon = iconFor(c.icon);
             return (
               <div key={c.id} class="lock-widget">
                 <label class="check">
                   <input type="checkbox" checked={p.hidden.indexOf(c.id) === -1} onChange={(e) => toggle(c.id, e.currentTarget.checked)} />
-                  <Icon size={16} /><span>{c.title || cardTypeTitle(c.type)}</span>
+                  <Icon name={c.icon} size={16} /><span>{c.title || cardTypeTitle(c.type)}</span>
                 </label>
                 <button class="icon-btn" disabled={i === 0} onClick={() => move(i, -1)}><ChevronUp size={18} /></button>
                 <button class="icon-btn" disabled={i === props.widgets.length - 1} onClick={() => move(i, 1)}><ChevronDown size={18} /></button>

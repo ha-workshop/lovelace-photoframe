@@ -9,6 +9,7 @@ import { applyBacklight, dimOpacity, onHardwareWake } from './lib/screen';
 import { setNativeVisible } from './lib/nativePhoto';
 import { PREVIEW } from './lib/preview';
 import { ACCENTS, clampBox, settle, type Card } from './lib/layout';
+import type { CameraFeed } from './lib/camera';
 import { useTone } from './lib/photoTone';
 import { useSwipe } from './lib/swipe';
 import { ChevronLeft, ChevronRight } from 'lucide-preact';
@@ -85,14 +86,16 @@ export function App() {
   const [editing, setEditing] = useState(store.ui.editing);
   useEffect(() => { store.ui.controls = controls; store.ui.editing = editing; }, [controls, editing]);
   const [showSettings, setShowSettings] = useState(false);
-  const [cameraUrl, setCameraUrl] = useState('');
+  // Полноэкранная камера: список потоков карточки и текущий — свайп листает по этому списку.
+  const [cameraView, setCameraView] = useState<null | { feeds: CameraFeed[]; index: number }>(null);
+  const openCamera = (feeds: CameraFeed[], index: number) => setCameraView({ feeds, index });
   const cameraTimer = useRef(0);
 
   // Команды из HA — кнопки устройства рамки и службы photoframe.* (рамка с интеграцией Photo Frame).
   useEffect(() => store.onCommand((c) => {
     if (c.command === 'next_photo') setIndex((i) => i + 1);
     else if (c.command === 'show_panel') setControls(true);
-    else if (c.command === 'show_photos') { setControls(false); setSheetId(null); setCameraUrl(''); }
+    else if (c.command === 'show_photos') { setControls(false); setSheetId(null); setCameraView(null); }
     else if (c.command === 'reload') location.reload();
     else if (c.command === 'update_apk') updateApk();
     else if (c.command === 'show_screen' && c.screen) {
@@ -103,9 +106,11 @@ export function App() {
       // Позвонили в дверь: камера поверх всего на N секунд, потом обратно.
       const url = client.cameraStreamUrl(c.entity);
       if (!url) return;
-      setCameraUrl(url);
+      const state = client.states[c.entity];
+      const name = (state && state.attributes.friendly_name) || c.entity;
+      setCameraView({ feeds: [{ entity: c.entity, name }], index: 0 });
       clearTimeout(cameraTimer.current);
-      cameraTimer.current = window.setTimeout(() => setCameraUrl(''), (c.duration || 30) * 1000);
+      cameraTimer.current = window.setTimeout(() => setCameraView(null), (c.duration || 30) * 1000);
     }
   }), [client]);
   const [sheetId, setSheetId] = useState<string | null>(null);
@@ -125,7 +130,7 @@ export function App() {
   useEffect(() => { if (needsSetup) setShowSettings(true); }, [needsSetup]);
 
   // Экран из HA: спит — чёрный, слайдшоу стоит. Камеру (позвонили в дверь) показываем и спящей рамкой.
-  const awake = store.screenOn || !!cameraUrl;
+  const awake = store.screenOn || !!cameraView;
   useEffect(() => applyBacklight(awake, store.brightness), [awake, store.brightness]);
   useEffect(() => onHardwareWake(() => store.wakeScreen()), []);
 
@@ -184,7 +189,7 @@ export function App() {
     };
   }, []);
 
-  const modal = showSettings || !!cameraUrl || !!editCard || adding || !!detail;
+  const modal = showSettings || !!cameraView || !!editCard || adding || !!detail;
   const busy = modal || !!sheet;
   const rootRef = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<HTMLDivElement>(null);
@@ -283,10 +288,11 @@ export function App() {
           innerRef={controlsRef}
           visible={controls}
           editing={editing}
+          paused={modal || !!sheet}
           onEditing={setEditing}
           onPhotos={() => setControls(false)}
           onSettings={() => setShowSettings(true)}
-          onCamera={setCameraUrl}
+          onCamera={openCamera}
           onEditCard={(card) => setEditCard({ card, isNew: false })}
           homes={homes}
           active={active}
@@ -297,10 +303,17 @@ export function App() {
         />
         </LiveContext.Provider>
       </div>
-      {sheet && <Sheet card={sheet} tone={tone} onCamera={setCameraUrl} onClose={() => setSheetId(null)} />}
+      {sheet && <Sheet card={sheet} tone={tone} onCamera={openCamera} onClose={() => setSheetId(null)} />}
       <div class={'screen-dim' + (awake ? '' : ' asleep')} style={{ opacity: dimOpacity(awake, store.brightness) }}
         onClick={awake ? undefined : () => store.wakeScreen()} />
-      {cameraUrl && <CameraModal url={cameraUrl} onClose={() => setCameraUrl('')} />}
+      {cameraView && (
+        <CameraModal
+          feeds={cameraView.feeds}
+          index={cameraView.index}
+          onIndex={(index) => setCameraView((v) => v ? { ...v, index } : v)}
+          onClose={() => setCameraView(null)}
+        />
+      )}
       {showSettings && (
         <SettingsModal
           onClose={() => setShowSettings(false)}

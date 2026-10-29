@@ -250,4 +250,15 @@ export class HAClient {
     if (!camToken) return '';
     return this.baseUrl.replace(/\/+$/, '') + '/api/camera_proxy_stream/' + entityId + '?token=' + camToken;
   }
+
+  // Один кадр камеры: entity_picture в HA уже подписан и обновляется сам; иначе — camera_proxy с токеном.
+  cameraSnapshotUrl(entityId: string) {
+    const s = this.states[entityId];
+    if (!s) return '';
+    const pic = s.attributes.entity_picture;
+    if (pic) return this.resolveUrl(pic);
+    const camToken = s.attributes.access_token;
+    if (!camToken) return '';
+    return this.baseUrl.replace(/\/+$/, '') + '/api/camera_proxy/' + entityId + '?token=' + camToken;
+  }
 }

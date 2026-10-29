@@ -3,9 +3,11 @@ import { X } from 'lucide-preact';
 import { useHA } from '../lib/hooks';
 import type { Tone } from '../lib/photoTone';
 import type { Card } from '../lib/layout';
+import type { CameraFeed } from '../lib/camera';
 import { CardAside, CardBody, cardTitle } from './CardView';
+import { Icon } from '../lib/icons';
 
-interface Props { card: Card; tone: Tone | null; onCamera: (url: string) => void; onClose: () => void }
+interface Props { card: Card; tone: Tone | null; onCamera: (feeds: CameraFeed[], index: number) => void; onClose: () => void }
 
 // «Матовое стекло»: растянутая миниатюра кадра, выровненная по экрану так, чтобы совпадать с фото под карточкой.
 // background-attachment: fixed не подходит — Chrome не рисует его, пока на карточке идёт transform-анимация.
@@ -58,7 +60,10 @@ export function Sheet({ card, tone, onCamera, onClose }: Props) {
         <Glass thumb={tone ? tone.thumb : undefined} sheet={sheetEl} />
         <div class="sheet-inner">
           <div class="panel-head">
-            <h2>{cardTitle(ha, card)}</h2>
+            <div class="panel-title">
+              {card.icon && <Icon name={card.icon} size={18} class="panel-icon" />}
+              <h2>{cardTitle(ha, card)}</h2>
+            </div>
             <div class="sheet-actions">
               <CardAside card={card} />
               <button class="sheet-close" onClick={onClose}><X size={18} /></button>

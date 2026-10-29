@@ -2,7 +2,7 @@ import { useState } from 'preact/hooks';
 import { ArrowDown, ArrowUp, Droplets, Plus, Search, Trash2, X, Thermometer } from 'lucide-preact';
 import type { HassState } from '../lib/ha';
 import { isAvailable, unitOf, useHA } from '../lib/hooks';
-import { ICONS, guessIcon, iconFor, type IconKey } from '../lib/icons';
+import { ICON_GROUPS, Icon, guessIcon, iconMatches, type IconKey } from '../lib/icons';
 import { ACCENTS, CARD_TYPES, cardTypeHint, cardTypeTitle, newId, type CameraFit, type Card, type CardType, type Item } from '../lib/layout';
 import { expandItem, fits } from '../lib/devices';
 import { Modal } from './Modals';
@@ -16,13 +16,12 @@ export function AddCardModal(props: { onPick: (card: Card) => void; onClose: () 
       <div class="type-list">
         {types.map((type) => {
           const info = CARD_TYPES[type];
-          const Icon = iconFor(info.icon);
           return (
             <button key={type} class="type-row" onClick={() => props.onPick({
               // Новая карточка встаёт в конец сетки; settle при сохранении поднимет её на свободное место.
               id: newId(), type, title: '', icon: info.icon, x: 0, y: 999, w: type === 'switches' ? 6 : 3, h: 3, items: [],
             })}>
-              <span class="status-icon"><Icon size={20} /></span>
+              <span class="status-icon"><Icon name={info.icon} size={20} /></span>
               <span class="status-text"><b>{cardTypeTitle(type)}</b><small>{cardTypeHint(type)}</small></span>
               <Plus size={18} />
             </button>
@@ -126,6 +125,8 @@ export function CardEditor(props: EditorProps) {
   const [card, setCard] = useState<Card>(props.card);
   // null — список; 'add' — новое устройство; иначе — вторая сущность для строки (влажность к климату, датчик к кондиционеру)
   const [picking, setPicking] = useState<null | 'add' | { index: number; field: 'hum' | 'temp' }>(null);
+  // null — окно выбора иконки закрыто; index — строка устройства; null в index — иконка всей карточки.
+  const [iconPick, setIconPick] = useState<null | { index: number | null }>(null);
   const info = CARD_TYPES[card.type];
   const set = (patch: Partial<Card>) => setCard({ ...card, ...patch });
   const setItem = (i: number, patch: Partial<Item>) => set({ items: card.items.map((it, k) => (k === i ? { ...it, ...patch } : it)) });
@@ -138,10 +139,15 @@ export function CardEditor(props: EditorProps) {
     set({ items });
   };
 
-  const iconKeys = Object.keys(ICONS) as IconKey[];
-
   return (
-    <Modal title={t('editor.card_title', { type: cardTypeTitle(card.type) })} onClose={props.onClose}>
+    <>
+    <Modal
+      title={t('editor.card_title', { type: cardTypeTitle(card.type) })}
+      onClose={props.onClose}
+      footer={<>
+        {props.onDelete ? <button class="btn btn-danger" onClick={props.onDelete}><Trash2 size={14} /><span>{t('common.delete')}</span></button> : <span />}
+        <button class="btn btn-accent" onClick={() => props.onSave(card)}>{t('common.save')}</button>
+      </>}>
       <label class="field">
         <span>{t('editor.name')}</span>
         <input value={card.title} placeholder={cardTypeTitle(card.type)} onInput={(e) => set({ title: e.currentTarget.value })} />
@@ -168,12 +174,11 @@ export function CardEditor(props: EditorProps) {
 
       <div class="field">
         <span>{t('editor.icon')}</span>
-        <div class="icon-grid">
-          {iconKeys.map((k) => {
-            const Icon = ICONS[k];
-            return <button key={k} class={card.icon === k ? 'active' : ''} onClick={() => set({ icon: k })}><Icon size={18} /></button>;
-          })}
-        </div>
+        <button class="icon-choose" onClick={() => setIconPick({ index: null })}>
+          <span class="icon-choose-preview"><Icon name={card.icon || info.icon} size={22} /></span>
+          <span>{t('editor.choose_icon')}</span>
+          <span class="icon-choose-key mono">{card.icon || t('editor.icon_default')}</span>
+        </button>
       </div>
 
       {card.type === 'cameras' && (
@@ -199,14 +204,12 @@ export function CardEditor(props: EditorProps) {
         {picking === null ? (
           <div class="items">
             {card.items.map((it, i) => {
-              const Icon = iconFor(it.icon || guessIcon(it.entity, ha.states[it.entity] && ha.states[it.entity].attributes.device_class));
               return (
                 <div class="item-block" key={it.entity + i}>
                 <div class="item-row">
-                  <button class="item-icon" title={t('editor.change_icon')} onClick={() => {
-                    const k = iconKeys.indexOf((it.icon || '') as IconKey);
-                    setItem(i, { icon: iconKeys[(k + 1) % iconKeys.length] });
-                  }}><Icon size={18} /></button>
+                  <button class="item-icon" title={t('editor.change_icon')} onClick={() => setIconPick({ index: i })}>
+                    <Icon name={it.icon || guessIcon(it.entity, ha.states[it.entity] && ha.states[it.entity].attributes.device_class)} size={18} />
+                  </button>
                   <div class="item-main">
                     <input value={it.name || ''} placeholder={it.device ? (ha.devices[it.device] ? ha.devices[it.device].name : t('editor.device')) : itemName(ha, { entity: it.entity })} onInput={(e) => setItem(i, { name: e.currentTarget.value || undefined })} />
                     {it.device
@@ -251,10 +254,51 @@ export function CardEditor(props: EditorProps) {
           />
         )}
       </div>
+    </Modal>
+    {iconPick && (
+      <IconPicker
+        value={iconPick.index === null ? card.icon : (card.items[iconPick.index] && card.items[iconPick.index].icon)}
+        onPick={(key) => {
+          if (iconPick.index === null) set({ icon: key });
+          else setItem(iconPick.index, { icon: key });
+          setIconPick(null);
+        }}
+        onClose={() => setIconPick(null)}
+      />
+    )}
+    </>
+  );
+}
 
-      <div class="modal-foot">
-        {props.onDelete ? <button class="btn btn-danger" onClick={props.onDelete}><Trash2 size={14} /><span>{t('common.delete')}</span></button> : <span />}
-        <button class="btn btn-accent" onClick={() => props.onSave(card)}>{t('common.save')}</button>
+// Окно выбора иконки: поиск и группы — свои линейные, Font Awesome по темам и контурные.
+function IconPicker(props: { value?: string; onPick: (key: IconKey) => void; onClose: () => void }) {
+  const [q, setQ] = useState('');
+  const groups = ICON_GROUPS
+    .map((g) => ({ ...g, keys: g.keys.filter((k) => iconMatches(k, q)) }))
+    .filter((g) => g.keys.length);
+  return (
+    <Modal title={t('editor.icon_pick')} onClose={props.onClose} wide>
+      <div class="icon-picker">
+        <div class="picker-search icon-picker-search">
+          <Search size={16} />
+          <input autoFocus placeholder={t('editor.icon_search')} value={q} onInput={(e) => setQ(e.currentTarget.value)} />
+          {q && <button class="icon-btn" onClick={() => setQ('')}><X size={16} /></button>}
+        </div>
+        <div class="icon-picker-scroll">
+          {!groups.length && <p class="muted picker-empty">{t('editor.nothing_found')}</p>}
+          {groups.map((g) => (
+            <section class="icon-group" key={g.titleKey}>
+              <h3>{t(g.titleKey)}</h3>
+              <div class="icon-grid icon-grid-picker">
+                {g.keys.map((k) => (
+                  <button key={k} class={props.value === k ? 'active' : ''} title={k} onClick={() => props.onPick(k)}>
+                    <Icon name={k} size={22} />
+                  </button>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
       </div>
     </Modal>
   );

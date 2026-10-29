@@ -214,14 +214,21 @@ class Store {
   bundled: string[] = [];
 
   get photoUrls(): string[] {
-    return this.bundled.concat(this.state.photos.map((p) => p.url));
+    const own = this.state.photos.map((p) => p.url);
+    if (own.length) return own;
+    // Фото кончились (пустая папка в HA): демо-кадры из сборки нужны только для первого запуска
+    // PWA без HA — когда рамка уже работает с медиатекой, пусто значит пусто.
+    if (this.card || this.haLink === 'ready' || this.haLink === 'missing') return [];
+    return this.bundled;
   }
 
   // PWA: пока работаем из браузера и, если вход в HA есть, подключаемся — хранилище переедет в HA.
   start() {
     if (this.card || this.state.sync !== 'connecting') return;
     this.set({ sync: 'local' });
-    this.reloadLocalPhotos();
+    // Фото в HA главнее локальных: если в кэше уже лежат снимки из HA, локальные не подмешиваем
+    // (они нужны только как источник для переноса в медиатеку, а не для показа).
+    if (!this.state.photos.length) this.reloadLocalPhotos();
     this.connectHa();
   }
 
@@ -276,6 +283,13 @@ class Store {
       (photos) => { this.photoError = ''; this.set({ photos }); },
       (e: Error) => { this.photoError = e.message; this.set({ photos: [] }); },
     );
+  }
+
+  // Выбрали папку на рамке: запоминаем у устройства в HA и сразу показываем её фото.
+  setAlbum(album: string) {
+    const card = this.card;
+    if (!card) return Promise.resolve();
+    return card.setAlbum(album).then(() => this.reloadCardPhotos());
   }
 
   private saveCard(patch: Partial<CardConfig>) {
