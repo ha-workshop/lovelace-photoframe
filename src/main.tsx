@@ -17,9 +17,22 @@ store.bundled = Object.values(
 ) as string[];
 
 // Вернулись со страницы входа HA — сначала забираем токены, потом рисуем (иначе мелькнут настройки).
+// Заставка из index.html: держим её, пока грузится оболочка, и мягко убираем — без «прыжка» чёрного экрана.
+function hideSplash() {
+  const splash = document.getElementById('splash');
+  if (!splash) return;
+  const min = 600;
+  window.setTimeout(() => {
+    splash.className = 'gone';
+    window.setTimeout(() => { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 600);
+  }, min);
+}
+
 finishLogin().then(() => {
   render(<App />, document.getElementById('app')!);
   if (!PREVIEW) keepScreenOn();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(hideSplash, hideSplash);
+  else hideSplash();
 });
 
 // Service worker: в браузере и в WebView, где он поддерживается (Chrome 40+ / WebView 51+, iOS 11.3+).
