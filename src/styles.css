@@ -375,9 +375,10 @@ svg { display: block; flex-shrink: 0; }
 .cam-play svg { margin-left: 3px; }
 .cam-full .cam-play { width: 84px; height: 84px; }
 /* Маленькая ▶ в углу карточки: кадр-снимок уже виден, видео — по клику или задержке курсора. */
-.cam-play-corner { position: absolute; right: 8px; bottom: 8px; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.55); color: #fff; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35); }
-.cam-play-corner svg { margin-left: 2px; }
-.cam-play-corner:hover { background: rgba(125, 211, 252, 0.9); color: #0b0d14; }
+/* ▶ по центру карточки: кадр-снимок уже виден, видео — по клику или задержке курсора. */
+.cam-play-center { position: absolute; left: 50%; top: 50%; width: 48px; height: 48px; margin: -24px 0 0 -24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(10, 12, 18, 0.5); color: #fff; border: 1px solid rgba(255, 255, 255, 0.28); box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.cam-play-center svg { margin-left: 3px; }
+.cam-play-center:hover { background: rgba(125, 211, 252, 0.92); border-color: rgba(125, 211, 252, 0.92); color: #0b0d14; }
 .cam-spinner { width: 22px; height: 22px; margin-bottom: 8px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.2); border-top-color: #7dd3fc;
   -webkit-animation: cam-spin 0.8s linear infinite; animation: cam-spin 0.8s linear infinite; }
 @-webkit-keyframes cam-spin { to { -webkit-transform: rotate(360deg); } }
