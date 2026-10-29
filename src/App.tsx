@@ -79,7 +79,9 @@ export function App() {
     reportFrame(ha, { photo: decodeURIComponent(path.split('?')[0].split('/').pop() || ''), photo_url: path });
   }, [current, store.frameClient]);
   useEffect(() => {
-    if (store.frameClient) reportFrame(store.frameClient, { screen: active + '/' + store.state.screen });
+    // Смена экрана — тоже повод синхронизировать настройки: сообщаем текущий экран и размер панели,
+    // чтобы HA и редактор «Фоторамок» видели последнее состояние устройства.
+    if (store.frameClient) reportFrame(store.frameClient, { screen: active + '/' + store.state.screen, display: { w: window.innerWidth, h: window.innerHeight } });
   }, [active, store.state.screen, store.frameClient]);
   // Открыта ли панель и идёт ли редактирование — из общего хранилища, чтобы пережить пересоздание карточки.
   const [controls, setControls] = useState(store.ui.controls);

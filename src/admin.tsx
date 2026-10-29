@@ -1,21 +1,21 @@
 import { render } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { Image, LayoutGrid, Monitor, RefreshCw, Smartphone } from 'lucide-preact';
+import { Image, LayoutGrid, RefreshCw } from 'lucide-preact';
 import css from './styles.css?inline';
 import { GridEditor, INSET, SPAN } from './components/Ambient';
 import { GRID, cleanLook, defaultGrid, lockPrefs, validGrid, type GridRect, type HAlign, type LockGrid, type Orientation, type VAlign } from './lib/lockscreen';
 import { t } from './i18n';
 
 // Раздел «Фоторамки» в боковом меню HA (только администраторам; регистрирует интеграция Photo Frame).
-// Список рамок и редактор сетки экрана с фото каждой из них: экран рамки — в её пропорциях (рамка сообщает
-// свой размер для каждой ориентации), сетка — своя для горизонтального и вертикального положения.
+// Список рамок и редактор сетки экрана с фото каждой из них. Ориентацию не выбираем вручную: показываем
+// экран в том размере, в каком рамку видели в последний раз (она сообщает его при повороте и смене навигации).
 // «Сохранить на рамку» — рамка берёт сетку сразу, а если она не в сети — при подключении.
-// «Дашборд» — само приложение рамки (/photoframe/?preview=1) в размере её экрана: экраны и карточки домов
-// правятся тем же редактором, что на рамке, и видно, как они лягут на этот экран. Раскладка общая для дома
-// (на узких экранах — своя телефонная), предпросмотр рамкой в HA не считается.
+// «Дашборд» — само приложение рамки (/photoframe/?preview=1&frame_id=…) в размере её экрана: экраны и карточки
+// домов правятся тем же редактором, что на рамке, и видно, как они лягут на этот экран. Раскладка у каждой
+// рамки своя (на узких экранах — своя телефонная), предпросмотр рамкой в HA не считается.
 
 // Предпросмотр в настоящем размере экрана рамки, уменьшенный под ширину окна.
-function DashboardPreview(props: { disp: Display }) {
+function DashboardPreview(props: { disp: Display; frame: string }) {
   const box = useRef<HTMLDivElement>(null);
   const [room, setRoom] = useState(900);
   useEffect(() => {
@@ -29,7 +29,7 @@ function DashboardPreview(props: { disp: Display }) {
   return (
     <div class="admin-screen-wrap" ref={box}>
       <div class="admin-iframe-box" style={{ width: Math.round(w * scale) + 'px', height: Math.round(h * scale) + 'px' }}>
-        <iframe key={w + 'x' + h} src="/photoframe/index.html?preview=1" title="preview"
+        <iframe key={w + 'x' + h + props.frame} src={'/photoframe/index.html?preview=1&frame_id=' + encodeURIComponent(props.frame)} title="preview"
           style={{ width: w + 'px', height: h + 'px', transform: 'scale(' + scale + ')' }} />
       </div>
     </div>
@@ -40,24 +40,27 @@ interface Hass { callWS<T>(msg: Record<string, unknown>): Promise<T> }
 interface Display { w: number; h: number }
 interface FrameInfo {
   frame_id: string; name?: string; model?: string; online: boolean;
-  grid?: LockGrid | null; grid_portrait?: LockGrid | null; displays?: Partial<Record<Orientation, Display>>; lockscreen?: unknown;
+  grid?: LockGrid | null; grid_portrait?: LockGrid | null;
+  // Последний известный размер экрана; displays — по ориентациям (у рамок, ещё не присылавших display).
+  display?: Display | null; displays?: Partial<Record<Orientation, Display>>; lockscreen?: unknown;
 }
 
-// Размер экрана рамки в этой ориентации: известный; известен только другой — повёрнутый; ничего — 16:10.
-function displayOf(f: FrameInfo, o: Orientation): Display {
+// Экран в том размере, в каком рамку видели в последний раз. Не сообщала — 16:10.
+function lastDisplay(f: FrameInfo | null | undefined): Display | null {
+  if (!f) return null;
+  if (f.display && f.display.w && f.display.h) return f.display;
   const d = f.displays || {};
-  const own = d[o];
-  if (own) return own;
-  const other = d[o === 'portrait' ? 'landscape' : 'portrait'];
-  if (other) return { w: other.h, h: other.w };
-  return o === 'portrait' ? { w: 800, h: 1280 } : { w: 1280, h: 800 };
+  return d.landscape || d.portrait || null;
+}
+
+function orientationOf(d: Display): Orientation {
+  return d.h > d.w ? 'portrait' : 'landscape';
 }
 
 function AdminApp(props: { hass: Hass }) {
   const [frames, setFrames] = useState<FrameInfo[] | null>(null);
   const [error, setError] = useState('');
   const [pick, setPick] = useState('');
-  const [orient, setOrient] = useState<Orientation>('landscape');
   // Правка до сохранения: сетки обеих ориентаций выбранной рамки.
   const [draft, setDraft] = useState<Record<Orientation, LockGrid | null>>({ landscape: null, portrait: null });
   const [moving, setMoving] = useState<LockGrid | null>(null);
@@ -77,11 +80,14 @@ function AdminApp(props: { hass: Hass }) {
   const choose = (f: FrameInfo) => {
     setPick(f.frame_id);
     setDraft({ landscape: validGrid(f.grid), portrait: validGrid(f.grid_portrait) });
-    const d = f.displays || {};
-    setOrient(d.landscape || !d.portrait ? 'landscape' : 'portrait');
     setStatus('');
   };
   const frame = frames && frames.filter((f) => f.frame_id === pick)[0];
+  // Ориентацию не спрашиваем: показываем и правим ту сетку, в какой рамку видели в последний раз.
+  const last = lastDisplay(frame);
+  const disp = last || { w: 1280, h: 800 };
+  const orient = orientationOf(disp);
+  const known = !!last;
   const grid = moving || draft[orient];
   const setGrid = (g: LockGrid | null) => { setDraft({ ...draft, [orient]: g }); setStatus(''); };
 
@@ -116,8 +122,6 @@ function AdminApp(props: { hass: Hass }) {
     }, (e: Error) => setStatus(e.message || String(e)));
   };
 
-  const disp = frame ? displayOf(frame, orient) : { w: 1280, h: 800 };
-  const known = !!(frame && frame.displays && frame.displays[orient]);
   const align = (patch: Partial<GridRect>) => {
     if (!grid) return;
     const r: GridRect = { ...grid[block], ...patch };
@@ -152,10 +156,6 @@ function AdminApp(props: { hass: Hass }) {
                 <button class={mode === 'photo' ? 'active' : ''} onClick={() => setMode('photo')}><Image size={14} /> {t('admin.mode_photo')}</button>
                 <button class={mode === 'dashboard' ? 'active' : ''} onClick={() => setMode('dashboard')}><LayoutGrid size={14} /> {t('admin.mode_dashboard')}</button>
               </div>
-              <div class="seg">
-                <button class={orient === 'landscape' ? 'active' : ''} onClick={() => setOrient('landscape')}><Monitor size={14} /> {t('admin.landscape')}</button>
-                <button class={orient === 'portrait' ? 'active' : ''} onClick={() => setOrient('portrait')}><Smartphone size={14} /> {t('admin.portrait')}</button>
-              </div>
               {mode === 'photo' && <label class="check">
                 <input type="checkbox" checked={!!draft[orient]}
                   onChange={(e) => setGrid(e.currentTarget.checked ? defaultGrid(lockPrefs(), orient === 'landscape') : null)} />
@@ -167,7 +167,7 @@ function AdminApp(props: { hass: Hass }) {
             {mode === 'dashboard' && (
               <>
                 <p class="hint small">{t('admin.dashboard_hint')}</p>
-                <DashboardPreview disp={disp} />
+                <DashboardPreview disp={disp} frame={pick} />
               </>
             )}
             {mode === 'photo' && <>
@@ -267,6 +267,7 @@ const ADMIN_CSS = ':host{display:block;min-height:100vh;background:#0b0d14;color
   + '.admin-editor{flex:1;min-width:0}'
   + '.admin-tools{display:flex;align-items:center;flex-wrap:wrap;margin-bottom:12px}'
   + '.admin-tools > *{margin-right:14px}'
+  + '.admin-tools .check{margin:0 16px 0 0}'
   + '.admin-screen-wrap{display:flex;justify-content:center}'
   + '.admin-screen{position:relative;max-width:100%;max-height:70vh;border-radius:14px;overflow:hidden;'
   + 'background:linear-gradient(135deg,#1e3a5f,#3b2f5c 50%,#5c3a2f);box-shadow:0 0 0 1px rgba(255,255,255,0.15)}'

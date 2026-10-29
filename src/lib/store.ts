@@ -1,4 +1,4 @@
-// Общее состояние рамки: настройки, дома и их экраны, альбом.
+// Состояние рамки: дома и их экраны, настройки, альбом. Экраны и настройки панели — у каждого устройства свои.
 // Источник правды — Home Assistant: конфиг карточки на дашборде «Фоторамка» (её же показывает HA)
 // и медиатека /media/photoframe. Рамка-PWA входит в HA через его страницу входа (lib/haAuth).
 // Пока входа нет или в HA нет дашборда — всё живёт в этом браузере: localStorage + IndexedDB.
@@ -52,6 +52,29 @@ const CACHE_KEY = 'photoframe.cache';
 // Главный дом и его стартовый экран — настройка конкретного устройства, в сервис не уходит.
 const MAIN_KEY = 'photoframe.mainHome';
 const START_KEY = 'photoframe.startScreen';
+// Слайдшоу и возврат к фото — тоже у каждого устройства свои (в HA остаётся только образец для нового).
+const SLIDE_KEY = 'photoframe.slideMs';
+const IDLE_KEY = 'photoframe.idleSec';
+
+function num(key: string): number | undefined {
+  try {
+    const raw = localStorage.getItem(key);
+    const n = raw == null ? NaN : +raw;
+    return isFinite(n) ? n : undefined;
+  } catch (e) { return undefined; }
+}
+
+function localSettings(): { slideIntervalMs?: number; idleSec?: number } {
+  return { slideIntervalMs: num(SLIDE_KEY), idleSec: num(IDLE_KEY) };
+}
+
+// Запомнить настройки панели на этом устройстве (в HA их больше не пишем).
+function writeLocalSettings(settings: Settings) {
+  try {
+    localStorage.setItem(SLIDE_KEY, String(settings.slideIntervalMs));
+    localStorage.setItem(IDLE_KEY, String(settings.idleSec));
+  } catch (e) { /* ignore */ }
+}
 
 export function mainHome(): string {
   try { return localStorage.getItem(MAIN_KEY) || MAIN_HOME; } catch (e) { return MAIN_HOME; }
@@ -88,8 +111,8 @@ function defaults(): State {
   return {
     settings: {
       haUrl: '',
-      slideIntervalMs: 10000,
-      idleSec: 45,
+      slideIntervalMs: localSettings().slideIntervalMs ?? 10000,
+      idleSec: localSettings().idleSec ?? 45,
     },
     homes: [{ id: MAIN_HOME, name: t('home.default_name') }],
     screens: { [MAIN_HOME]: mainScreens() },
@@ -118,8 +141,12 @@ function readCache(): State {
       const cs = c.settings || {};
       const settings = { ...d.settings };
       if (typeof cs.haUrl === 'string') settings.haUrl = cs.haUrl;
-      if (typeof cs.slideIntervalMs === 'number') settings.slideIntervalMs = cs.slideIntervalMs;
-      if (typeof cs.idleSec === 'number') settings.idleSec = cs.idleSec;
+      // Свои настройки панели важнее того, что когда-то пришло из HA.
+      const own = localSettings();
+      if (own.slideIntervalMs !== undefined) settings.slideIntervalMs = own.slideIntervalMs;
+      else if (typeof cs.slideIntervalMs === 'number') settings.slideIntervalMs = cs.slideIntervalMs;
+      if (own.idleSec !== undefined) settings.idleSec = own.idleSec;
+      else if (typeof cs.idleSec === 'number') settings.idleSec = cs.idleSec;
       const homes = c.homes ? c.homes.map((h: Home) => ({ id: h.id, name: h.name })) : d.homes;
       return { ...d, settings, homes, screens, photos: c.photos || [] };
     }
@@ -266,11 +293,14 @@ class Store {
       const l = cfg.layouts && cfg.layouts[h.id];
       screens[h.id] = l ? normalizeScreens(l) : h.id === MAIN_HOME ? mainScreens() : normalizeScreens(null);
     });
-    // Из настроек берём только слайдшоу — подключение к HA карточке не нужно.
+    // Слайдшоу и возврат к фото — у каждого устройства свои. Из HA берём их один раз,
+    // пока устройство ничего не сохраняло само: дальше правки других рамок его не трогают.
     const cs = cfg.settings || {};
+    const own = localSettings();
     const settings = { ...this.state.settings };
-    if (typeof cs.slideIntervalMs === 'number') settings.slideIntervalMs = cs.slideIntervalMs;
-    if (typeof cs.idleSec === 'number') settings.idleSec = cs.idleSec;
+    settings.slideIntervalMs = own.slideIntervalMs ?? (typeof cs.slideIntervalMs === 'number' ? cs.slideIntervalMs : settings.slideIntervalMs);
+    settings.idleSec = own.idleSec ?? (typeof cs.idleSec === 'number' ? cs.idleSec : settings.idleSec);
+    if (own.slideIntervalMs === undefined || own.idleSec === undefined) writeLocalSettings(settings);
     this.set({ sync: 'card', homes, screens, settings });
   }
 
@@ -392,8 +422,20 @@ class Store {
     const offPrefs = onLockPrefs(resend);
     let t = 0;
     const onResize = () => { clearTimeout(t); t = window.setTimeout(resend, 1500); };
+    // Повернули панель или сменили системную навигацию (панель навигации меняет размер экрана) —
+    // сразу отправляем настройки в HA: редактор «Фоторамок» покажет последний размер и ориентацию.
+    const onOrient = () => { clearTimeout(t); t = window.setTimeout(resend, 300); };
     window.addEventListener('resize', onResize);
-    this.gridOff = () => { offPrefs(); clearTimeout(t); window.removeEventListener('resize', onResize); };
+    window.addEventListener('orientationchange', onOrient);
+    const so = screen.orientation;
+    if (so && so.addEventListener) so.addEventListener('change', onOrient);
+    this.gridOff = () => {
+      offPrefs();
+      clearTimeout(t);
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onOrient);
+      if (so && so.removeEventListener) so.removeEventListener('change', onOrient);
+    };
   }
 
   // ── Рамка как устройство в HA ───────────────────────
@@ -571,10 +613,10 @@ class Store {
     if (this.card) this.saveCard({ homes: plain, layouts: this.packAll() });
   }
 
-  // Адрес HA — только этого устройства; слайдшоу — общее (в карточке HA).
+  // Настройки панели — только этого устройства: в HA их не пишем, чтобы не менялись на других рамках.
   saveSettings(settings: Settings) {
+    writeLocalSettings(settings);
     this.set({ settings });
-    if (this.card) this.saveCard({ settings: { slideIntervalMs: settings.slideIntervalMs, idleSec: settings.idleSec } });
   }
 
   // Раскладка показанного экрана.

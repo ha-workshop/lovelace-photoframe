@@ -2,11 +2,26 @@
 // photoframe/frame/connect. Пока подписка жива — в HA рамка «в сети»; по ней же приходят
 // её альбом и стартовый экран (их меняют в HA) и команды — следующее фото, показать камеру и т.п.
 import type { HAClient } from './ha';
+import { PREVIEW } from './preview';
 
 declare const __VERSION__: string;
 
 const ID_KEY = 'photoframe.frameId';
 const NAME_KEY = 'photoframe.frameName';
+// Предпросмотр в разделе «Фоторамки» (?preview=1&frame_id=…) — это выбранная рамка:
+// раскладку и её настройки берём у неё, а не у браузера, с которого открыт HA.
+const PREVIEW_FRAME_KEY = 'photoframe.previewFrame';
+
+function previewFrame(): string {
+  if (!PREVIEW) return '';
+  try {
+    const fromUrl = new URLSearchParams(location.search).get('frame_id');
+    if (fromUrl) sessionStorage.setItem(PREVIEW_FRAME_KEY, fromUrl);
+    return sessionStorage.getItem(PREVIEW_FRAME_KEY) || '';
+  } catch (e) { return ''; }
+}
+
+const PREVIEW_ID = previewFrame();
 
 // layout — сетки экрана с фото, заданные в HA (rev растёт с каждой правкой из редактора).
 export interface FrameState {
@@ -25,6 +40,8 @@ function write(key: string, value: string) {
 }
 
 export function frameId(): string {
+  // В предпросмотре «Фоторамки» — id выбранной рамки, чтобы правки ложились в её раскладку.
+  if (PREVIEW_ID) return PREVIEW_ID;
   let id = read(ID_KEY);
   if (!id) {
     for (id = ''; id.length < 16;) id += Math.floor(Math.random() * 16).toString(16);
