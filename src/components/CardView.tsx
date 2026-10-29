@@ -153,7 +153,7 @@ function Cameras({ card, onCamera }: { card: Card; onCamera: (url: string) => vo
   return (
     <div class="cam-wrap">
       {card.items.length > 1 && (
-        <div class="seg seg-inline">
+         <div class="seg seg-inline seg-full">
           {card.items.map((c, i) => (
             <button key={c.entity + i} class={i === active ? 'active' : ''} onClick={() => setActive(i)}>{itemName(ha, c)}</button>
           ))}

@@ -164,3 +164,29 @@ export function activeGrid(p: LockPrefs, o: Orientation): LockGrid | null {
 export function gridPatch(o: Orientation, g: LockGrid | null): Partial<LockPrefs> {
   return o === 'portrait' ? { gridPortrait: g } : { grid: g };
 }
+
+// ── Перенос экрана с фото между рамками ───────────────
+// Вид экрана с фото, который можно перенести на другую рамку (всё, кроме служебного номера правки).
+const LOOK_KEYS: Array<keyof LockPrefs> = ['font', 'color', 'widgetsColor', 'customColor', 'widgetsCustomColor', 'size', 'layout',
+  'date', 'datePos', 'weather', 'chipStyle', 'widgetsPos', 'hidden', 'order', 'grid', 'gridPortrait'];
+
+export function lookOf(p: LockPrefs): Partial<LockPrefs> {
+  const out: Record<string, unknown> = {};
+  LOOK_KEYS.forEach((k) => { out[k] = p[k]; });
+  return out as Partial<LockPrefs>;
+}
+
+// Только известные поля и только правильного вида — пришедшее из HA или с другой рамки не сломает свои настройки.
+export function cleanLook(raw: unknown): Partial<LockPrefs> {
+  const src = (raw || {}) as Record<string, unknown>;
+  const base = defaults() as unknown as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  LOOK_KEYS.forEach((k) => {
+    if (!(k in src)) return;
+    const v = src[k];
+    if (k === 'grid' || k === 'gridPortrait') out[k] = v == null ? null : validGrid(v);
+    else if (Array.isArray(base[k])) { if (Array.isArray(v)) out[k] = v.filter((x) => typeof x === 'string'); }
+    else if (typeof v === typeof base[k]) out[k] = v;
+  });
+  return out as Partial<LockPrefs>;
+}

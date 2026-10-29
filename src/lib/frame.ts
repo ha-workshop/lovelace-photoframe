@@ -11,7 +11,8 @@ const NAME_KEY = 'photoframe.frameName';
 // layout — сетки экрана с фото, заданные в HA (rev растёт с каждой правкой из редактора).
 export interface FrameState {
   type: 'state'; name?: string; album?: string; start_screen?: string | null; screen_on?: boolean; brightness?: number;
-  layout?: { rev: number; grid: unknown; grid_portrait: unknown } | null;
+  // Экран с фото, заданный в HA (редактор или «Скопировать на…»): rev растёт с каждой правкой.
+  lockscreen_push?: { rev: number; patch: unknown } | null;
 }
 export interface FrameCommand { type: 'command'; command: string; entity?: string; duration?: number; screen?: string }
 
@@ -72,6 +73,6 @@ export function connectFrame(client: HAClient, onEvent: (event: FrameState | Fra
 }
 
 // Сообщить HA, что рамка сейчас показывает (фото, экран). Без ответа — это не важно для работы рамки.
-export function reportFrame(client: HAClient, data: { photo?: string | null; photo_url?: string | null; screen?: string | null; screen_on?: boolean; grid?: unknown; grid_portrait?: unknown; display?: { w: number; h: number } }) {
+export function reportFrame(client: HAClient, data: { photo?: string | null; photo_url?: string | null; screen?: string | null; screen_on?: boolean; lockscreen?: unknown; display?: { w: number; h: number } }) {
   client.call({ type: 'photoframe/frame/report', frame_id: frameId(), ...data }).catch(() => {});
 }
