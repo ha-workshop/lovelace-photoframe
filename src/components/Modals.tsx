@@ -11,7 +11,7 @@ import { kioskPref, setKioskPref, type KioskPref } from '../lib/kiosk';
 import { autostart, setAutostart } from '../lib/screen';
 import { autoQuality, photoFit, qualityPref, setPhotoFit, setQualityPref, type PhotoFit, type QualityPref } from '../lib/quality';
 import { applyLanguage, languages, preferredLanguage, setPreferredLanguage, t } from '../i18n';
-import { NO_STREAM, stepCamera, useStreamState, type CameraFeed } from '../lib/camera';
+import { stepCamera, useStreamState, type CameraFeed } from '../lib/camera';
 import { cameraDisplayPref, setCameraDisplayPref, type CameraDisplayPref } from '../lib/cameraPrefs';
 import { useSwipeStep } from '../lib/gestures';
 import { MAIN_HOME, mainHome, startScreen, store as frame, useStore, type Home, type Settings } from '../lib/store';
@@ -49,7 +49,7 @@ export function CameraModal(props: { feeds: CameraFeed[]; index: number; onIndex
   return (
     <Modal title={current ? current.name : t('camera.live_title')} onClose={props.onClose} wide>
       <div class="cam-full cam-swipe" {...swipe}>
-        <CameraStream src={url || NO_STREAM} {...stream.img} />
+        <CameraStream src={url} {...stream.img} />
         {(!url || stream.state === 'error') && (
           <div class="cam-empty"><span>{t('camera.no_stream')}</span></div>
         )}

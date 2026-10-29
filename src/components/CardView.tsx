@@ -11,7 +11,7 @@ import { Media } from './Media';
 import { WeatherCard } from './Weather';
 import { condition } from '../lib/weather';
 import { expandCard } from '../lib/devices';
-import { NO_STREAM, stepCamera, useStill, useStreamState, type CameraFeed } from '../lib/camera';
+import { stepCamera, useStill, useStreamState, type CameraFeed } from '../lib/camera';
 import { useCameraDisplay } from '../lib/cameraPrefs';
 import { useHoverStart, useSwipeStep } from '../lib/gestures';
 import { t } from '../i18n';
@@ -187,12 +187,13 @@ function Cameras({ card, paused, onCamera }: { card: Card; paused?: boolean; onC
       )}
       <div class={'cam cam-swipe fit-' + (card.fit || 'cover')} {...swipe} {...hover}
         onMouseLeave={() => { swipe.onMouseLeave(); hover.onMouseLeave(); }}>
-        {/* Один и тот же <img>: смена src обрывает поток прошлой камеры — второй не остаётся в памяти. */}
-        <CameraStream paused={paused && playing} src={playing ? (url || NO_STREAM) : (still || NO_STREAM)} {...stream.img} />
+        {/* Один и тот же <img>: смена src обрывает поток прошлой камеры — второй не остаётся в памяти.
+            На паузе остаётся последний показанный кадр, а не снимок с момента открытия страницы. */}
+        <CameraStream src={url} poster={still} paused={!playing || !!paused} {...stream.img} />
         {empty && <div class="cam-empty"><VideoOff size={26} /><span>{t('camera.no_stream')}</span></div>}
         {!playing && !empty && (
-          <button class="cam-play-corner" onClick={(e) => { e.stopPropagation(); setLive(true); }} title={t('camera.play')}>
-            <Play size={15} fill="currentColor" />
+          <button class="cam-play-center" onClick={(e) => { e.stopPropagation(); setLive(true); }} title={t('camera.play')}>
+            <Play size={20} fill="currentColor" />
           </button>
         )}
         {playing && stream.state === 'loading' && (
