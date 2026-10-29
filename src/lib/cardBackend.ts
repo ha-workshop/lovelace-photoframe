@@ -8,6 +8,7 @@ import type { HomeScreens, Layout } from './layout';
 import type { Home, Photo, Settings } from './store';
 import { resize } from './photos';
 import { targetSize } from './quality';
+import { frameId } from './frame';
 import { t } from '../i18n';
 
 export const CARD_TYPE = 'custom:photoframe-card';
@@ -29,6 +30,9 @@ export interface CardConfig {
 }
 
 interface Lovelace { views?: Array<Record<string, any>> }
+
+// Папка медиатеки внутри папки фото: count — кадров в ней самой, total — вместе с подпапками.
+export interface FrameFolder { path: string; count: number; total: number }
 
 // Ищем свою карточку в конфиге дашборда — она может лежать в карточках вида, в секциях или во вложенных стеках.
 function findCard(node: any): Record<string, any> | null {
@@ -85,6 +89,21 @@ export class CardBackend {
 
   // Альбом этой рамки (подпапка папки фото) — выбирается в HA, у устройства рамки; all — вся папка.
   album = '';
+
+  // Папка медиатеки внутри папки фото (для дерева в настройках): путь, фото в ней и во всех подпапках.
+  folderTree(): Promise<FrameFolder[]> {
+    if (!this.integration) return Promise.resolve([]);
+    return this.client.call<{ folders?: FrameFolder[] }>({ type: 'photoframe/folders' })
+      .then((r) => r.folders || [], () => []);
+  }
+
+  // Выбранная на рамке папка — запоминается у её устройства в HA; all (пусто) — вся папка фото.
+  setAlbum(album: string): Promise<void> {
+    this.album = album && album !== 'all' ? album : 'all';
+    if (!this.integration) return Promise.resolve();
+    return this.client.call({ type: 'photoframe/frame/album', frame_id: frameId(), album: this.album })
+      .then(() => undefined, (e: Error) => { throw e; });
+  }
 
   get folder() {
     const base = (this.config.media_folder || 'photoframe').replace(/^\/+|\/+$/g, '');

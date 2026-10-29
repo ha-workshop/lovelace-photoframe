@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",
+    "@fortawesome/free-regular-svg-icons": "^7.3.1",
+    "@fortawesome/free-solid-svg-icons": "^7.3.1",
     "lucide-preact": "^1.61.0",
     "nosleep.js": "^0.12.0",
     "preact": "^10.29.8"

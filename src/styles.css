@@ -242,6 +242,10 @@ svg { display: block; flex-shrink: 0; }
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
 }
 .panel-head { display: flex; align-items: center; justify-content: space-between; min-height: 30px; margin-bottom: 14px; }
+.panel-title { display: flex; align-items: center; min-width: 0; }
+.panel-title h2 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Значок карточки в шапке — приглушённый, чтобы не спорить с названием. */
+.panel-icon { margin-right: 8px; color: var(--ink-3); }
 .panel-head h2 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-2); }
 
 /* Дома: переключатель в шапке и въезд раскладки при свайпе */
@@ -349,6 +353,13 @@ svg { display: block; flex-shrink: 0; }
 .seg-full button { -webkit-flex: 1 0 auto; flex: 1 0 auto; text-align: center; }
 .cam { position: relative; flex: 1; min-height: 120px; border-radius: 18px; overflow: hidden; background: rgba(0, 0, 0, 0.45); cursor: pointer; }
 .cam img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+/* Свайп по кадру листает камеры; вертикаль оставляем прокрутке. */
+.cam-swipe { touch-action: pan-y; }
+.cam-swipe img { -webkit-user-drag: none; user-select: none; -webkit-user-select: none; }
+.cam-dots { display: flex; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+.cam-dots button { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+.cam-dots button:before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.24); }
+.cam-dots .active:before { background: #7dd3fc; }
 /* По ширине / по высоте: одна сторона кадра во всю карточку, вторая — по пропорциям, по центру.
    Сделано через translate, а не object-fit: contain — так кадр может и выходить за край, а не только ужиматься. */
 .cam.fit-width img { top: 50%; height: auto; -webkit-transform: translateY(-50%); transform: translateY(-50%); }
@@ -356,6 +367,21 @@ svg { display: block; flex-shrink: 0; }
 .cam.fit-width, .cam.fit-height { background: #000; }
 .cam-empty { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--ink-3); font-size: 13px; }
 .cam-empty svg { margin-bottom: 8px; }
+.cam-loading { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.35); color: var(--ink-2); font-size: 13px; pointer-events: none; }
+/* «Лёгкое» качество: поток не идёт, пока не нажали ▶. */
+.cam-paused { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.2); color: #fff; font-size: 13px; }
+.cam-paused span { margin-top: 10px; color: var(--ink-2); }
+.cam-play { width: 62px; height: 62px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(125, 211, 252, 0.9); color: #0b0d14; box-shadow: 0 8px 26px rgba(0, 0, 0, 0.45); }
+.cam-play svg { margin-left: 3px; }
+.cam-full .cam-play { width: 84px; height: 84px; }
+/* Маленькая ▶ в углу карточки: кадр-снимок уже виден, видео — по клику или задержке курсора. */
+.cam-play-corner { position: absolute; right: 8px; bottom: 8px; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.55); color: #fff; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35); }
+.cam-play-corner svg { margin-left: 2px; }
+.cam-play-corner:hover { background: rgba(125, 211, 252, 0.9); color: #0b0d14; }
+.cam-spinner { width: 22px; height: 22px; margin-bottom: 8px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.2); border-top-color: #7dd3fc;
+  -webkit-animation: cam-spin 0.8s linear infinite; animation: cam-spin 0.8s linear infinite; }
+@-webkit-keyframes cam-spin { to { -webkit-transform: rotate(360deg); } }
+@keyframes cam-spin { to { transform: rotate(360deg); } }
 .live { position: absolute; top: 10px; left: 10px; display: flex; align-items: center; padding: 3px 8px; border-radius: 6px; background: rgba(0, 0, 0, 0.5); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; }
 .live i { width: 6px; height: 6px; border-radius: 50%; background: var(--red); margin-right: 5px; -webkit-animation: pulse 1.6s infinite; animation: pulse 1.6s infinite; }
 @-webkit-keyframes pulse { 50% { opacity: 0.3; } }
@@ -412,17 +438,19 @@ svg { display: block; flex-shrink: 0; }
   background: rgba(0, 0, 0, 0.6);
 }
 .modal-box {
-  width: 100%; max-width: 560px; max-height: 92%; overflow-y: auto; -webkit-overflow-scrolling: touch;
-  background: rgba(20, 22, 32, 0.97); border: 1px solid var(--panel-line); border-radius: 28px; padding: 24px;
+  width: 100%; max-width: 560px; max-height: 92%; display: flex; flex-direction: column; overflow: hidden;
+  background: rgba(20, 22, 32, 0.97); border: 1px solid var(--panel-line); border-radius: 28px; padding: 0;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
 }
 .modal-wide { max-width: 960px; }
-.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.modal-head { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; margin: 0; padding: 24px 24px 16px; }
 .modal-head h2 { font-size: 19px; font-weight: 600; }
+.modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 24px 24px; }
+.modal-box.has-foot .modal-body { padding-bottom: 8px; }
 .modal-title { display: flex; align-items: center; }
 .modal-title svg { margin-right: 10px; color: #7dd3fc; }
 .icon-btn { color: var(--ink-3); }
-.cam-full { border-radius: 18px; overflow: hidden; background: #000; }
+.cam-full { position: relative; border-radius: 18px; overflow: hidden; background: #000; }
 .cam-full img { display: block; width: 100%; max-height: 72vh; object-fit: contain; }
 
 .tabs { display: flex; padding: 4px; margin-bottom: 18px; border-radius: 14px; background: rgba(255, 255, 255, 0.05); }
@@ -451,6 +479,23 @@ svg { display: block; flex-shrink: 0; }
 .option select { padding: 8px 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.08); color: var(--ink); font-size: 13px; }
 .option select option { color: #000; }
 .option-col { display: block; }
+
+/* Папка на рамке: кнопка-путь и дерево медиатеки в отдельном окне. */
+.folder-choose { display: flex; align-items: center; max-width: 62%; padding: 8px 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.08); color: var(--ink); font-size: 13px; }
+.folder-choose svg { margin-right: 8px; color: #7dd3fc; flex-shrink: 0; }
+.folder-choose span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.folder-tree { margin: 4px -6px; }
+.folder-row { display: flex; align-items: center; min-height: 40px; }
+.folder-toggle { width: 26px; height: 32px; display: flex; align-items: center; justify-content: center; color: var(--ink-3); flex-shrink: 0; }
+.folder-name { flex: 1; min-width: 0; display: flex; align-items: center; height: 34px; padding: 0 10px; border-radius: 10px; color: var(--ink-2); font-size: 14px; text-align: left; }
+.folder-name:hover { background: rgba(255, 255, 255, 0.06); }
+.folder-name svg { margin-right: 8px; color: var(--ink-3); flex-shrink: 0; }
+.folder-name span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.folder-name em { margin-left: auto; padding-left: 10px; font-style: normal; font-size: 12px; color: var(--ink-3); }
+.folder-name.active { background: rgba(125, 211, 252, 0.16); color: var(--ink); }
+.folder-name.active svg { color: #7dd3fc; }
+.folder-loading { display: flex; flex-direction: column; align-items: center; padding: 28px 0; color: var(--ink-3); font-size: 13px; }
+.folder-loading .cam-spinner { border-top-color: #7dd3fc; }
 .chip-picker { margin-top: 8px; }
 .chip-picker .check { margin: 4px 0; color: var(--ink); }
 
@@ -469,7 +514,7 @@ svg { display: block; flex-shrink: 0; }
 .strong { font-weight: 600; }
 .muted { color: var(--ink-3); }
 
-.modal-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
+.modal-foot { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; margin: 0; padding: 16px 24px 24px; border-top: 1px solid var(--panel-line); background: inherit; }
 .btn { display: flex; align-items: center; padding: 11px 18px; border-radius: 14px; font-size: 14px; font-weight: 600; }
 .btn svg { margin-right: 6px; }
 .btn-accent { background: #7dd3fc; color: #0b0d14; }
@@ -487,6 +532,17 @@ svg { display: block; flex-shrink: 0; }
 .icon-grid { display: flex; flex-wrap: wrap; margin: 0 -3px; }
 .icon-grid button { width: 40px; height: 40px; margin: 3px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.05); color: var(--ink-2); }
 .icon-grid .active { background: rgba(255, 255, 255, 0.2); color: var(--ink); }
+/* Выбор иконки: кнопка в редакторе и окно с поиском */
+.icon-choose { display: flex; align-items: center; width: 100%; padding: 8px 10px; border-radius: 14px; background: rgba(255, 255, 255, 0.06); color: var(--ink-2); text-align: left; }
+.field .icon-choose span { display: inline; margin: 0; font-size: 14px; color: var(--ink-2); }
+.field .icon-choose .icon-choose-preview { width: 38px; height: 38px; margin-right: 12px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.08); color: var(--ink); flex-shrink: 0; }
+.field .icon-choose .icon-choose-key { margin-left: auto; font-size: 11px; color: var(--ink-3); }
+.icon-picker-search { margin-bottom: 12px; }
+.icon-picker-scroll { max-height: 58vh; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 4px; }
+.icon-group { margin-bottom: 14px; }
+.icon-group h3 { margin: 0 0 4px; font-size: 12px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; }
+.icon-grid-picker button { width: 44px; height: 44px; }
+.icon-grid-picker .active { background: #7dd3fc; color: #0b0d14; }
 .check { display: flex; align-items: center; font-size: 14px; color: var(--ink-2); margin: 6px 0 10px; }
 .check input { margin-right: 10px; width: 18px; height: 18px; }
 .check-row { padding: 10px 0; border-top: 1px solid var(--panel-line); border-bottom: 1px solid var(--panel-line); margin-bottom: 14px; }

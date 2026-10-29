@@ -7,9 +7,11 @@ import { store } from '../lib/store';
 import type { Home } from '../lib/store';
 import { formatDate, formatTime, useNow } from '../lib/time';
 import type { Status } from '../lib/ha';
+import type { CameraFeed } from '../lib/camera';
 import { Grid } from './Grid';
 import { goToMainDashboard, useKioskActive } from '../lib/kiosk';
 import { useSize } from '../lib/useSize';
+import { useLinger } from '../lib/visibility';
 import { t } from '../i18n';
 
 const statusText = (s: Status) => t('status.' + s);
@@ -29,10 +31,12 @@ interface Props {
   innerRef: RefObject<HTMLDivElement>;
   visible: boolean;
   editing: boolean;
+  // Окно открыто поверх панели — потоки камер на карточках останавливаем.
+  paused: boolean;
   onEditing: (v: boolean) => void;
   onPhotos: () => void;
   onSettings: () => void;
-  onCamera: (url: string) => void;
+  onCamera: (feeds: CameraFeed[], index: number) => void;
   onEditCard: (card: Card) => void;
   onAddCard: () => void;
   homes: Home[];
@@ -120,6 +124,8 @@ export function Controls(props: Props) {
     return () => { clearTimeout(id); document.removeEventListener('click', close); };
   }, [menu]);
   const canEdit = !store.card || store.card.canEdit;
+  // Скрытая панель остаётся пустым контейнером: сетка карточек не рендерится и не держит подписки.
+  const alive = useLinger(props.visible);
   const actions = (
     <>
       {canEdit && <button class="round" onClick={() => props.onEditing(true)} title={t('controls.customize')}><Pencil size={18} /></button>}
@@ -130,6 +136,7 @@ export function Controls(props: Props) {
 
   return (
     <div ref={props.innerRef} class={'controls' + (props.visible ? ' visible' : '')}>
+      {alive && <>
       <header class={'bar' + (narrow ? ' bar-narrow' : '') + (menu ? ' menu-open' : '') + (props.editing ? ' bar-editing' : '')}>
         {/* В киоске мини-часы — выход на главный дашборд HA (меню HA скрыто, иначе не уйти). */}
         <div class={'bar-time' + (kiosk ? ' clock-link' : '')} onClick={kiosk ? goToMainDashboard : undefined}>
@@ -164,8 +171,9 @@ export function Controls(props: Props) {
       </header>
       <ScreenTabs editing={props.editing} />
       <div key={props.active + '/' + store.state.screen} class={'home-pane' + (props.slide ? ' slide-' + props.slide : '')} {...swipe}>
-        <Grid editing={props.editing} onCamera={props.onCamera} onEdit={props.onEditCard} />
+        <Grid editing={props.editing} paused={props.paused} onCamera={props.onCamera} onEdit={props.onEditCard} />
       </div>
+      </>}
     </div>
   );
 }

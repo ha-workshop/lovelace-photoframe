@@ -1,15 +1,19 @@
-import { useRef, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
-import { Droplets, Power, VideoOff } from 'lucide-preact';
+import { Droplets, Play, Power, VideoOff } from 'lucide-preact';
 import { fmtNum, isAvailable, isOn, isUnknown, stateOf, unitOf, useDetail, useHA } from '../lib/hooks';
-import { guessIcon, iconFor } from '../lib/icons';
+import { Icon, guessIcon } from '../lib/icons';
 import type { HAClient } from '../lib/ha';
 import { cardTypeTitle, type Card, type Item } from '../lib/layout';
 import { ClimateControl } from './ClimateControl';
+import { CameraStream } from './CameraStream';
 import { Media } from './Media';
 import { WeatherCard } from './Weather';
 import { condition } from '../lib/weather';
 import { expandCard } from '../lib/devices';
+import { NO_STREAM, stepCamera, useStill, useStreamState, type CameraFeed } from '../lib/camera';
+import { useCameraDisplay } from '../lib/cameraPrefs';
+import { useHoverStart, useSwipeStep } from '../lib/gestures';
 import { t } from '../i18n';
 
 // Отрисовка карточек по типу. Один и тот же код — в панели, в карточке поверх фото и в информерах.
@@ -127,10 +131,9 @@ function SwitchTile({ it }: { it: Item }) {
   const press = useLongPress(() => detail([it.entity]), () => ha.toggle(it.entity));
   const st = stateOf(ha, it.entity);
   const on = isOn(st);
-  const Icon = iconFor(it.icon || guessIcon(it.entity));
   return (
     <button class={'light' + (on ? ' on' : '') + (st === undefined ? ' na' : '')} {...press}>
-      <span class="light-icon"><Icon size={22} /></span>
+      <span class="light-icon"><Icon name={it.icon || guessIcon(it.entity)} size={22} /></span>
       <span class="light-name">{itemName(ha, it)}</span>
       <span class="light-state">{st === undefined ? t('switch.unavailable') : on ? t('switch.on') : t('switch.off')}</span>
     </button>
@@ -145,23 +148,57 @@ function Switches({ card, size }: { card: Card; size: Size }) {
   );
 }
 
-function Cameras({ card, onCamera }: { card: Card; onCamera: (url: string) => void }) {
+function Cameras({ card, paused, onCamera }: { card: Card; paused?: boolean; onCamera: (feeds: CameraFeed[], index: number) => void }) {
   const ha = useHA();
+  // Как показывать камеру на этом устройстве: видео сразу, видео с паузы (сначала кадр) или только снимок.
+  const display = useCameraDisplay();
+  const [live, setLive] = useState(false);
   const [active, setActive] = useState(0);
-  const it = card.items[Math.min(active, card.items.length - 1)];
-  const url = it ? ha.cameraStreamUrl(it.entity) : '';
+  // В списке — только записи камер: адрес потока берём для текущей, остальные не загружаем.
+  const feeds: CameraFeed[] = card.items.map((c) => ({ entity: c.entity, name: itemName(ha, c) }));
+  const index = Math.min(active, Math.max(0, feeds.length - 1));
+  const current = feeds[index];
+  const entity = current ? current.entity : '';
+  const url = current ? ha.cameraStreamUrl(current.entity) : '';
+  const poster = current ? ha.cameraSnapshotUrl(current.entity) : '';
+  // live настройка — поток сразу; paused/snapshot — сначала кадр, видео только по ▶ (клик или задержка курсора).
+  const [hovered, setHovered] = useState(false);
+  const playing = display === 'live' || live || hovered;
+  const still = useStill(poster, !playing && !paused);
+  // Пока поток открывается — заглушка; «живым» он считается по onLoad или через пару секунд.
+  const stream = useStreamState(entity);
+  const swipe = useSwipeStep(
+    (dir) => { if (feeds.length > 1) setActive(stepCamera(index, dir, feeds.length)); },
+    () => { if (url) onCamera(feeds, index); },
+  );
+  // Наведение включает видео, уход курсора — гасит (если не нажали ▶).
+  const hover = useHoverStart(() => setHovered(true), !playing, () => setHovered(false));
+  // Сменили настройку — возвращаемся к её режиму (например, на «только снимок» поток гаснет).
+  useEffect(() => { setLive(false); setHovered(false); }, [display]);
+  const empty = !playing ? !still : (!url || stream.state === 'error');
   return (
     <div class="cam-wrap">
-      {card.items.length > 1 && (
+      {feeds.length > 1 && (
          <div class="seg seg-inline seg-full">
-          {card.items.map((c, i) => (
-            <button key={c.entity + i} class={i === active ? 'active' : ''} onClick={() => setActive(i)}>{itemName(ha, c)}</button>
+          {feeds.map((c, i) => (
+            <button key={c.entity + i} class={i === index ? 'active' : ''} onClick={() => setActive(i)}>{c.name}</button>
           ))}
         </div>
       )}
-      <div class={'cam fit-' + (card.fit || 'cover')} onClick={() => url && onCamera(url)}>
-        {url ? <img src={url} alt="" /> : <div class="cam-empty"><VideoOff size={26} /><span>{t('camera.no_stream')}</span></div>}
-        {url && <span class="live"><i />LIVE</span>}
+      <div class={'cam cam-swipe fit-' + (card.fit || 'cover')} {...swipe} {...hover}
+        onMouseLeave={() => { swipe.onMouseLeave(); hover.onMouseLeave(); }}>
+        {/* Один и тот же <img>: смена src обрывает поток прошлой камеры — второй не остаётся в памяти. */}
+        <CameraStream paused={paused && playing} src={playing ? (url || NO_STREAM) : (still || NO_STREAM)} {...stream.img} />
+        {empty && <div class="cam-empty"><VideoOff size={26} /><span>{t('camera.no_stream')}</span></div>}
+        {!playing && !empty && (
+          <button class="cam-play-corner" onClick={(e) => { e.stopPropagation(); setLive(true); }} title={t('camera.play')}>
+            <Play size={15} fill="currentColor" />
+          </button>
+        )}
+        {playing && stream.state === 'loading' && (
+          <div class="cam-loading"><i class="cam-spinner" /><span>{t('camera.loading')}</span></div>
+        )}
+        {playing && !empty && <span class="live"><i />LIVE</span>}
       </div>
     </div>
   );
@@ -174,10 +211,9 @@ function Sensors({ card }: { card: Card }) {
     <div class="sensors">
       {card.items.map((it) => {
         const d = describe(ha, it.entity);
-        const Icon = iconFor(it.icon || guessIcon(it.entity, deviceClass(ha, it.entity)));
         return (
           <div key={it.entity} class={'status-row tappable' + (d.alert ? ' alert' : '')} onClick={() => detail([it.entity])}>
-            <span class="status-icon"><Icon size={20} /></span>
+            <span class="status-icon"><Icon name={it.icon || guessIcon(it.entity, deviceClass(ha, it.entity))} size={20} /></span>
             <span class="status-text">
               <b>{itemName(ha, it)}</b>
               <small>{d.text}</small>
@@ -201,10 +237,9 @@ function Scenes({ card, size }: { card: Card; size: Size }) {
   return (
     <div class={tileClass(card.items.length, size)}>
       {card.items.map((it) => {
-        const Icon = iconFor(it.icon || 'sparkles');
         return (
           <button key={it.entity} class={'light scene' + (fired === it.entity ? ' on' : '')} onClick={() => run(it.entity)}>
-            <span class="light-icon"><Icon size={22} /></span>
+            <span class="light-icon"><Icon name={it.icon || 'sparkles'} size={22} /></span>
             <span class="light-name">{itemName(ha, it)}</span>
             <span class="light-state">{fired === it.entity ? t('scene.started') : t('scene.tap_to_run')}</span>
           </button>
@@ -214,7 +249,7 @@ function Scenes({ card, size }: { card: Card; size: Size }) {
   );
 }
 
-export function CardBody(props: { card: Card; size: Size; onCamera: (url: string) => void }) {
+export function CardBody(props: { card: Card; size: Size; paused?: boolean; onCamera: (feeds: CameraFeed[], index: number) => void }) {
   const ha = useHA();
   const { size, onCamera } = props;
   if (!props.card.items.length) return <div class="card-empty">{t('card.empty')}</div>;
@@ -223,7 +258,7 @@ export function CardBody(props: { card: Card; size: Size; onCamera: (url: string
   switch (card.type) {
     case 'climate': return <Climate card={card} size={size} />;
     case 'switches': return <Switches card={card} size={size} />;
-    case 'cameras': return <Cameras card={card} onCamera={onCamera} />;
+    case 'cameras': return <Cameras card={card} paused={props.paused} onCamera={onCamera} />;
     case 'sensors': return <Sensors card={card} />;
     case 'scenes': return <Scenes card={card} size={size} />;
     case 'ac': return <ClimateControl card={card} size={size} />;
@@ -291,11 +326,15 @@ export function summary(ha: HAClient, full: Card): { text: string; lit: boolean;
   return { text: card.title, lit: false, alert: false };
 }
 
-export function Panel(props: { title: ComponentChildren; aside?: ComponentChildren; class?: string; children: ComponentChildren }) {
+export function Panel(props: { title: ComponentChildren; icon?: string; aside?: ComponentChildren; class?: string; children: ComponentChildren }) {
   return (
     <section class={'panel ' + (props.class || '')}>
       <div class="panel-head">
-        <h2>{props.title}</h2>
+        {/* Значок карточки — тот, что выбран в редакторе (по умолчанию — значок её типа). */}
+        <div class="panel-title">
+          {props.icon && <Icon name={props.icon} size={16} class="panel-icon" />}
+          <h2>{props.title}</h2>
+        </div>
         {props.aside}
       </div>
       {props.children}
