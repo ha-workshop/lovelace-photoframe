@@ -1,6 +1,6 @@
 // Service worker в ES5: оболочка приложения кэшируется (network-first, при офлайне — из кэша).
 // Запросы к Home Assistant (/api/...) и WebSocket не трогаем.
-var CACHE = 'photoframe-v2';
+var CACHE = 'photoframe-v3';
 
 self.addEventListener('install', function (event) {
   event.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(['index.html', 'manifest.webmanifest']); }));
