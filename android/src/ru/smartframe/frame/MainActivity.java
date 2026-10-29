@@ -362,6 +362,13 @@ public class MainActivity extends Activity {
             photos.preload(url);
         }
 
+        // Страница отдала список фото альбома (по одному в строке) — скачиваем их в кэш,
+        // чтобы рамка продолжала показывать фото без сервера.
+        @JavascriptInterface
+        public void prefetchPhotos(String urls) {
+            photos.prefetch(urls);
+        }
+
         // Панель управления открыта и закрыла фото целиком — слой фото не рисуем вовсе (и наезд не считаем).
         @JavascriptInterface
         public void setPhotosVisible(final boolean visible) {

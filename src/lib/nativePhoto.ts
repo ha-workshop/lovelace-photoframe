@@ -5,6 +5,8 @@ interface Bridge {
   showPhoto?: (url: string, fit: string, lite: boolean) => void;
   preloadPhoto?: (url: string) => void;
   setPhotosVisible?: (visible: boolean) => void;
+  // Список кадров альбома через \n: APK скачивает их в свой кэш, чтобы работать без сервера.
+  prefetchPhotos?: (urls: string) => void;
 }
 
 function bridge(): Bridge | null {
@@ -34,6 +36,19 @@ export function preloadNative(url: string) {
 // Кадр на экране: thumb — миниатюра 48 px (data:), по ней цвет интерфейса и «размытие» под панелью.
 export function onNativeShown(fn: (thumb: string) => void) {
   (window as unknown as { SmartFramePhoto?: (url: string, thumb: string) => void }).SmartFramePhoto = (_url, thumb) => fn(thumb);
+}
+
+// Скачать альбом в кэш APK. Старая оболочка такого метода не знает — вернём false, и страница
+// сложит кадры в Cache Storage (если в WebView есть service worker).
+export function prefetchNativePhotos(urls: string[]): boolean {
+  const b = (window as unknown as { SmartFrame?: Bridge }).SmartFrame;
+  if (!b || !b.prefetchPhotos) return false;
+  try {
+    b.prefetchPhotos(urls.join('\n'));
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 
 // Панель управления открыта — фото под ней закрыто размытием целиком, и APK его не рисует.

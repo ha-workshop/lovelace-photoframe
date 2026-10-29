@@ -10,6 +10,7 @@ import { HAClient } from './ha';
 import { accessToken, haSession } from './haAuth';
 import { createDashboard, DASHBOARD_PATH } from './setup';
 import { PREVIEW } from './preview';
+import { prefetchPhotos } from './offline';
 import { cleanLook, lockPrefs, lookOf, onLockPrefs, setLockPrefs } from './lockscreen';
 import { connectFrame, frameId, frameName, reportFrame, setFrameName, type FrameCommand, type FrameState } from './frame';
 import { t } from '../i18n';
@@ -310,8 +311,14 @@ class Store {
   reloadCardPhotos() {
     if (!this.card) return Promise.resolve();
     return this.card.listPhotos().then(
-      (photos) => { this.photoError = ''; this.set({ photos }); },
-      (e: Error) => { this.photoError = e.message; this.set({ photos: [] }); },
+      (photos) => {
+        this.photoError = '';
+        this.set({ photos });
+        // Альбом офлайн: кадры догружаются в кэш устройства (Cache Storage в PWA, файлы в APK).
+        prefetchPhotos(photos.map((p) => p.url));
+      },
+      // Сервер не ответил — оставляем последний список: рамка продолжает показывать его из кэша.
+      (e: Error) => { this.photoError = e.message; this.notify(); },
     );
   }
 
