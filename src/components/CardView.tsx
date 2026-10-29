@@ -68,13 +68,14 @@ function tileCols(size: Size) {
 
 // Плитки под размер карточки: если ряды не помещаются по высоте — больше колонок (пока плитки не уже 120 px),
 // потом компактные плитки, потом строки «значок + имя». Не влезают и строки — тогда прокрутка.
+// Порог нормальной плитки — по двум строкам имени, компактной — по одной: иначе текст обрезается.
 function tileClass(n: number, size: Size) {
   const GAP = 10;
   const height = (cols: number) => (size.h + GAP) / Math.ceil(n / cols) - GAP;
   let cols = tileCols(size);
   while (cols < Math.min(n, 6) && height(cols) < 96 && size.w / (cols + 1) >= 120) cols++;
   const h = height(cols);
-  return 'lights cols-' + cols + (h >= 96 ? '' : h >= 70 ? ' compact' : ' list');
+  return 'lights cols-' + cols + (h >= 132 ? '' : h >= 84 ? ' compact' : ' list');
 }
 
 function Climate({ card, size }: { card: Card; size: Size }) {
