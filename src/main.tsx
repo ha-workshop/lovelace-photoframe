@@ -29,6 +29,9 @@ function hideSplash() {
   }, min);
 }
 
+// Отдельное приложение рамки (не карточка на дашборде HA): фото может уходить под панели браузера.
+document.documentElement.classList.add('pwa');
+
 finishLogin().then(() => {
   render(<App />, document.getElementById('app')!);
   if (!PREVIEW) keepScreenOn();

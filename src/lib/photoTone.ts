@@ -2,8 +2,18 @@ import { useEffect, useState } from 'preact/hooks';
 
 // Для каждого фото считаем миниатюру 48px и средний цвет.
 // Миниатюра, растянутая на весь экран, даёт «размытый» фон без CSS blur — дёшево даже для Android 5.
-// Цвет становится акцентом интерфейса.
-export interface Tone { thumb: string; accent: string; accentSoft: string }
+// Цвет становится акцентом интерфейса. Цвета верхнего и нижнего края кадра — для полос браузера (lib/browserBars).
+export interface Tone { thumb: string; accent: string; accentSoft: string; edgeTop: string; edgeBottom: string }
+
+// Средний цвет полосы строк миниатюры, приглушённый как затемнение (.shade) у этого края экрана.
+function edge(px: Uint8ClampedArray, w: number, from: number, to: number, dim: number) {
+  let r = 0, g = 0, b = 0, n = 0;
+  for (let y = from; y < to; y++) {
+    for (let x = 0; x < w; x++) { const i = (y * w + x) * 4; r += px[i]; g += px[i + 1]; b += px[i + 2]; n++; }
+  }
+  const f = (v: number) => Math.round((v / Math.max(1, n)) * dim);
+  return 'rgb(' + f(r) + ',' + f(g) + ',' + f(b) + ')';
+}
 
 const cache: Record<string, Tone | null> = {};
 
@@ -36,7 +46,11 @@ function analyze(url: string): Promise<Tone | null> {
         // Нормализуем: акцент всегда читаемый — достаточно насыщенный и светлый.
         const h = Math.round(hsl[0]);
         const s = Math.round(Math.min(Math.max(hsl[1], 0.45), 0.85) * 100);
+        const rows = Math.max(1, Math.round(c.height / 12));
         resolve({
+          // Сверху затемнение кадра ~25%, снизу ~70% (.shade) — полосы браузера того же тона, что край фото.
+          edgeTop: edge(px, c.width, 0, rows, 0.75),
+          edgeBottom: edge(px, c.width, c.height - rows, c.height, 0.3),
           thumb: c.toDataURL('image/jpeg', 0.7),
           accent: 'hsl(' + h + ',' + s + '%,68%)',
           accentSoft: 'hsla(' + h + ',' + s + '%,60%,0.22)',
