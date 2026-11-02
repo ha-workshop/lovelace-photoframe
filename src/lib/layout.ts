@@ -121,8 +121,9 @@ export function defaultLayout(): Layout {
 
 // ── Сетка ─────────────────────────────────────────────
 // CSS Grid в WebView Android 5 нет, поэтому раскладку считаем сами, а карточки ставим абсолютно.
-// Поведение как у дашбордов: карточки не перекрываются, мешающие сдвигаются вниз,
-// затем всё «всплывает» вверх (гравитация), чтобы не оставалось дыр.
+// Сетка свободная, как на экране фото: карточка стоит там, куда её поставили, соседей не двигает,
+// пустые места сохраняются. Перекрываться карточки не могут — та, что встала на занятое место,
+// сдвигается вниз.
 
 type Box = Pick<Card, 'x' | 'y' | 'w' | 'h'>;
 
@@ -140,34 +141,49 @@ export function clampBox<T extends Box>(c: T, cols = GRID_COLS): T {
   return { ...c, w, h, x: Math.max(0, Math.min(cols - w, Math.round(c.x))), y: Math.max(0, Math.round(c.y)) };
 }
 
-// Ставит карточку `moved` на её место, раздвигает остальных и поджимает всё вверх.
-export function settle(cards: Card[], moved?: Card): Card[] {
-  const fixed: Card[] = [];
-  if (moved) fixed.push(moved);
-  const others = cards.filter((c) => !moved || c.id !== moved.id).slice().sort(byPosition);
-  others.forEach((c) => {
-    let y = c.y;
-    // Сдвигаем вниз, пока пересекается с уже поставленными.
-    for (let guard = 0; guard < 500; guard++) {
-      const hit = fixed.filter((f) => collides({ ...c, y }, f));
-      if (!hit.length) break;
-      y = Math.max.apply(null, hit.map((f) => f.y + f.h));
-    }
-    fixed.push({ ...c, y });
-  });
-  // Гравитация: по порядку сверху вниз каждая карточка поднимается, пока есть место.
-  const out: Card[] = [];
-  fixed.slice().sort((a, b) => byPosition(a, b) || (moved && a.id === moved.id ? -1 : 0)).forEach((c) => {
-    let y = c.y;
-    while (y > 0 && !out.some((o) => collides({ ...c, y: y - 1 }, o))) y--;
-    out.push({ ...c, y });
-  });
-  // Исходный порядок массива сохраняем — он же порядок информеров на фото.
-  return cards.map((c) => out.filter((o) => o.id === c.id)[0]);
-}
-
 export function bottom(cards: Box[]) {
   return cards.reduce((m, c) => Math.max(m, c.y + c.h), 0);
+}
+
+// Свободная сетка, как на экране фото: карточка встаёт точно по клеткам и соседей не двигает.
+// Если её место занято — вниз сдвигается только она сама (чужие места и пустоты остаются как были).
+export function placeFree(cards: Card[], moved: Card): Card[] {
+  const others = cards.filter((c) => c.id !== moved.id);
+  let y = Math.max(0, moved.y);
+  for (let guard = 0; guard < 500; guard++) {
+    const hit = others.filter((o) => collides({ ...moved, y }, o));
+    if (!hit.length) break;
+    y = Math.max.apply(null, hit.map((o) => o.y + o.h));
+  }
+  return cards.map((c) => (c.id === moved.id ? { ...moved, y } : c));
+}
+
+// Размер в свободной сетке: тянуть можно только до соседей — карточка не наезжает на них и не «отпрыгивает»
+// вниз. Упёрлись — уменьшаем то, что выросло сильнее (ширину или высоту), пока не станет свободно.
+export function fitResize(cards: Card[], orig: Card, target: Card): Card {
+  const others = cards.filter((c) => c.id !== orig.id);
+  let t = { ...target };
+  for (let guard = 0; guard < 100 && others.some((o) => collides(t, o)); guard++) {
+    const growW = t.w - orig.w, growH = t.h - orig.h;
+    if (growW <= 0 && growH <= 0) return orig;
+    t = growW >= growH && growW > 0 ? { ...t, w: t.w - 1 } : { ...t, h: t.h - 1 };
+  }
+  return t;
+}
+
+// Разводит только пересечения (без «гравитации»): порядок и пустые места в сетке сохраняются.
+function stack(cards: Card[]): Card[] {
+  const out: Card[] = [];
+  cards.slice().sort(byPosition).forEach((c) => {
+    let y = c.y;
+    for (let guard = 0; guard < 500; guard++) {
+      const hit = out.filter((o) => collides({ ...c, y }, o));
+      if (!hit.length) break;
+      y = Math.max.apply(null, hit.map((o) => o.y + o.h));
+    }
+    out.push({ ...c, y });
+  });
+  return cards.map((c) => out.filter((o) => o.id === c.id)[0]);
 }
 
 // Старые раскладки: размеры 1|2 в сетке на 4 колонки, без координат.
@@ -230,7 +246,7 @@ function repair(layout: Layout): Layout {
     floor += placed.h;
     return placed;
   });
-  return { ...layout, cols: GRID_COLS, cards: settle(cards) };
+  return { ...layout, cols: GRID_COLS, cards: stack(cards) };
 }
 
 // Раскладка узкого экрана: карточки со своими местами (m) — на них, остальные — в конец по порядку широкой
@@ -245,7 +261,7 @@ export function mobileView(cards: Card[]): Card[] {
     floor += h;
     return placed;
   });
-  return settle(own.concat(auto));
+  return stack(own.concat(auto));
 }
 
 // Места из узкого вида — обратно в карточки (m), широкая раскладка не меняется.
