@@ -107,7 +107,7 @@ export function Controls(props: Props) {
   const many = props.homes.length > 1;
   const kiosk = useKioskActive();
   const total = props.homes.reduce((n, h) => n + (store.state.screens[h.id] || []).length, 0);
-  const swipe = useHomeSwipe(total > 1 && !props.editing, props.onStep);
+  // Свайпы между домами и экранами отключены.
   const home = props.homes.filter((h) => h.id === props.active)[0];
   // Выйти из редактирования, когда панель спрятали.
   useEffect(() => { if (!props.visible && props.editing) props.onEditing(false); }, [props.visible]);
@@ -170,7 +170,7 @@ export function Controls(props: Props) {
         </div>
       </header>
       <ScreenTabs editing={props.editing} />
-      <div key={props.active + '/' + store.state.screen} class={'home-pane' + (props.slide ? ' slide-' + props.slide : '')} {...swipe}>
+      <div key={props.active + '/' + store.state.screen} class={'home-pane' + (props.slide ? ' slide-' + props.slide : '')}>
         <Grid editing={props.editing} paused={props.paused} onCamera={props.onCamera} onEdit={props.onEditCard} />
       </div>
       </>}

@@ -8,7 +8,7 @@ import { reportFrame, updateApk } from './lib/frame';
 import { applyBacklight, dimOpacity, onHardwareWake } from './lib/screen';
 import { setNativeVisible } from './lib/nativePhoto';
 import { PREVIEW } from './lib/preview';
-import { ACCENTS, clampBox, settle, type Card } from './lib/layout';
+import { ACCENTS, bottom, clampBox, placeFree, type Card } from './lib/layout';
 import type { CameraFeed } from './lib/camera';
 import { useTone } from './lib/photoTone';
 import { useSwipe } from './lib/swipe';
@@ -254,8 +254,11 @@ export function App() {
   const saveCard = (card: Card) => {
     const exists = layout.cards.some((c) => c.id === card.id);
     const placed = clampBox(card);
-    const cards = exists ? layout.cards.map((c) => (c.id === card.id ? placed : c)) : layout.cards.concat(placed);
-    store.saveLayout({ ...layout, cards: settle(cards, placed) });
+    // Новая карточка — в конец сетки; поставленная — остаётся там, где её поставили (соседей не двигаем).
+    const cards = exists
+      ? layout.cards.map((c) => (c.id === card.id ? placed : c))
+      : layout.cards.concat({ ...placed, y: bottom(layout.cards) });
+    store.saveLayout({ ...layout, cards: placeFree(cards, cards.filter((c) => c.id === card.id)[0]) });
     setEditCard(null);
   };
 
@@ -327,7 +330,7 @@ export function App() {
           card={editCard.card}
           onSave={saveCard}
           onDelete={editCard.isNew ? undefined : () => {
-            store.saveLayout({ ...layout, cards: settle(layout.cards.filter((c) => c.id !== editCard.card.id)) });
+            store.saveLayout({ ...layout, cards: layout.cards.filter((c) => c.id !== editCard.card.id) });
             setEditCard(null);
           }}
           onClose={() => setEditCard(null)}

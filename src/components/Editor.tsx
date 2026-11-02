@@ -18,7 +18,7 @@ export function AddCardModal(props: { onPick: (card: Card) => void; onClose: () 
           const info = CARD_TYPES[type];
           return (
             <button key={type} class="type-row" onClick={() => props.onPick({
-              // Новая карточка встаёт в конец сетки; settle при сохранении поднимет её на свободное место.
+              // Новая карточка встаёт в конец сетки (место уточнит placeFree при сохранении).
               id: newId(), type, title: '', icon: info.icon, x: 0, y: 999, w: type === 'switches' ? 6 : 3, h: 3, items: [],
             })}>
               <span class="status-icon"><Icon name={info.icon} size={20} /></span>

@@ -10,6 +10,7 @@ import { keepScreenOn } from './lib/wakeLock';
 import { store } from './lib/store';
 import { finishLogin } from './lib/haAuth';
 import { PREVIEW } from './lib/preview';
+import { watchIosViewport } from './lib/iosViewport';
 
 // Фото из src/photos попадают в сборку PWA и показываются всегда.
 store.bundled = Object.values(
@@ -33,6 +34,8 @@ finishLogin().then(() => {
   if (!PREVIEW) keepScreenOn();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(hideSplash, hideSplash);
   else hideSplash();
+  // iOS: после клавиатуры внизу остаётся чёрная полоса — лечим вьюпорт (см. lib/iosViewport).
+  watchIosViewport();
 });
 
 // Service worker: в браузере и в WebView, где он поддерживается (Chrome 40+ / WebView 51+, iOS 11.3+).

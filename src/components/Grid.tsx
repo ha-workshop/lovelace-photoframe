@@ -2,7 +2,7 @@ import { useRef, useState } from 'preact/hooks';
 import { EyeOff, Pencil, Plus, X } from 'lucide-preact';
 import { useHA } from '../lib/hooks';
 import { useStore } from '../lib/store';
-import { GRID_COLS, MOBILE_COLS, bottom, clampBox, mobileView, settle, withMobile, type Card } from '../lib/layout';
+import { GRID_COLS, MOBILE_COLS, bottom, clampBox, fitResize, mobileView, placeFree, withMobile, type Card } from '../lib/layout';
 import type { CameraFeed } from '../lib/camera';
 import { CardAside, CardBody, Panel, cardTitle } from './CardView';
 import { useSize } from '../lib/useSize';
@@ -85,6 +85,8 @@ export function Grid({ editing, paused, onCamera, onEdit }: Props) {
     dragRef.current = d;
     let picked = !hold;
     let holdTimer = 0;
+    // Повели пальцем, чтобы прокрутить страницу, — это не нажатие на карточку (настройки не открываем).
+    let scrolled = false;
     if (hold) {
       holdTimer = window.setTimeout(() => {
         const cur = dragRef.current;
@@ -107,7 +109,7 @@ export function Grid({ editing, paused, onCamera, onEdit }: Props) {
       const dx = q.x - cur.x0, dy = q.y - cur.y0;
       if (!picked) {
         // Повели пальцем до удержания — это прокрутка страницы: карточку не трогаем.
-        if (Math.abs(dx) > DRAG_START || Math.abs(dy) > DRAG_START) up();
+        if (Math.abs(dx) > DRAG_START || Math.abs(dy) > DRAG_START) { scrolled = true; up(); }
         return;
       }
       const active = cur.active || Math.abs(dx) > DRAG_START || Math.abs(dy) > DRAG_START;
@@ -117,12 +119,16 @@ export function Grid({ editing, paused, onCamera, onEdit }: Props) {
       const target = clampBox(cur.mode === 'move'
         ? { ...o, x: o.x + dx / step, y: o.y + dy / step }
         : { ...o, w: o.w + dx / step, h: o.h + dy / step }, cols);
-      const next = { ...cur, dx, dy, active, preview: settle(cards, target) };
+      // Соседей не двигаем: карточка встаёт точно по клеткам, как блок на экране фото;
+      // размер — только до соседей.
+      const placed = cur.mode === 'resize' ? fitResize(cards, o, target) : target;
+      const next = { ...cur, dx, dy, active, preview: placeFree(cards, placed) };
       dragRef.current = next;
       setDrag(next);
     };
-    const up = () => {
+    const up = (ev?: Event) => {
       clearTimeout(holdTimer);
+      if (ev && ev.type === 'touchcancel') scrolled = true;
       const cur = dragRef.current;
       dragRef.current = null;
       setDrag(null);
@@ -132,6 +138,8 @@ export function Grid({ editing, paused, onCamera, onEdit }: Props) {
       document.removeEventListener('touchend', up);
       document.removeEventListener('touchcancel', up);
       if (cur && cur.active) save(cur.preview);
+      // Короткое касание без переноса — настройки карточки (как тап по блоку на экране фото).
+      else if (cur && cur.mode === 'move' && !scrolled && Math.abs(cur.dx) < DRAG_START && Math.abs(cur.dy) < DRAG_START) onEdit(card);
     };
     window.addEventListener('mousemove', move);
     window.addEventListener('mouseup', up);
@@ -146,9 +154,9 @@ export function Grid({ editing, paused, onCamera, onEdit }: Props) {
   const shown = drag && drag.active ? drag.preview : cards;
   // На телефоне × — «скрыть здесь», на широком экране — удалить карточку совсем.
   const remove = (card: Card) => {
-    if (!narrow) { store.saveLayout({ ...store.state.layout, cards: settle(all.filter((c) => c.id !== card.id)) }); return; }
+    if (!narrow) { store.saveLayout({ ...store.state.layout, cards: all.filter((c) => c.id !== card.id) }); return; }
     const view = cards.filter((c) => c.id !== card.id);
-    const next = withMobile(all, settle(view)).map((c) => (c.id === card.id ? { ...c, m: { x: 0, y: 0, w: MOBILE_COLS, h: 3, hide: true } } : c));
+    const next = withMobile(all, view).map((c) => (c.id === card.id ? { ...c, m: { x: 0, y: 0, w: MOBILE_COLS, h: 3, hide: true } } : c));
     store.saveLayout({ ...store.state.layout, cards: next });
   };
   // Вернуть скрытую на телефоне карточку — в конец телефонной сетки.
