@@ -6,6 +6,7 @@ import { GRID_COLS, MOBILE_COLS, bottom, clampBox, fitResize, mobileView, placeF
 import type { CameraFeed } from '../lib/camera';
 import { CardAside, CardBody, Panel, cardTitle } from './CardView';
 import { useSize } from '../lib/useSize';
+import { docScrollOn } from '../lib/docScroll';
 import { t } from '../i18n';
 
 // Сетка на 12 колонок с квадратными клетками: высота ряда = ширине колонки.
@@ -48,9 +49,11 @@ interface Props {
   paused?: boolean;
   onCamera: (feeds: CameraFeed[], index: number) => void;
   onEdit: (card: Card) => void;
+  // Шапка панели лежит поверх сетки: карточки начинаются под ней и при прокрутке уходят под неё (до верха).
+  insetTop?: number;
 }
 
-export function Grid({ editing, paused, onCamera, onEdit }: Props) {
+export function Grid({ editing, paused, insetTop = 0, onCamera, onEdit }: Props) {
   const ha = useHA();
   const store = useStore();
   const ref = useRef<HTMLDivElement>(null);
@@ -60,7 +63,9 @@ export function Grid({ editing, paused, onCamera, onEdit }: Props) {
   const all = store.state.layout.cards;
 
   const innerW = box.w - PAD * 2;
-  const innerH = box.h - PAD * 2;
+  // Прокручивается страница (lib/docScroll) — сетка растёт по карточкам, а «сколько рядов на экране» — по окну.
+  const viewH = docScrollOn() ? window.innerHeight : box.h;
+  const innerH = viewH - PAD * 2 - insetTop;
   const narrow = box.w > 0 && innerW < NARROW;
   const cols = narrow ? MOBILE_COLS : GRID_COLS;
   const cards = narrow ? mobileView(all) : all;
@@ -186,7 +191,7 @@ export function Grid({ editing, paused, onCamera, onEdit }: Props) {
           )}
         </div>
       )}
-      <div class="grid-inner" style={{ height: Math.max(0, rows * step - GAP), margin: (PAD + top) + 'px ' + PAD + 'px' }}>
+      <div class="grid-inner" style={{ height: Math.max(0, rows * step - GAP), margin: (PAD + top + insetTop) + 'px ' + PAD + 'px ' + PAD + 'px' }}>
         {editing && box.w > 0 && <GridDots rows={rows} cols={cols} cell={cell} step={step} />}
         {box.w > 0 && shown.map((card) => {
           const isDragged = !!drag && drag.active && drag.id === card.id;

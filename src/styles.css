@@ -38,6 +38,16 @@ svg { display: block; flex-shrink: 0; }
 /* В APK фото рисует Android под страницей — фон страницы прозрачный (lib/nativePhoto) */
 .native-photos body, .native-photos .backdrop { background: transparent; }
 .backdrop { position: absolute; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; }
+/* В приложении рамки фото прибито к окну: стоит на месте, пока прокручивается дашборд (lib/docScroll).
+   Под панели Safari (строка состояния, нижняя панель) страница его не пускает — на весь экран фото
+   бывает только в приложении с экрана «Домой». */
+.pwa .backdrop { position: fixed; }
+/* iOS «на домашний экран» с прозрачной строкой состояния: WebKit делает окно короче экрана на её высоту
+   (после клавиатуры, а иногда и сразу — lib/iosViewport лечит не всегда), снизу остаётся полоса фона.
+   Фото тянем вниз на ту же высоту — оно закрывает полосу; при нормальном окне лишнее просто за краем. */
+@media (display-mode: standalone) {
+  .pwa .backdrop { bottom: calc(-1 * env(safe-area-inset-top)); }
+}
 .slide {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
   background-size: cover; background-position: center;
@@ -152,7 +162,7 @@ svg { display: block; flex-shrink: 0; }
   padding: 22px 28px 28px;
   /* iOS 26.1+ в PWA со статус-баром black-translucent сам накладывает размытие поверх safe-area
      (и ещё ~16px вниз): текст под ним расплывается. Отодвигаем шапку ниже этой полосы. */
-  padding-top: max(22px, calc(env(safe-area-inset-top) + 16px));
+  padding-top: 0; /* верхний отступ — у шапки (.controls-head): она уезжает вместе с ним */
   padding-left: max(28px, env(safe-area-inset-left));
   padding-right: max(28px, env(safe-area-inset-right));
   padding-bottom: max(28px, env(safe-area-inset-bottom));
@@ -256,6 +266,21 @@ svg { display: block; flex-shrink: 0; }
 
 /* Дома: переключатель в шапке и въезд раскладки при свайпе */
 .home-pane { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+/* Шапка с вкладками экранов — поверх карточек, уезжает и выезжает за пальцем (Controls) */
+.controls-head {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 5; display: flex; flex-direction: column;
+  padding: 22px 28px 0;
+  /* iOS 26.1+ в PWA со статус-баром black-translucent сам накладывает размытие поверх safe-area
+     (и ещё ~16px вниз): текст под ним расплывается. Отодвигаем шапку ниже этой полосы. */
+  padding-top: max(22px, calc(env(safe-area-inset-top) + 16px));
+  padding-left: max(28px, env(safe-area-inset-left));
+  padding-right: max(28px, env(safe-area-inset-right));
+  transition: background-color 0.2s;
+}
+/* Под шапкой карточки — стеклянный фон, чтобы её было видно */
+.controls-head.over { background-color: rgba(10, 12, 20, 0.72); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+.controls-head.gone { pointer-events: none; }
+.q-lite .controls-head.over { background-color: rgba(10, 12, 20, 0.92); -webkit-backdrop-filter: none; backdrop-filter: none; }
 /* Экраны дома: вкладки под шапкой панели (в редактировании — имя правится во вкладке) */
 .screen-tabs { display: flex; align-items: center; overflow-x: auto; white-space: nowrap; margin: -8px 0 12px; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
 .screen-tab { display: -webkit-inline-flex; display: inline-flex; -webkit-flex-shrink: 0; flex-shrink: 0; align-items: center; height: 34px; padding: 0 14px; margin-right: 8px; border-radius: 17px; font-size: 14px; font-weight: 500; color: var(--ink-3); background: rgba(255, 255, 255, 0.06); }
@@ -796,9 +821,15 @@ svg { display: block; flex-shrink: 0; }
   .glances { position: absolute; left: 6vw; right: 6vw; bottom: 10vh; max-width: none; justify-content: flex-start; }
   .glance { margin: 6px 8px 0 0; }
 
+  .controls-head {
+    padding: 16px 16px 0;
+    padding-top: max(16px, env(safe-area-inset-top));
+    padding-right: max(16px, env(safe-area-inset-right));
+    padding-left: max(16px, env(safe-area-inset-left));
+  }
   .controls {
     padding: 16px;
-    padding-top: max(16px, env(safe-area-inset-top));
+    padding-top: 0;
     padding-right: max(16px, env(safe-area-inset-right));
     padding-bottom: max(16px, env(safe-area-inset-bottom));
     padding-left: max(16px, env(safe-area-inset-left));
@@ -983,6 +1014,13 @@ svg { display: block; flex-shrink: 0; }
   transition: opacity 0.8s ease; }
 .screen-dim.asleep { pointer-events: auto; }
 
+/* Сетка экрана с фото — внутри безопасной зоны: блоки не заходят под строку состояния и «чёлку» iPhone,
+   фото под ними при этом на весь экран (оно в .backdrop). */
+.ambient.lock-grid {
+  top: env(safe-area-inset-top); bottom: env(safe-area-inset-bottom);
+  left: env(safe-area-inset-left); right: env(safe-area-inset-right);
+}
+
 /* ── Экран с фото на сетке (Настроить → «Сетка»): блоки часов и виджетов стоят по ячейкам 12×12 ── */
 .ambient.lock-grid {
   display: block; padding: 0;
@@ -1049,3 +1087,24 @@ svg { display: block; flex-shrink: 0; }
 /* Окна часов и виджетов разделами: «Вид», «Цвет», «Расположение», «Показывать» / «Какие виджеты» */
 .lock-sec { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); margin: 14px 0 8px; }
 .lock-panel-head + .lock-sec { margin-top: 0; }
+
+/* ── Дашборд прокручивается самой страницей (lib/docScroll): браузер и приложение с экрана «Домой» ──
+   Страница растёт по высоте карточек; фото и экран с часами стоят на месте, шапка панели — поверх. */
+html.doc-scroll, html.doc-scroll body { height: auto; min-height: 100%; overflow: visible; overflow-x: hidden; }
+html.doc-scroll #app, html.doc-scroll .root, html.doc-scroll .app { height: auto; min-height: 100%; overflow: visible; }
+html.doc-scroll .app { overflow-x: hidden; }
+html.doc-scroll .ambient { position: fixed; }
+html.doc-scroll .controls { position: relative; min-height: 100vh; }
+html.doc-scroll .controls-head { position: fixed; }
+html.doc-scroll .home-pane { flex: none; }
+html.doc-scroll .grid { flex: none; overflow: visible; }
+
+/* Экран с фото в Safari (lib/docScroll, setPhotoPeek): фото — часть страницы (не fixed), высотой во весь
+   экран iPhone (100lvh — как при свёрнутой панели) и на 1 px выше — страница прокручена на 1 px, и Safari
+   сжимает панель и показывает фото под ней и под строкой состояния. Ничего не закреплено (fixed): от
+   закреплённого слоя у края Safari 26 рисует под панелью сплошную полосу. Виджеты — в высоте видимой части
+   (100svh, панель развёрнута), чтобы не прятались под неё. */
+html.photo-peek, html.photo-peek body, html.photo-peek #app, html.photo-peek .root { overflow: visible; overflow-x: hidden; height: auto; }
+html.photo-peek .app { height: calc(100vh + 1px); height: calc(100lvh + 1px); }
+html.photo-peek .backdrop { position: absolute; }
+html.photo-peek .ambient { bottom: auto; height: 100vh; height: 100svh; }

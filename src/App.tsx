@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { HAClient } from './lib/ha';
 import { DetailContext, HAContext, LiveContext } from './lib/hooks';
 import { useLanguage } from './i18n';
@@ -11,6 +11,8 @@ import { PREVIEW } from './lib/preview';
 import { ACCENTS, bottom, clampBox, placeFree, type Card } from './lib/layout';
 import type { CameraFeed } from './lib/camera';
 import { useTone } from './lib/photoTone';
+import { paintBrowserBars } from './lib/browserBars';
+import { setDocScroll, setPhotoPeek } from './lib/docScroll';
 import { useSwipe } from './lib/swipe';
 import { ChevronLeft, ChevronRight } from 'lucide-preact';
 import { Backdrop } from './components/Backdrop';
@@ -85,6 +87,8 @@ export function App() {
   }, [active, store.state.screen, store.frameClient]);
   // Открыта ли панель и идёт ли редактирование — из общего хранилища, чтобы пережить пересоздание карточки.
   const [controls, setControls] = useState(store.ui.controls);
+  // Открыта панель — прокручивается сама страница (Safari пускает её под свои панели), к фото — обратно.
+  useLayoutEffect(() => { setDocScroll(controls); setPhotoPeek(!controls); }, [controls]);
   const [editing, setEditing] = useState(store.ui.editing);
   useEffect(() => { store.ui.controls = controls; store.ui.editing = editing; }, [controls, editing]);
   const [showSettings, setShowSettings] = useState(false);
@@ -123,6 +127,12 @@ export function App() {
   // Цвет интерфейса — по кадру, который уже на экране (уменьшенному), а не по оригиналу.
   const [shown, setShown] = useState('');
   const tone = useTone(shown || undefined);
+  // Полосы браузера — в цвет краёв кадра (в Safari на iPhone их не убрать, а так они сливаются с фото).
+  // Карточка на дашборде HA — не трогаем: страница там HA, а не рамки.
+  useEffect(() => {
+    const inCard = !!store.card && !store.card.standalone;
+    if (tone && !inCard && !PREVIEW) paintBrowserBars(tone.edgeTop, tone.edgeBottom);
+  }, [tone]);
   // Карточку поверх фото берём из актуальной раскладки — правки с других рамок видны сразу.
   const sheet = sheetId ? layout.cards.filter((c) => c.id === sheetId)[0] || null : null;
 
@@ -134,6 +144,7 @@ export function App() {
   // Экран из HA: спит — чёрный, слайдшоу стоит. Камеру (позвонили в дверь) показываем и спящей рамкой.
   const awake = store.screenOn || !!cameraView;
   useEffect(() => applyBacklight(awake, store.brightness), [awake, store.brightness]);
+  const dim = dimOpacity(awake, store.brightness);
   useEffect(() => onHardwareWake(() => store.wakeScreen()), []);
 
   // Слайдшоу — только на экране с фото: пока открыта панель управления, фон стоит (не тратим силы рамки
@@ -309,8 +320,12 @@ export function App() {
         </LiveContext.Provider>
       </div>
       {sheet && <Sheet card={sheet} tone={tone} onCamera={openCamera} onClose={() => setSheetId(null)} />}
-      <div class={'screen-dim' + (awake ? '' : ' asleep')} style={{ opacity: dimOpacity(awake, store.brightness) }}
-        onClick={awake ? undefined : () => store.wakeScreen()} />
+      {/* Экран из HA (сущность «Экран»): сон — чёрный экран, яркость в браузере — затемнение. Только когда нужно:
+          прозрачный слой во весь экран Safari 26 принимает за край страницы и красит свои панели в его чёрный. */}
+      {dim > 0 && (
+        <div class={'screen-dim' + (awake ? '' : ' asleep')} style={{ opacity: dim }}
+          onClick={awake ? undefined : () => store.wakeScreen()} />
+      )}
       {cameraView && (
         <CameraModal
           feeds={cameraView.feeds}
