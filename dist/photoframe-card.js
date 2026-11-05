@@ -46259,8 +46259,8 @@ function ove(t) {
 }
 function ive(t) {
   return t === "cdn" ? {
-    ort: "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/ort.all.bundle.min.mjs",
-    wasm: "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/",
+    ort: "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/dist/ort.all.min.js",
+    wasm: "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/dist/",
     engine: "/photoframe/models/wakeword.js",
     models: "/photoframe/models"
   } : {
@@ -46273,10 +46273,7 @@ function ive(t) {
 async function ohe(t) {
   if (nt) return;
   const a = ive(t);
-  window.ORT || await new Promise((i, c) => {
-    const r = document.createElement("script");
-    r.src = a.ort, r.type = "module", r.onload = () => i(), r.onerror = () => c(new Error("Failed to load ONNX runtime")), document.head.appendChild(r);
-  }), window.WakeWordEngine || await new Promise((i, c) => {
+  window.WakeWordEngine || await new Promise((i, c) => {
     const r = document.createElement("script");
     r.src = a.engine, r.onload = () => i(), r.onerror = () => c(new Error("Failed to load wakeword engine")), document.head.appendChild(r);
   });
@@ -46286,7 +46283,8 @@ async function ohe(t) {
     baseAssetUrl: a.models,
     ortWasmPath: a.wasm,
     detectionThreshold: 0.5,
-    cooldownMs: 3e3
+    cooldownMs: 3e3,
+    debug: !0
   }), nt.on("detect", ({ keyword: i }) => {
     nve();
   }), nt.on("error", (i) => console.warn("[WakeWord]", i)), await nt.load();
