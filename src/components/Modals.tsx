@@ -13,6 +13,7 @@ import { autoQuality, photoFit, qualityPref, setPhotoFit, setQualityPref, type P
 import { applyLanguage, languages, preferredLanguage, setPreferredLanguage, t } from '../i18n';
 import { cameraDisplayPref, setCameraDisplayPref, type CameraDisplayPref } from '../lib/cameraPrefs';
 import { deviceSpeechRate, deviceVoiceId, deviceVoices, listVoicePipelines, primeVoice, setDeviceSpeechRate, setDeviceVoiceId, setTtsSource, speakVoice, ttsSource, type DeviceVoice, type TtsSource, type VoicePipeline, type VoiceRun } from '../lib/voice';
+import { WakeWordPicker } from './WakeWord';
 import { MAIN_HOME, mainHome, startScreen, store as frame, useStore, type Home, type Settings } from '../lib/store';
 import { FolderPicker } from './FolderPicker';
 
@@ -413,7 +414,8 @@ export function SettingsModal(props: { onClose: () => void }) {
             </Section>
             {/* Голосовое управление — отдельным блоком: свои настройки у каждого устройства. */}
             {!inCard && signedIn && (
-              <Section title={t('settings.section.voice')}>
+              <>
+              <Section title={t('settings.section.voice_assist')}>
                 <div className="option">
                   <label>{t('settings.voice')}</label>
                   <select value={draft.voicePipeline} onChange={(e) => set({voicePipeline: e.currentTarget.value})}>
@@ -422,56 +424,62 @@ export function SettingsModal(props: { onClose: () => void }) {
                   </select>
                 </div>
                 {!draft.voicePipeline && <div className="hint small">{t('settings.voice_hint')}</div>}
-                {draft.voicePipeline && (
-                  <>
-                    <div className="option">
-                      <label>{t('settings.tts')}</label>
-                      <select value={tts} onChange={(e) => {
-                        const v = e.currentTarget.value as TtsSource;
-                        setTts(v);
-                        setTtsSource(v);
-                      }}>
-                        <option value="ha">{t('settings.tts_ha')}</option>
-                        <option value="device">{t('settings.tts_device')}</option>
-                      </select>
-                      {tts === 'device' && !ttsDevice && <div className="hint small">{t('settings.tts_device_none')}</div>}
-                    </div>
-                    {/* Системный голос: можно выбрать конкретный голос и темп речи. */}
-                    {tts === 'device' && ttsDevice && (
-                      <>
-                        <div className="option">
-                          <label>{t('settings.tts_voice')}</label>
-                          <select value={voicePick} onChange={(e) => {
-                            const v = e.currentTarget.value;
-                            setVoiceId(v);
-                            setDeviceVoiceId(v);
-                          }}>
-                            <option value="">{t('settings.tts_voice_auto')}</option>
-                            {voices.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
-                          </select>
-                        </div>
-                        <div className="option">
-                          <label>{t('settings.tts_rate')}</label>
-                          <select value={String(rate)} onChange={(e) => {
-                            const v = +e.currentTarget.value;
-                            setRate(v);
-                            setDeviceSpeechRate(v);
-                          }}>
-                            <option value="0.85">{t('settings.tts_rate_slow')}</option>
-                            <option value="1">{t('settings.tts_rate_normal')}</option>
-                            <option value="1.15">{t('settings.tts_rate_fast')}</option>
-                          </select>
-                        </div>
-                      </>
-                    )}
-                    <button class="btn btn-ghost voice-test" type="button" onClick={testVoice}
-                      disabled={tts === 'device' && !ttsDevice}>
-                      <Volume2 size={16} />
-                      <span>{testing ? t('settings.tts_testing') : t('settings.tts_test')}</span>
-                    </button>
-                  </>
-                )}
               </Section>
+              {draft.voicePipeline && (
+                <Section title={t('settings.section.tts')}>
+                  <div className="option">
+                    <label>{t('settings.tts')}</label>
+                    <select value={tts} onChange={(e) => {
+                      const v = e.currentTarget.value as TtsSource;
+                      setTts(v);
+                      setTtsSource(v);
+                    }}>
+                      <option value="ha">{t('settings.tts_ha')}</option>
+                      <option value="device">{t('settings.tts_device')}</option>
+                    </select>
+                    {tts === 'device' && !ttsDevice && <div className="hint small">{t('settings.tts_device_none')}</div>}
+                  </div>
+                  {/* Системный голос: можно выбрать конкретный голос и темп речи. */}
+                  {tts === 'device' && ttsDevice && (
+                    <>
+                      <div className="option">
+                        <label>{t('settings.tts_voice')}</label>
+                        <select value={voicePick} onChange={(e) => {
+                          const v = e.currentTarget.value;
+                          setVoiceId(v);
+                          setDeviceVoiceId(v);
+                        }}>
+                          <option value="">{t('settings.tts_voice_auto')}</option>
+                          {voices.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+                        </select>
+                      </div>
+                      <div className="option">
+                        <label>{t('settings.tts_rate')}</label>
+                        <select value={String(rate)} onChange={(e) => {
+                          const v = +e.currentTarget.value;
+                          setRate(v);
+                          setDeviceSpeechRate(v);
+                        }}>
+                          <option value="0.85">{t('settings.tts_rate_slow')}</option>
+                          <option value="1">{t('settings.tts_rate_normal')}</option>
+                          <option value="1.15">{t('settings.tts_rate_fast')}</option>
+                        </select>
+                      </div>
+                    </>
+                  )}
+                  <button class="btn btn-ghost voice-test" type="button" onClick={testVoice}
+                    disabled={tts === 'device' && !ttsDevice}>
+                    <Volume2 size={16} />
+                    <span>{testing ? t('settings.tts_testing') : t('settings.tts_test')}</span>
+                  </button>
+                </Section>
+              )}
+              {draft.voicePipeline && (
+                <Section title={t('settings.section.wake')}>
+                  <WakeWordPicker />
+                </Section>
+              )}
+              </>
             )}
           </div>
       )}

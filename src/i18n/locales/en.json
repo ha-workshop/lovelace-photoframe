@@ -321,6 +321,14 @@
   "settings.cameras_live": "Live video right away",
   "settings.cameras_paused": "Start paused — still frame first",
   "settings.cameras_snapshot": "Snapshot only, no video",
+  "settings.wake_word": "Wake word",
+  "settings.wake_word_off": "Off",
+  "settings.wake_word_hey_jarvis": "Hey Jarvis",
+  "settings.wake_word_alexa": "Alexa",
+  "settings.wake_word_hey_mycroft": "Hey Mycroft",
+  "settings.wake_word_hey_rhasspy": "Hey Rhasspy",
+  "settings.wake_word_hey_jarvis_v2": "Hey Jarvis v2",
+  "settings.wake_word_hint": "Microphone listens continuously. Say the wake word to open the voice dialog.",
   "settings.voice": "Voice assistant",
   "settings.voice_off": "Don't show",
   "settings.voice_hint": "The list comes from Home Assistant Assist. Without a selection the voice buttons are hidden.",
@@ -473,5 +481,11 @@
   "voice.error.closed": "The connection was interrupted.",
   "voice.error.run": "The request failed. Try again.",
   "voice.sign_in": "Sign in to Home Assistant",
-  "admin.download_apk": "Download APK"
+  "admin.download_apk": "Download APK",
+  "settings.wake_source": "Источник ONNX",
+  "settings.wake_source_local": "Локальный (HA)",
+  "settings.wake_source_cdn": "CDN (jsDelivr)",
+  "settings.section.voice_assist": "Assistant",
+  "settings.section.tts": "Answer voice",
+  "settings.section.wake": "Wake word"
 }

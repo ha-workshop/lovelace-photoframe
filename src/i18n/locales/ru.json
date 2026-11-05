@@ -321,6 +321,14 @@
   "settings.cameras_live": "Видео сразу",
   "settings.cameras_paused": "С паузы — сначала кадр",
   "settings.cameras_snapshot": "Только снимок, без видео",
+  "settings.wake_word": "Слово для пробуждения",
+  "settings.wake_word_off": "Выключено",
+  "settings.wake_word_hey_jarvis": "Hey Jarvis",
+  "settings.wake_word_alexa": "Alexa",
+  "settings.wake_word_hey_mycroft": "Hey Mycroft",
+  "settings.wake_word_hey_rhasspy": "Hey Rhasspy",
+  "settings.wake_word_hey_jarvis_v2": "Hey Jarvis v2",
+  "settings.wake_word_hint": "Микрофон слушает постоянно. На слово откроется голосовой диалог.",
   "settings.voice": "Голосовой помощник",
   "settings.voice_off": "Не показывать",
   "settings.voice_hint": "Список — ассистенты Assist из Home Assistant. Без выбора кнопки голоса скрыты.",
@@ -473,5 +481,11 @@
   "voice.error.closed": "Связь прервалась.",
   "voice.error.run": "Запрос не выполнился. Попробуйте ещё раз.",
   "voice.sign_in": "Войти в Home Assistant",
-  "admin.download_apk": "Скачать APK"
+  "admin.download_apk": "Скачать APK",
+  "settings.wake_source": "Источник ONNX",
+  "settings.wake_source_local": "Локальный (HA)",
+  "settings.wake_source_cdn": "CDN (jsDelivr)",
+  "settings.section.voice_assist": "Ассистент",
+  "settings.section.tts": "Озвучка ответов",
+  "settings.section.wake": "Пробуждение по голосу"
 }

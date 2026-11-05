@@ -24,7 +24,8 @@ import { arrowDir, focusFirst, isBack, markKeyboard, moveFocus, pressFocused } f
 import { leaveTv, tvMode } from './lib/tvShell';
 import { SettingsModal } from './components/Modals';
 import { Voice } from './components/Voice';
-import { primeVoice } from './lib/voice';
+import { WakeWordDetector } from './components/WakeWord';
+import { primeVoice, wakeWordModel } from './lib/voice';
 import { CameraViewer } from './components/CameraViewer';
 import { AddCardModal, CardEditor } from './components/Editor';
 import { Sheet } from './components/Sheet';
@@ -449,6 +450,7 @@ export function App() {
         />
       )}
       {voice && canVoice && <Voice onClose={() => setVoice(false)} onSettings={() => { setVoice(false); setShowSettings(true); }} />}
+      {canVoice && !!wakeWordModel() && <WakeWordDetector onWake={() => { if (!voice) { primeVoice(); setVoice(true); } }} />}
       {adding && <AddCardModal onClose={() => setAdding(false)} onPick={(card) => { setAdding(false); setEditCard({ card, isNew: true }); }} />}
       {editCard && (
         <CardEditor

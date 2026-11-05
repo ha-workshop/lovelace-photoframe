@@ -80,6 +80,10 @@ const RU_SEARCH: Record<string, string> = {
   'paw-print': 'лапа животное', 'toy-brick': 'кубики лего игрушка', dices: 'кости настольная игра',
 };
 
+export function iconKeyToPascal(key: string): string {
+  return key.split('-').map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join('');
+}
+
 export function iconMatches(key: string, query: string): boolean {
   const q = query.trim().toLowerCase();
   if (!q) return true;
@@ -123,9 +127,11 @@ export function preloadLucide() { loadLucide(); }
 
 export type IconKey = string;
 
+// Конвертирует kebab-case ключ (lamp-ceiling) в PascalCase (LampCeiling)
 // Единая иконка: загружает Lucide динамически при первом вызове.
 export function Icon(props: { name?: string; size?: number; class?: string }) {
-  const key = props.name || 'house';
+  const raw = props.name || 'house';
+  const key = iconKeyToPascal(raw);
   const [, tick] = useState(0);
 
   useEffect(() => {
@@ -135,13 +141,11 @@ export function Icon(props: { name?: string; size?: number; class?: string }) {
     waiters.push(cb);
     loadLucide();
     return () => { const i = waiters.indexOf(cb); if (i !== -1) waiters.splice(i, 1); };
-    // подгружаем только если иконка ещё не загружена
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
   const Lucide = icons && icons[key];
   if (Lucide) return <Lucide size={props.size || 18} class={props.class} />;
-  // Плейсхолдер — пустой квадрат того же размера, чтобы вёрстка не прыгала.
   const sz = props.size || 18;
   return <svg class={props.class} width={sz} height={sz} aria-hidden="true" focusable="false" />;
 }

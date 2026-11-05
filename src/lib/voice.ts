@@ -142,6 +142,30 @@ try {
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.getVoices();
 } catch (e) { /* ignore */ }
 
+// ── Wake word ────────────────────────────────────────────
+// Локальное детектирование через openWakeWord (WASM + ONNX в браузере).
+// Модели: hey_jarvis, alexa, hey_mycroft, hey_rhasspy, hey_jarvis_v2.
+const WAKE_KEY = 'photoframe.wakeWord';
+const WAKE_MODELS = ['hey_jarvis', 'alexa', 'hey_mycroft', 'hey_rhasspy', 'hey_jarvis_v2'] as const;
+
+export type WakeModel = (typeof WAKE_MODELS)[number];
+
+export function wakeWordModel(): WakeModel | '' {
+  try {
+    const v = localStorage.getItem(WAKE_KEY) || '';
+    return WAKE_MODELS.includes(v as WakeModel) ? (v as WakeModel) : '';
+  } catch (e) { return ''; }
+}
+
+export function setWakeWordModel(model: WakeModel | '') {
+  try {
+    if (model) localStorage.setItem(WAKE_KEY, model);
+    else localStorage.removeItem(WAKE_KEY);
+  } catch (e) { /* ignore */ }
+}
+
+export const WAKE_WORD_OPTIONS = WAKE_MODELS;
+
 export function deviceTtsReady(): boolean {
   return ttsSource() === 'device' && deviceTtsSupported();
 }
