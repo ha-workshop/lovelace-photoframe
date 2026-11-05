@@ -15,7 +15,8 @@ export function triggerWake() {
 let engine: any = null;
 let engineReady = false;
 
-// Откуда грузить ONNX runtime: локально с HA или с CDN
+// Движок wake word собирается из исходников (см. src/wakeword-standalone.js ->
+// public/models/wakeword-standalone.js): полностью автономный, с onnxruntime-web внутри.
 const WAKE_SOURCE_KEY = 'photoframe.wakeSource';
 type WakeSource = 'local' | 'cdn';
 
@@ -28,18 +29,15 @@ function setWakeSource(v: WakeSource) {
 }
 
 function wakeUrls(source: WakeSource) {
+  // Локальная сборка (самодостаточна); CDN-режим оставлен для сравнения.
   if (source === 'cdn') {
     return {
-      ort: 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/dist/ort.all.min.js',
-      wasm: 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/dist/',
-      engine: '/photoframe/models/wakeword.js',
+      engine: '/photoframe/models/wakeword-standalone.js',
       models: '/photoframe/models',
     };
   }
   return {
-    ort: '/photoframe/models/ort.mjs',
-    wasm: '/photoframe/models/',
-    engine: '/photoframe/models/wakeword.js',
+    engine: '/photoframe/models/wakeword-standalone.js',
     models: '/photoframe/models',
   };
 }
@@ -47,7 +45,6 @@ function wakeUrls(source: WakeSource) {
 async function ensureEngine(source: WakeSource) {
   if (engine) return;
   const urls = wakeUrls(source);
-  // Load WakeWordEngine (it imports ort.mjs dynamically itself)
   if (!(window as any).WakeWordEngine) {
     await new Promise<void>((resolve, reject) => {
       const s = document.createElement('script');
@@ -61,7 +58,7 @@ async function ensureEngine(source: WakeSource) {
   engine = new WakeWordEngine({
     keywords: [],
     baseAssetUrl: urls.models,
-    ortWasmPath: urls.wasm,
+    ortWasmPath: urls.models + '/',
     detectionThreshold: 0.5,
     cooldownMs: 3000,
     debug: true,

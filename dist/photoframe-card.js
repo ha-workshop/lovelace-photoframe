@@ -2014,7 +2014,7 @@ function Xhe() {
   }
 }
 function Qhe(t, a) {
-  const n = { type: "photoframe/frame/connect", frame_id: yt(), model: Zhe(), version: "1.6.0" };
+  const n = { type: "photoframe/frame/connect", frame_id: yt(), model: Zhe(), version: "1.9.2" };
   return T1() && (n.name = T1()), kI() && (n.apk = kI()), t.subscribeMessage(n, a);
 }
 function Kc(t, a) {
@@ -46259,14 +46259,10 @@ function ove(t) {
 }
 function ive(t) {
   return t === "cdn" ? {
-    ort: "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/dist/ort.all.min.js",
-    wasm: "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/dist/",
-    engine: "/photoframe/models/wakeword.js",
+    engine: "/photoframe/models/wakeword-standalone.js",
     models: "/photoframe/models"
   } : {
-    ort: "/photoframe/models/ort.mjs",
-    wasm: "/photoframe/models/",
-    engine: "/photoframe/models/wakeword.js",
+    engine: "/photoframe/models/wakeword-standalone.js",
     models: "/photoframe/models"
   };
 }
@@ -46281,7 +46277,7 @@ async function ohe(t) {
   nt = new n({
     keywords: [],
     baseAssetUrl: a.models,
-    ortWasmPath: a.wasm,
+    ortWasmPath: a.models + "/",
     detectionThreshold: 0.5,
     cooldownMs: 3e3,
     debug: !0
@@ -48437,7 +48433,7 @@ class s9e extends HTMLElement {
   }
 }
 customElements.get("photoframe-card") || customElements.define("photoframe-card", s9e);
-console.info("%c PHOTO-FRAME %c v1.6.0 ", "color:#fff;background:#0891b2;font-weight:700", "color:#0891b2;background:#fff");
+console.info("%c PHOTO-FRAME %c v1.9.2 ", "color:#fff;background:#0891b2;font-weight:700", "color:#0891b2;background:#fff");
 spe();
 const LC = window;
 LC.customCards = LC.customCards || [];
