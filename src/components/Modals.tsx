@@ -12,7 +12,7 @@ import { autostart, setAutostart } from '../lib/screen';
 import { autoQuality, photoFit, qualityPref, setPhotoFit, setQualityPref, type PhotoFit, type QualityPref } from '../lib/quality';
 import { applyLanguage, languages, preferredLanguage, setPreferredLanguage, t } from '../i18n';
 import { cameraDisplayPref, setCameraDisplayPref, type CameraDisplayPref } from '../lib/cameraPrefs';
-import { deviceTtsSupported, listVoicePipelines, setTtsSource, ttsSource, type TtsSource, type VoicePipeline } from '../lib/voice';
+import { deviceSpeechRate, deviceVoiceId, deviceVoices, listVoicePipelines, setDeviceSpeechRate, setDeviceVoiceId, setTtsSource, ttsSource, type DeviceVoice, type TtsSource, type VoicePipeline } from '../lib/voice';
 import { MAIN_HOME, mainHome, startScreen, store as frame, useStore, type Home, type Settings } from '../lib/store';
 import { FolderPicker } from './FolderPicker';
 
@@ -137,21 +137,30 @@ export function SettingsModal(props: { onClose: () => void }) {
   const [language, setLanguage] = useState(preferredLanguage());
   const [kiosk, setKiosk] = useState<KioskPref>(kioskPref());
   const [qPref, setQPref] = useState<QualityPref>(qualityPref());
-  // Голос озвучки: синтез самого устройства (Web Speech API) или TTS Home Assistant (Piper/Google).
+  // Озвучка ответов: системный синтез устройства (Web Speech API) или TTS Home Assistant
+  // (тот, что выбран в Assist — Piper, Google, любой другой).
   const [tts, setTts] = useState<TtsSource>(ttsSource());
-  // Список голосов Chrome отдаёт асинхронно: без подписки на voiceschanged предупреждение
-  // «нет русского голоса» могло висеть, даже когда голос уже загрузился.
-  const [ttsDevice, setTtsDevice] = useState(deviceTtsSupported());
+  // Список голосов Chrome отдаёт асинхронно: без подписки на voiceschanged список голосов
+  // и предупреждение «нет русского голоса» оставались пустыми до перезагрузки.
+  const [voices, setVoices] = useState<DeviceVoice[]>(deviceVoices());
+  const [voiceId, setVoiceId] = useState(deviceVoiceId());
+  const [rate, setRate] = useState(deviceSpeechRate());
   useEffect(() => {
-    if (ttsDevice || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    const check = () => { if (deviceTtsSupported()) setTtsDevice(true); };
-    window.speechSynthesis.addEventListener('voiceschanged', check);
-    const timer = window.setTimeout(check, 1500);
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    const sync = () => setVoices(deviceVoices());
+    sync();
+    window.speechSynthesis.addEventListener('voiceschanged', sync);
+    const timer = window.setTimeout(sync, 1500);
     return () => {
-      window.speechSynthesis.removeEventListener('voiceschanged', check);
+      window.speechSynthesis.removeEventListener('voiceschanged', sync);
       clearTimeout(timer);
     };
-  }, [ttsDevice]);
+    // Язык интерфейса меняет набор голосов — пересобираем список.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language]);
+  const ttsDevice = voices.length > 0;
+  // Сохранённый голос мог исчезнуть из системы — тогда показываем «Авто».
+  const voicePick = voices.some((v) => v.id === voiceId) ? voiceId : '';
   const [camPref, setCamPref] = useState<CameraDisplayPref>(cameraDisplayPref());
   const [fit, setFit] = useState<PhotoFit>(photoFit());
   // Только в APK: открывать рамку сама после включения.
@@ -389,18 +398,48 @@ export function SettingsModal(props: { onClose: () => void }) {
                 </div>
                 {!draft.voicePipeline && <div className="hint small">{t('settings.voice_hint')}</div>}
                 {draft.voicePipeline && (
-                  <div className="option">
-                    <label>{t('settings.tts')}</label>
-                    <select value={tts} onChange={(e) => {
-                      const v = e.currentTarget.value as TtsSource;
-                      setTts(v);
-                      setTtsSource(v);
-                    }}>
-                      <option value="device">{t('settings.tts_device')}</option>
-                      <option value="ha">{t('settings.tts_ha')}</option>
-                    </select>
-                    {tts === 'device' && !ttsDevice && <div className="hint small">{t('settings.tts_device_none')}</div>}
-                  </div>
+                  <>
+                    <div className="option">
+                      <label>{t('settings.tts')}</label>
+                      <select value={tts} onChange={(e) => {
+                        const v = e.currentTarget.value as TtsSource;
+                        setTts(v);
+                        setTtsSource(v);
+                      }}>
+                        <option value="device">{t('settings.tts_device')}</option>
+                        <option value="ha">{t('settings.tts_ha')}</option>
+                      </select>
+                      {tts === 'device' && !ttsDevice && <div className="hint small">{t('settings.tts_device_none')}</div>}
+                    </div>
+                    {/* Системный голос: можно выбрать конкретный голос и темп речи. */}
+                    {tts === 'device' && ttsDevice && (
+                      <>
+                        <div className="option">
+                          <label>{t('settings.tts_voice')}</label>
+                          <select value={voicePick} onChange={(e) => {
+                            const v = e.currentTarget.value;
+                            setVoiceId(v);
+                            setDeviceVoiceId(v);
+                          }}>
+                            <option value="">{t('settings.tts_voice_auto')}</option>
+                            {voices.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+                          </select>
+                        </div>
+                        <div className="option">
+                          <label>{t('settings.tts_rate')}</label>
+                          <select value={String(rate)} onChange={(e) => {
+                            const v = +e.currentTarget.value;
+                            setRate(v);
+                            setDeviceSpeechRate(v);
+                          }}>
+                            <option value="0.85">{t('settings.tts_rate_slow')}</option>
+                            <option value="1">{t('settings.tts_rate_normal')}</option>
+                            <option value="1.15">{t('settings.tts_rate_fast')}</option>
+                          </select>
+                        </div>
+                      </>
+                    )}
+                  </>
                 )}
               </Section>
             )}

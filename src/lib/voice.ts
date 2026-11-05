@@ -70,16 +70,68 @@ function speechLang(): string {
   return (currentLanguage() || navigator.language || 'ru').slice(0, 2).toLowerCase();
 }
 
+function sameLang(v: SpeechSynthesisVoice): boolean {
+  return (v.lang || '').replace('_', '-').toLowerCase().slice(0, 2) === speechLang();
+}
+
+function allVoices(): SpeechSynthesisVoice[] {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return [];
+  try { return window.speechSynthesis.getVoices() || []; } catch (e) { return []; }
+}
+
+export interface DeviceVoice {
+  id: string;
+  name: string;
+  lang: string;
+}
+
+// Голоса системы для языка интерфейса — из них выбирается «голос устройства».
+export function deviceVoices(): DeviceVoice[] {
+  return allVoices()
+    .filter(sameLang)
+    .map((v) => ({ id: v.voiceURI || v.name, name: v.name, lang: v.lang }));
+}
+
+const DEVICE_VOICE_KEY = 'photoframe.voiceDeviceVoice';
+
+export function deviceVoiceId(): string {
+  try { return localStorage.getItem(DEVICE_VOICE_KEY) || ''; } catch (e) { return ''; }
+}
+
+export function setDeviceVoiceId(id: string) {
+  try {
+    if (id) localStorage.setItem(DEVICE_VOICE_KEY, id);
+    else localStorage.removeItem(DEVICE_VOICE_KEY);
+  } catch (e) { /* ignore */ }
+}
+
+const DEVICE_RATE_KEY = 'photoframe.voiceDeviceRate';
+
+export function deviceSpeechRate(): number {
+  try {
+    const n = parseFloat(localStorage.getItem(DEVICE_RATE_KEY) || '1');
+    return n >= 0.6 && n <= 1.6 ? n : 1;
+  } catch (e) { return 1; }
+}
+
+export function setDeviceSpeechRate(rate: number) {
+  try { localStorage.setItem(DEVICE_RATE_KEY, String(rate)); } catch (e) { /* ignore */ }
+}
+
 function deviceVoice(): SpeechSynthesisVoice | null {
-  if (typeof window === 'undefined' || !('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') return null;
-  let voices: SpeechSynthesisVoice[] = [];
-  try { voices = window.speechSynthesis.getVoices() || []; } catch (e) { return null; }
-  const lang = speechLang();
-  return voices.filter((v) => (v.lang || '').replace('_', '-').toLowerCase().slice(0, 2) === lang)[0] || null;
+  if (typeof SpeechSynthesisUtterance === 'undefined') return null;
+  const voices = allVoices();
+  if (!voices.length) return null;
+  const id = deviceVoiceId();
+  // Выбранный голос уважаем, пока он есть в системе и подходит по языку.
+  const chosen = id ? voices.filter((v) => sameLang(v) && (v.voiceURI || v.name) === id)[0] : null;
+  if (chosen) return chosen;
+  const matching = voices.filter(sameLang);
+  return matching.filter((v) => v.default)[0] || matching[0] || null;
 }
 
 export function deviceTtsSupported(): boolean {
-  return !!deviceVoice();
+  return deviceVoices().length > 0;
 }
 
 // Chrome отдаёт голоса асинхронно — просим заранее, чтобы настройка и первый ответ
@@ -120,6 +172,7 @@ function speakOnDevice(text: string, token: SpeechToken, onDone: (ok: boolean) =
   if (!voice || !synth) return false;
   const chunks = speechChunks(text);
   if (!chunks.length) return false;
+  const rate = deviceSpeechRate();
   let at = 0;
   let spoke = false;
   const next = () => {
@@ -129,7 +182,7 @@ function speakOnDevice(text: string, token: SpeechToken, onDone: (ok: boolean) =
       const u = new SpeechSynthesisUtterance(chunks[at++]);
       u.voice = voice;
       u.lang = voice.lang || speechLang() + '-' + speechLang().toUpperCase();
-      u.rate = 1;
+      u.rate = rate;
       u.onstart = () => { spoke = true; };
       u.onend = () => next();
       u.onerror = (e: any) => {
