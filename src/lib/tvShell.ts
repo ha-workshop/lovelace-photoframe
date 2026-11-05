@@ -1,11 +1,15 @@
 // Телевизор: рамку открыли из Media Station X или из своей оболочки Tizen как обычную страницу,
 // а не во фрейме. `?tv=1` ставит MSX; флаг запоминаем в localStorage — после входа в HA адрес
 // теряет query (redirect_uri — только путь), а режим должен остаться.
+//
+// Флаг общий на весь origin, поэтому смотрим только на страницу рамки: в дашборде HA (и в карточке)
+// телевизионный режим не включаем, иначе «Назад» там уводил бы в MSX.
 const KEY = 'photoframe.tv';
 const topLevel = window.parent === window;
+const framePage = location.pathname.indexOf('/photoframe/') !== -1;
 const asked = /(?:^\?|&)tv=1(?:&|$)/.test(location.search);
 let tv = false;
-if (topLevel) {
+if (topLevel && framePage) {
   try {
     if (asked) localStorage.setItem(KEY, '1');
     tv = asked || localStorage.getItem(KEY) === '1';
