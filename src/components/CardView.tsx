@@ -171,6 +171,7 @@ function Cameras({ card, paused, onCamera }: { card: Card; paused?: boolean; onC
   const swipe = useSwipeStep(
     (dir) => { if (feeds.length > 1) setActive(stepCamera(index, dir, feeds.length)); },
     () => { if (url) onCamera(feeds, index); },
+    (dir) => (feeds.length > 1 ? ha.cameraSnapshotUrl(feeds[stepCamera(index, dir, feeds.length)].entity) : undefined),
   );
   // Наведение включает видео, уход курсора — гасит (если не нажали ▶).
   const hover = useHoverStart(() => setHovered(true), !playing, () => setHovered(false));

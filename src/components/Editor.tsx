@@ -2,7 +2,7 @@ import { useState } from 'preact/hooks';
 import { ArrowDown, ArrowUp, Droplets, Plus, Search, Trash2, X, Thermometer } from 'lucide-preact';
 import type { HassState } from '../lib/ha';
 import { isAvailable, unitOf, useHA } from '../lib/hooks';
-import { ICON_GROUPS, Icon, guessIcon, iconMatches, type IconKey } from '../lib/icons';
+import { Icon, guessIcon, iconMatches, useIconGroups, type IconKey } from '../lib/icons';
 import { ACCENTS, CARD_TYPES, cardTypeHint, cardTypeTitle, newId, type CameraFit, type Card, type CardType, type Item } from '../lib/layout';
 import { expandItem, fits } from '../lib/devices';
 import { Modal } from './Modals';
@@ -273,7 +273,7 @@ export function CardEditor(props: EditorProps) {
 // Окно выбора иконки: поиск и группы — свои линейные, Font Awesome по темам и контурные.
 function IconPicker(props: { value?: string; onPick: (key: IconKey) => void; onClose: () => void }) {
   const [q, setQ] = useState('');
-  const groups = ICON_GROUPS
+  const groups = useIconGroups()
     .map((g) => ({ ...g, keys: g.keys.filter((k) => iconMatches(k, q)) }))
     .filter((g) => g.keys.length);
   return (

@@ -59,7 +59,8 @@ deploy_integration() {
   [[ -f "$repo/scripts/build-frontend.sh" ]] || { echo "Нет интеграции в $repo (INTEGRATION_DIR)" >&2; exit 1; }
   local dir="$HA_CONFIG_DIR/custom_components/photoframe"
   local tag; tag="$(git -C "$repo" describe --tags --abbrev=0 2>/dev/null || echo v0.0.0)"
-  local version="${tag#v}-dev"
+  # Свою версию можно задать: DEV_VERSION=1.5.0-dev ./deploy.sh integration
+  local version="${DEV_VERSION:-${tag#v}-dev}"
   # Сборка всегда из этой рабочей копии, откуда бы ни запустили скрипт (а не из OLDPWD).
   local src="$PWD"
   local out; out="$(mktemp -d)"

@@ -1,3 +1,4 @@
+import { syncVars } from './iosViewport';
 // Дашборд в браузере и в приложении с экрана «Домой» прокручивается самой страницей, а не блоком внутри неё:
 // только так Safari на iPhone пускает карточки под строку состояния и под плавающую нижнюю панель и
 // сворачивает её при прокрутке (как обычные сайты). Включается, пока открыта панель (на экране с фото
@@ -12,7 +13,7 @@ export function setDocScroll(on: boolean) {
   const html = document.documentElement;
   const want = on && docScrollAllowed();
   if (want === html.classList.contains('doc-scroll')) return;
-  if (want) html.classList.add('doc-scroll');
+  if (want) { syncVars(); html.classList.add('doc-scroll'); }
   else {
     html.classList.remove('doc-scroll');
     window.scrollTo(0, 0);
@@ -42,5 +43,23 @@ export function setPhotoPeek(on: boolean) {
     window.setTimeout(() => { if (html.classList.contains('photo-peek') && window.pageYOffset < 1) window.scrollTo(0, 1); }, 60);
   } else {
     html.classList.remove('photo-peek');
+  }
+}
+
+// Открыто окно или карточка поверх — фон (страница) не прокручивается. На iOS overflow: hidden у body этого
+// не держит, поэтому body закрепляем на месте (с тем же сдвигом), а после закрытия возвращаем прокрутку.
+let lockedY = 0;
+export function lockScroll(on: boolean) {
+  const html = document.documentElement;
+  const body = document.body;
+  if (on === html.classList.contains('scroll-lock')) return;
+  if (on) {
+    lockedY = window.pageYOffset;
+    body.style.top = -lockedY + 'px';
+    html.classList.add('scroll-lock');
+  } else {
+    html.classList.remove('scroll-lock');
+    body.style.top = '';
+    window.scrollTo(0, lockedY);
   }
 }

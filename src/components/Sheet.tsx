@@ -55,7 +55,7 @@ export function Sheet({ card, tone, onCamera, onClose }: Props) {
   const wide = ['switches', 'scenes', 'cameras', 'ac', 'speakers', 'tv', 'weather'].indexOf(card.type) !== -1;
 
   return (
-    <div class="sheet-layer" onClick={onClose}>
+    <div class={'sheet-layer' + (card.type === 'cameras' ? ' cams' : '')} onClick={onClose}>
       <div ref={sheetRef} class={'sheet sheet-' + card.type + (wide ? ' sheet-wide' : '') + (card.color ? ' tint-' + card.color : '')} onClick={(e) => e.stopPropagation()}>
         <Glass thumb={tone ? tone.thumb : undefined} sheet={sheetEl} />
         <div class="sheet-inner">

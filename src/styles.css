@@ -22,6 +22,15 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
 html, body, #app { height: 100%; }
+/* Приложение на iPhone (lib/iosViewport, html.standalone): высота по экрану (100vh), а не по окну — iOS 26
+   порой укорачивает окно на высоту строки состояния, и страница по 100% оставляет снизу полосу. */
+html.standalone:not(.doc-scroll), html.standalone:not(.doc-scroll) body, html.standalone:not(.doc-scroll) #app,
+html.standalone:not(.doc-scroll) .root, html.standalone:not(.doc-scroll) .app { height: 100vh; }
+/* То же для дашборда и окон поверх: страница не короче экрана (иначе под окном с закреплённой страницей —
+   lockScroll — снова полоса), и слои во весь экран — по экрану. */
+html.standalone, html.standalone body, html.standalone.doc-scroll, html.standalone.doc-scroll body { min-height: 100vh; }
+html.standalone.scroll-lock, html.standalone.scroll-lock body { height: 100vh; }
+html.standalone .modal, html.standalone .sheet-layer, html.standalone .atv { bottom: auto; height: 100vh; }
 body {
   background: #000; color: var(--ink); overflow: hidden;
   font-family: Inter, Roboto, -apple-system, 'Segoe UI', sans-serif;
@@ -42,12 +51,8 @@ svg { display: block; flex-shrink: 0; }
    Под панели Safari (строка состояния, нижняя панель) страница его не пускает — на весь экран фото
    бывает только в приложении с экрана «Домой». */
 .pwa .backdrop { position: fixed; }
-/* iOS «на домашний экран» с прозрачной строкой состояния: WebKit делает окно короче экрана на её высоту
-   (после клавиатуры, а иногда и сразу — lib/iosViewport лечит не всегда), снизу остаётся полоса фона.
-   Фото тянем вниз на ту же высоту — оно закрывает полосу; при нормальном окне лишнее просто за краем. */
-@media (display-mode: standalone) {
-  .pwa .backdrop { bottom: calc(-1 * env(safe-area-inset-top)); }
-}
+/* iOS «на домашний экран»: WebKit делает окно короче экрана, снизу остаётся полоса фона. Высоту фото во весь
+   экран задаёт lib/iosViewport (своим <style>: CSS-переменные сборка разворачивает в статику). */
 .slide {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
   background-size: cover; background-position: center;
@@ -82,6 +87,19 @@ svg { display: block; flex-shrink: 0; }
   transition: background-color 0.6s var(--ease);
 }
 .shade.deep { background-color: rgba(4, 6, 12, 0.38); }
+/* Дашборд открыт — размываем само фото, один раз и только фон (не каждую панель поверх него).
+   Слабые рамки (q-lite) и браузеры без backdrop-filter — по-старому, размытой миниатюрой (.soft). */
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  /* Размытие нарастает и спадает плавно: от нулевого блюра, вместе с затемнением. */
+  .q-full .shade {
+    -webkit-backdrop-filter: blur(0px) saturate(1); backdrop-filter: blur(0px) saturate(1);
+    transition: background-color 0.6s var(--ease), -webkit-backdrop-filter 0.6s var(--ease), backdrop-filter 0.6s var(--ease);
+  }
+  .q-full .shade.deep { -webkit-backdrop-filter: blur(28px) saturate(1.2); backdrop-filter: blur(28px) saturate(1.2); }
+  .q-full .soft { display: none; }
+  /* APK: фото рисует Android под прозрачной страницей — размытие в WebView его не видит и может закрасить. */
+  .native-photos .shade { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+}
 
 /* ── Режим покоя ─────────────────────────────────── */
 .ambient {
@@ -162,7 +180,7 @@ svg { display: block; flex-shrink: 0; }
   padding: 22px 28px 28px;
   /* iOS 26.1+ в PWA со статус-баром black-translucent сам накладывает размытие поверх safe-area
      (и ещё ~16px вниз): текст под ним расплывается. Отодвигаем шапку ниже этой полосы. */
-  padding-top: 0; /* верхний отступ — у шапки (.controls-head): она уезжает вместе с ним */
+  padding-top: 0; /* верхний отступ — у шапки (.controls-head) */
   padding-left: max(28px, env(safe-area-inset-left));
   padding-right: max(28px, env(safe-area-inset-right));
   padding-bottom: max(28px, env(safe-area-inset-bottom));
@@ -217,6 +235,10 @@ svg { display: block; flex-shrink: 0; }
 .grid::-webkit-scrollbar { display: none; }
 .grid-inner { position: relative; }
 .cell { position: absolute; display: flex; transition: left 0.22s var(--ease), top 0.22s var(--ease), width 0.22s var(--ease), height 0.22s var(--ease); }
+/* Телефон вне правки (Grid: flow) — карточки потоком и по высоте содержимого, без прокрутки внутри. */
+.grid-flow { display: grid; grid-auto-rows: auto; align-items: stretch; }
+.grid-flow .cell { position: relative; transition: none; }
+.grid-flow .panel-body, .grid-flow .lights { flex: none; min-height: 0; overflow: visible; }
 .cell.dragged { z-index: 20; transition: none; -webkit-animation: none; animation: none; }
 .cell.dragged .panel { box-shadow: 0 30px 60px rgba(0, 0, 0, 0.55); border-color: rgba(255, 255, 255, 0.5); }
 .drop-slot { position: absolute; border-radius: 28px; border: 2px dashed rgba(255, 255, 255, 0.45); background: rgba(255, 255, 255, 0.08); transition: left 0.15s, top 0.15s, width 0.15s, height 0.15s; }
@@ -266,21 +288,13 @@ svg { display: block; flex-shrink: 0; }
 
 /* Дома: переключатель в шапке и въезд раскладки при свайпе */
 .home-pane { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-/* Шапка с вкладками экранов — поверх карточек, уезжает и выезжает за пальцем (Controls) */
+/* Шапка с вкладками экранов — обычная часть панели: прокручивается вместе с карточками. */
 .controls-head {
-  position: absolute; top: 0; left: 0; right: 0; z-index: 5; display: flex; flex-direction: column;
-  padding: 22px 28px 0;
+  display: flex; flex-direction: column; flex: none;
   /* iOS 26.1+ в PWA со статус-баром black-translucent сам накладывает размытие поверх safe-area
      (и ещё ~16px вниз): текст под ним расплывается. Отодвигаем шапку ниже этой полосы. */
   padding-top: max(22px, calc(env(safe-area-inset-top) + 16px));
-  padding-left: max(28px, env(safe-area-inset-left));
-  padding-right: max(28px, env(safe-area-inset-right));
-  transition: background-color 0.2s;
 }
-/* Под шапкой карточки — стеклянный фон, чтобы её было видно */
-.controls-head.over { background-color: rgba(10, 12, 20, 0.72); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
-.controls-head.gone { pointer-events: none; }
-.q-lite .controls-head.over { background-color: rgba(10, 12, 20, 0.92); -webkit-backdrop-filter: none; backdrop-filter: none; }
 /* Экраны дома: вкладки под шапкой панели (в редактировании — имя правится во вкладке) */
 .screen-tabs { display: flex; align-items: center; overflow-x: auto; white-space: nowrap; margin: -8px 0 12px; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
 .screen-tab { display: -webkit-inline-flex; display: inline-flex; -webkit-flex-shrink: 0; flex-shrink: 0; align-items: center; height: 34px; padding: 0 14px; margin-right: 8px; border-radius: 17px; font-size: 14px; font-weight: 500; color: var(--ink-3); background: rgba(255, 255, 255, 0.06); }
@@ -393,10 +407,6 @@ svg { display: block; flex-shrink: 0; }
 /* Свайп по кадру листает камеры; вертикаль оставляем прокрутке. */
 .cam-swipe { touch-action: pan-y; }
 .cam-swipe img { -webkit-user-drag: none; user-select: none; -webkit-user-select: none; }
-.cam-dots { display: flex; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
-.cam-dots button { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
-.cam-dots button:before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.24); }
-.cam-dots .active:before { background: #7dd3fc; }
 /* По ширине / по высоте: одна сторона кадра во всю карточку, вторая — по пропорциям, по центру.
    Сделано через translate, а не object-fit: contain — так кадр может и выходить за край, а не только ужиматься. */
 .cam.fit-width img { top: 50%; height: auto; -webkit-transform: translateY(-50%); transform: translateY(-50%); }
@@ -410,10 +420,9 @@ svg { display: block; flex-shrink: 0; }
 .cam-paused span { margin-top: 10px; color: var(--ink-2); }
 .cam-play { width: 62px; height: 62px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(125, 211, 252, 0.9); color: #0b0d14; box-shadow: 0 8px 26px rgba(0, 0, 0, 0.45); }
 .cam-play svg { margin-left: 3px; }
-.cam-full .cam-play { width: 84px; height: 84px; }
 /* Маленькая ▶ в углу карточки: кадр-снимок уже виден, видео — по клику или задержке курсора. */
 /* ▶ по центру карточки: кадр-снимок уже виден, видео — по клику или задержке курсора. */
-.cam-play-center { position: absolute; left: 50%; top: 50%; width: 48px; height: 48px; margin: -24px 0 0 -24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(10, 12, 18, 0.5); color: #fff; border: 1px solid rgba(255, 255, 255, 0.28); box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.cam-play-center { position: absolute; left: 50%; top: 50%; width: 48px; height: 48px; margin: -24px 0 0 -24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(10, 12, 18, 0.5); color: #fff; border: 1px solid rgba(255, 255, 255, 0.28); box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4); }
 .cam-play-center svg { margin-left: 3px; }
 .cam-play-center:hover { background: rgba(125, 211, 252, 0.92); border-color: rgba(125, 211, 252, 0.92); color: #0b0d14; }
 .cam-spinner { width: 22px; height: 22px; margin-bottom: 8px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.2); border-top-color: #7dd3fc;
@@ -490,8 +499,8 @@ svg { display: block; flex-shrink: 0; }
 .modal-title { display: flex; align-items: center; }
 .modal-title svg { margin-right: 10px; color: #7dd3fc; }
 .icon-btn { color: var(--ink-3); }
-.cam-full { position: relative; border-radius: 18px; overflow: hidden; background: #000; }
-.cam-full img { display: block; width: 100%; max-height: 72vh; object-fit: contain; }
+/* Кадр соседней камеры, въезжающий сбоку при свайпе (lib/gestures). */
+.cam-peek { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-position: center; background-repeat: no-repeat; pointer-events: none; z-index: 1; }
 
 .tabs { display: flex; padding: 4px; margin-bottom: 18px; border-radius: 14px; background: rgba(255, 255, 255, 0.05); }
 .tabs button { flex: 1; padding: 9px; border-radius: 10px; font-size: 14px; font-weight: 500; color: var(--ink-2); }
@@ -790,16 +799,6 @@ svg { display: block; flex-shrink: 0; }
 /* ── Качество отображения ───────────────────────── */
 .root { height: 100%; }
 
-/* «Красиво» (iPad, компьютеры): настоящее матовое стекло под панелями и окнами. */
-@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-  .q-full .panel, .q-full .glance, .q-full .round, .q-full .chip-btn {
-    -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%);
-  }
-  .q-full .panel { background: rgba(12, 14, 22, 0.32); }
-  .q-full .modal { -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
-  .q-full .modal-box { background: rgba(20, 22, 32, 0.82); -webkit-backdrop-filter: blur(24px) saturate(150%); backdrop-filter: blur(24px) saturate(150%); }
-}
-
 /* «Лёгкое» (старые рамки): без приближения фото, размытия, теней и фоновых анимаций. */
 .q-lite .slide { transform: none !important; transition: opacity 0.6s linear; }
 .q-lite .soft { display: none; }
@@ -822,10 +821,9 @@ svg { display: block; flex-shrink: 0; }
   .glance { margin: 6px 8px 0 0; }
 
   .controls-head {
-    padding: 16px 16px 0;
-    padding-top: max(16px, env(safe-area-inset-top));
-    padding-right: max(16px, env(safe-area-inset-right));
-    padding-left: max(16px, env(safe-area-inset-left));
+    /* Ниже полосы размытия iOS 26 под строкой состояния (см. .controls-head выше) — иначе время, дом и меню
+       в шапке расплываются. */
+    padding-top: max(16px, calc(env(safe-area-inset-top) + 16px));
   }
   .controls {
     padding: 16px;
@@ -1090,12 +1088,15 @@ svg { display: block; flex-shrink: 0; }
 
 /* ── Дашборд прокручивается самой страницей (lib/docScroll): браузер и приложение с экрана «Домой» ──
    Страница растёт по высоте карточек; фото и экран с часами стоят на месте, шапка панели — поверх. */
-html.doc-scroll, html.doc-scroll body { height: auto; min-height: 100%; overflow: visible; overflow-x: hidden; }
+/* Прокручивается только сама страница: overflow-x: hidden — лишь у html (уходит на окно); у body —
+   нельзя, иначе на iOS body становится своей маленькой прокручиваемой областью и ловит палец. */
+html.doc-scroll { height: auto; min-height: 100%; overflow: visible; overflow-x: hidden; }
+html.doc-scroll body { height: auto; min-height: 100%; overflow: visible; }
 html.doc-scroll #app, html.doc-scroll .root, html.doc-scroll .app { height: auto; min-height: 100%; overflow: visible; }
-html.doc-scroll .app { overflow-x: hidden; }
+/* .app не должна становиться своей прокручиваемой областью: overflow-x: hidden делает её такой, и на iOS
+   палец крутит её (на пару десятков px), а не страницу. Лишнее по горизонтали режут html и body. */
 html.doc-scroll .ambient { position: fixed; }
 html.doc-scroll .controls { position: relative; min-height: 100vh; }
-html.doc-scroll .controls-head { position: fixed; }
 html.doc-scroll .home-pane { flex: none; }
 html.doc-scroll .grid { flex: none; overflow: visible; }
 
@@ -1108,3 +1109,136 @@ html.photo-peek, html.photo-peek body, html.photo-peek #app, html.photo-peek .ro
 html.photo-peek .app { height: calc(100vh + 1px); height: calc(100lvh + 1px); }
 html.photo-peek .backdrop { position: absolute; }
 html.photo-peek .ambient { bottom: auto; height: 100vh; height: 100svh; }
+
+/* ── Пульт и клавиатура (components/TvBar, lib/spatialNav) ── */
+/* Лента экрана с фото — как в Tizen: снизу поверх фото, плитка под фокусом крупнее и светлая, над ней —
+   название и состояние. */
+.tv-bar {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; pointer-events: none;
+  padding: 0 0 max(5vh, env(safe-area-inset-bottom));
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.35) 60%, rgba(0, 0, 0, 0));
+  opacity: 0; transition: opacity 0.25s ease;
+}
+/* Въезд снизу — анимацией, а не сдвигом спрятанной ленты: сдвинутая за край, она удлиняет страницу. */
+.tv-bar.visible { opacity: 1; -webkit-animation: tv-bar-in 0.3s var(--ease); animation: tv-bar-in 0.3s var(--ease); }
+@-webkit-keyframes tv-bar-in { from { -webkit-transform: translateY(30px); } to { -webkit-transform: none; } }
+@keyframes tv-bar-in { from { transform: translateY(30px); } to { transform: none; } }
+.tv-row {
+  display: flex; align-items: center; overflow: hidden; scroll-behavior: smooth;
+  padding: 96px max(5vw, env(safe-area-inset-left)) 16px;
+}
+.tv-tile {
+  position: relative; flex: none; display: flex; align-items: center; justify-content: center;
+  width: 76px; height: 76px; margin-right: 14px; border-radius: 18px;
+  background: rgba(255, 255, 255, 0.14); color: rgba(255, 255, 255, 0.85);
+  transition: -webkit-transform 0.18s var(--ease), background 0.18s ease, color 0.18s ease;
+  transition: transform 0.18s var(--ease), background 0.18s ease, color 0.18s ease;
+}
+.tv-tile.on { color: #ffd27a; }
+.tv-tile.alert { color: #ff8a80; }
+.tv-tile.focus { -webkit-transform: scale(1.22); transform: scale(1.22); background: #f4f2ec; color: #1c1c1c; z-index: 1; }
+.tv-tile.focus.on { color: #a86a00; }
+.tv-tile.focus.alert { color: #c62828; }
+.tv-label {
+  position: absolute; left: 50%; bottom: calc(100% + 12px); -webkit-transform: translateX(-50%) scale(0.82); transform: translateX(-50%) scale(0.82);
+  white-space: nowrap; text-align: center; font-size: 17px; font-weight: 500; color: #fff; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+}
+.tv-label small { display: block; margin-top: 2px; font-size: 14px; font-weight: 400; color: rgba(255, 255, 255, 0.75); }
+.tv-sep { flex: none; width: 1px; height: 44px; margin: 0 16px 0 2px; background: rgba(255, 255, 255, 0.28); }
+.q-lite .tv-bar { background: rgba(0, 0, 0, 0.55); }
+
+/* Фокус в дашборде, карточках и окнах — только когда управляют клавишами (html.kbd-nav). */
+.kbd-nav .controls :focus, .kbd-nav .modal :focus, .kbd-nav .sheet :focus, .kbd-nav .lock-modal :focus {
+  outline: none; box-shadow: 0 0 0 3px #fff, 0 0 0 6px rgba(0, 0, 0, 0.35); border-radius: 12px; position: relative; z-index: 2;
+}
+/* С пульта карточка устройства открывается по центру экрана, а не у виджетов. */
+.kbd-nav .sheet-layer { align-items: center; justify-content: center; padding: 5vh 5vw; background: rgba(0, 0, 0, 0.45); }
+.kbd-nav .sheet { -webkit-transform-origin: 50% 50%; transform-origin: 50% 50%; max-height: 86vh; }
+.kbd-nav .sheet-inner { max-height: 86vh; }
+/* С пульта к дому ведёт лента (плитка «Дом») — стрелка-подсказка над фото не нужна. */
+.kbd-nav .home-hint { display: none; }
+
+/* Дашборд с пульта — как главный экран Apple TV (components/TvHome). */
+.atv {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 4; overflow-y: auto;
+  padding: max(5vh, env(safe-area-inset-top)) max(5vw, env(safe-area-inset-right)) 8vh max(5vw, env(safe-area-inset-left));
+  display: flex; flex-direction: column; justify-content: flex-end;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0) 60%);
+  -webkit-animation: fade-in 0.3s ease; animation: fade-in 0.3s ease;
+}
+.atv-tabs { display: flex; justify-content: flex-start; flex-wrap: wrap; margin-bottom: 3vh; }
+.atv-tab {
+  margin: 0 6px; padding: 8px 22px; border-radius: 22px; font-size: 18px; color: rgba(255, 255, 255, 0.6);
+  background: transparent; border: 0; transition: background 0.18s ease, color 0.18s ease;
+}
+.atv-tab.on { color: #fff; background: rgba(255, 255, 255, 0.14); }
+.atv-tab:focus { outline: none; color: #1c1c1c; background: #f4f2ec; }
+.atv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); grid-gap: 4vh 2.6vw; gap: 4vh 2.6vw; }
+.atv-tile { display: flex; flex-direction: column; align-items: stretch; padding: 0; border: 0; background: none; color: inherit; text-align: center; }
+.atv-tile:focus { outline: none; }
+.atv-face {
+  position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;
+  height: 0; padding-bottom: 60%; border-radius: 16px; background: rgba(255, 255, 255, 0.12); color: rgba(255, 255, 255, 0.85);
+  transition: -webkit-transform 0.2s var(--ease), box-shadow 0.2s ease, background 0.2s ease;
+  transition: transform 0.2s var(--ease), box-shadow 0.2s ease, background 0.2s ease;
+}
+.atv-face > * { position: absolute; top: 50%; left: 50%; -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%); }
+.atv-tile.lit .atv-face { color: #ffd27a; }
+.atv-tile.alert .atv-face { color: #ff8a80; }
+.atv-tile:focus .atv-face {
+  -webkit-transform: scale(1.12) translateY(-4px); transform: scale(1.12) translateY(-4px);
+  background: rgba(255, 255, 255, 0.24); box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+.atv-weather { display: flex; align-items: center; white-space: nowrap; }
+.atv-weather b { margin-left: 10px; font-size: 40px; font-weight: 300; }
+.atv-face .atv-shot { top: 0; left: 0; width: 100%; height: 100%; -webkit-transform: none; transform: none; object-fit: cover; }
+.atv-name { margin-top: 16px; font-size: 16px; font-weight: 500; color: #fff; opacity: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity 0.2s ease; }
+.atv-name small { display: block; margin-top: 2px; font-size: 14px; font-weight: 400; color: rgba(255, 255, 255, 0.7); }
+.atv-tile:focus .atv-name { opacity: 1; }
+.q-lite .atv-face { transition: none; }
+/* Дашборд с пульта — тот же экран с фото: часы на месте, виджеты и стрелку заменяют плитки, фото — лёгкий блюр. */
+.tv-home .ambient .glances, .tv-home .home-hint { display: none; }
+.tv-home .soft { opacity: 0; }
+.tv-home .shade.deep { background-color: rgba(4, 6, 12, 0.15); }
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .q-full .tv-home .shade.deep { -webkit-backdrop-filter: blur(8px) saturate(1); backdrop-filter: blur(8px) saturate(1); }
+}
+.atv.atv-top { justify-content: flex-start; background: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0) 60%); }
+/* С пульта карточка камеры — почти на весь экран, с небольшими отступами по краям. */
+.kbd-nav .sheet-layer.cams { padding: 2vh 2vw; }
+.kbd-nav .sheet-cameras { width: 96vw; max-width: none; height: 96vh; max-height: none; }
+.kbd-nav .sheet-cameras .sheet-inner { display: flex; flex-direction: column; height: 96vh; max-height: none; box-sizing: border-box; overflow: hidden; }
+.kbd-nav .sheet-cameras .cam-wrap { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.kbd-nav .sheet-cameras .cam { flex: 1; height: auto; min-height: 0; }
+
+/* Просмотр камер как в Telegram (components/CameraViewer): на весь экран, на чёрном, видео целиком. */
+.cam-viewer {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 120; background: #000; overflow: hidden;
+  -webkit-animation: fade-in 0.2s ease; animation: fade-in 0.2s ease; touch-action: none;
+}
+html.standalone .cam-viewer { bottom: auto; height: 100vh; }
+.cam-viewer-stage { position: absolute; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; }
+.cam-viewer-stage img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain;
+  -webkit-transform-origin: 0 0; transform-origin: 0 0; }
+.cam-viewer-peek { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000 no-repeat center;
+  background-size: contain; pointer-events: none; }
+.cam-viewer-bar {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between;
+  /* Ниже полосы размытия iOS 26 под строкой состояния (как .controls-head) — иначе название и крестик расплываются. */
+  padding: max(16px, calc(env(safe-area-inset-top) + 16px)) max(16px, env(safe-area-inset-right)) 18px max(16px, env(safe-area-inset-left));
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0)); transition: opacity 0.2s ease;
+}
+.cam-viewer-name { color: #fff; font-size: 17px; font-weight: 500; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6); }
+.cam-viewer-close { width: 44px; height: 44px; border-radius: 50%; border: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, 0.16); color: #fff; }
+.cam-viewer-dots { position: absolute; left: 0; right: 0; bottom: max(24px, calc(env(safe-area-inset-bottom) + 12px)); z-index: 2;
+  display: flex; justify-content: center; transition: opacity 0.2s ease; }
+.cam-viewer-dots button { width: 8px; height: 8px; margin: 0 5px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.4); }
+.cam-viewer-dots button.active { background: #fff; }
+/* Касание прячет шапку и точки; пока кадр тянут вниз-вверх — тоже. */
+.cam-viewer.bare .cam-viewer-bar, .cam-viewer.bare .cam-viewer-dots,
+.cam-viewer.dragging .cam-viewer-bar, .cam-viewer.dragging .cam-viewer-dots { opacity: 0; pointer-events: none; }
+
+/* Окно поверх (lib/docScroll, lockScroll): страница под ним закреплена и не прокручивается. */
+html.scroll-lock { overflow: hidden; }
+html.scroll-lock body { position: fixed; left: 0; right: 0; overflow: hidden; }

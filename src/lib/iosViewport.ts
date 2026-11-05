@@ -59,8 +59,36 @@ function check(delay: number) {
   }, delay);
 }
 
+// Фото — на весь экран в этой ориентации, даже когда WebKit укоротил окно. Высота строки состояния из env() в таком
+// состоянии бывает неверной, а CSS-переменные сборка разворачивает в статику (postcss, ради Android 5) —
+// поэтому готовые пиксели пишем отдельным <style>. Окно WebKit укорачивает и без события resize — поэтому
+// пересчитываем ещё и при каждом открытии дашборда (lib/docScroll) и сверяемся по таймеру.
+export function syncVars() {
+  if (!document.documentElement.classList.contains('standalone')) return;
+  const a = screen.width, b = screen.height;
+  const h = Math.max(window.innerWidth > window.innerHeight ? Math.min(a, b) : Math.max(a, b), window.innerHeight);
+  let el = document.getElementById('ios-viewport') as HTMLStyleElement | null;
+  if (!el) {
+    el = document.createElement('style');
+    el.id = 'ios-viewport';
+    document.head.appendChild(el);
+  }
+  el.textContent = 'html.standalone .backdrop{bottom:auto;height:' + h + 'px}';
+}
+
 export function watchIosViewport() {
   if (!standalone()) return;
+  document.documentElement.classList.add('standalone');
+  syncVars();
+  window.addEventListener('resize', syncVars);
+  // WebKit меняет высоту окна и молча (без resize) — сверяемся раз в пару секунд, пока приложение на экране.
+  let lastH = window.innerHeight;
+  window.setInterval(() => {
+    if (document.hidden || window.innerHeight === lastH) return;
+    lastH = window.innerHeight;
+    syncVars();
+  }, 2000);
+  window.addEventListener('orientationchange', () => window.setTimeout(syncVars, 300));
   remember();
   // Закрыли клавиатуру после ввода — обычный случай: ждём, пока она уедет, и лечим.
   window.addEventListener('focusout', (e) => {

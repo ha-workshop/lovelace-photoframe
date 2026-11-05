@@ -139,17 +139,23 @@ interface Props {
   onDone: () => void;
 }
 
-export function Ambient(props: Props) {
-  const ha = useHA();
-  const store = useStore();
-  const prefs = useLockPrefs();
-  const [panel, setPanel] = useState<'' | 'clock' | 'widgets'>('');
-  // Виджеты — со всех экранов показанного дома; погода с галочкой «на фото» встаёт под часами.
+// Виджеты экрана с фото — карточки с галочкой «на фото» со всех экранов показанного дома (кроме погоды:
+// она встаёт под часами), в порядке и без скрытых из настроек. Тревоги — первыми.
+export function lockChips(ha: ReturnType<typeof useHA>, store: ReturnType<typeof useStore>, prefs: LockPrefs) {
   const all = store.homeCards().filter((c) => c.chip);
   const weather = all.filter((c) => c.type === 'weather' && c.items.length)[0];
   const widgets = sortWidgets(all.filter((c) => c.type !== 'weather'), prefs);
   const chips = widgets.filter((c) => prefs.hidden.indexOf(c.id) === -1);
   const alerts = chips.filter((c) => summary(ha, c).alert);
+  return { weather, widgets, chips, alerts, ordered: alerts.concat(chips.filter((c) => alerts.indexOf(c) === -1)) };
+}
+
+export function Ambient(props: Props) {
+  const ha = useHA();
+  const store = useStore();
+  const prefs = useLockPrefs();
+  const [panel, setPanel] = useState<'' | 'clock' | 'widgets'>('');
+  const { weather, widgets, chips, alerts, ordered } = lockChips(ha, store, prefs);
   const edit = props.customizing;
   const done = () => { setPanel(''); props.onDone(); };
   // Сетка: пока блок тянут, его место — черновик (сохраняется, когда отпустили).
@@ -198,7 +204,7 @@ export function Ambient(props: Props) {
           )}
           {edit && !chips.length && <span class="glance glance-add"><Plus size={18} /><span>{t('lock.add_widgets')}</span></span>}
           {/* Тревоги — первыми */}
-          {alerts.concat(chips.filter((c) => alerts.indexOf(c) === -1)).map((card) => {
+          {ordered.map((card) => {
             const s = summary(ha, card);
             return (
               <button key={card.id} class={'glance' + (s.lit ? ' lit' : '') + (s.alert ? ' alert' : '')} title={s.text}

@@ -463,7 +463,13 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (web.canGoBack()) web.goBack();
+        // «Назад» пульта — странице рамки (закрыть окно, вернуться к фото, спрятать ленту). Нет её обработчика
+        // (вход в HA, другая страница) — назад по истории.
+        web.evaluateJavascript("window.SmartFrameBack ? String(window.SmartFrameBack()) : 'false'", new android.webkit.ValueCallback<String>() {
+            public void onReceiveValue(String handled) {
+                if (!"\"true\"".equals(handled) && web.canGoBack()) web.goBack();
+            }
+        });
     }
 
     @Override
@@ -476,6 +482,12 @@ public class MainActivity extends Activity {
             if (sleepLock.isHeld()) sleepLock.release();
             web.evaluateJavascript("window.SmartFrameWake && window.SmartFrameWake()", null);
         }
+    }
+
+    @Override
+    public void onTrimMemory(int level) {
+        super.onTrimMemory(level);
+        if (photos != null) photos.trim(level);
     }
 
     @Override
