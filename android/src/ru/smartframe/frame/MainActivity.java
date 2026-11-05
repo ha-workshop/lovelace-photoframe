@@ -16,13 +16,17 @@ import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.net.nsd.NsdManager;
+import android.net.nsd.NsdServiceInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.text.InputType;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
@@ -33,8 +37,11 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ListView;
+import android.widget.TextView;
 
 import org.json.JSONObject;
 
@@ -43,6 +50,8 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 // Рамка — полноэкранный WebView с PWA, которую раздаёт Home Assistant.
 // Интерфейс живёт на сервере (./deploy.sh pwa обновляет его без переустановки APK),
@@ -135,6 +144,14 @@ public class MainActivity extends Activity {
             // Вход в HA и всё прочее открываем здесь же, а не во внешнем браузере (его на рамке может не быть).
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if (handleSmartFrameUrl(url)) return true;
+                return false;
+            }
+
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req) {
+                String url = req.getUrl().toString();
+                if (handleSmartFrameUrl(url)) return true;
                 return false;
             }
 
@@ -263,48 +280,173 @@ public class MainActivity extends Activity {
         getSharedPreferences(PREFS, MODE_PRIVATE).edit().putString(KEY_HA, ha.trim()).apply();
     }
 
+    // Поиск Home Assistant в локальной сети через mDNS (_home-assistant._tcp).
+    private NsdManager nsdManager;
+    private NsdManager.DiscoveryListener discoveryListener;
+    private final List<String> discovered = new java.util.ArrayList<>();
+    private final List<String> discoveredUrls = new java.util.ArrayList<>();
+
+    private void startDiscovery() {
+        discovered.clear();
+        discoveredUrls.clear();
+        try {
+            nsdManager = (NsdManager) getSystemService(NSD_SERVICE);
+            discoveryListener = new NsdManager.DiscoveryListener() {
+                @Override
+                public void onDiscoveryStarted(String serviceType) {}
+
+                @Override
+                public void onServiceFound(NsdServiceInfo info) {
+                    final String name = info.getServiceName();
+                    if (!name.toLowerCase().contains("home-assistant") && !name.toLowerCase().contains("homeassistant") && !name.toLowerCase().contains("hass")) {
+                        // Пробуем resolve — может порт 8123
+                    }
+                    nsdManager.resolveService(info, new NsdManager.ResolveListener() {
+                        @Override
+                        public void onResolveFailed(NsdServiceInfo si, int code) {}
+
+                        @Override
+                        public void onServiceResolved(NsdServiceInfo si) {
+                            // Home Assistant по умолчанию на порту 8123
+                            int port = si.getPort();
+                            if (port <= 0) port = 8123;
+                            String ip = si.getHost().getHostAddress();
+                            String url = "http://" + ip + ":" + port;
+                            if (!discoveredUrls.contains(url)) {
+                                discoveredUrls.add(url);
+                                discovered.add(si.getServiceName() + " (" + url + ")");
+                            }
+                        }
+                    });
+                }
+
+                @Override
+                public void onServiceLost(NsdServiceInfo info) {}
+
+                @Override
+                public void onDiscoveryStopped(String serviceType) {}
+
+                @Override
+                public void onStartDiscoveryFailed(String serviceType, int code) {}
+
+                @Override
+                public void onStopDiscoveryFailed(String serviceType, int code) {}
+            };
+            nsdManager.discoverServices("_home-assistant._tcp.local.", NsdManager.PROTOCOL_DNS_SD, discoveryListener);
+        } catch (Exception e) { /* nsd не поддерживается */ }
+    }
+
+    private void stopDiscovery() {
+        try {
+            if (discoveryListener != null) nsdManager.stopServiceDiscovery(discoveryListener);
+        } catch (Exception e) { /* ignore */ }
+        discoveryListener = null;
+    }
+
     private void askUrl() {
-        final EditText input = new EditText(this);
-        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
+        // Запускаем mDNS поиск
+        startDiscovery();
+
+        final View dialogView = getLayoutInflater().inflate(R.layout.url_picker, null);
+        final EditText input = dialogView.findViewById(R.id.url_input);
+        final ListView list = dialogView.findViewById(R.id.url_list);
+        final TextView status = dialogView.findViewById(R.id.url_status);
+
         String current = ha();
         input.setText(current.isEmpty() ? getString(R.string.url_default) : current);
         input.setSelection(input.getText().length());
+
+        final ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+            android.R.layout.simple_list_item_1, discovered) {
+            @Override
+            public View getView(int pos, View convertView, ViewGroup parent) {
+                TextView v = (TextView) super.getView(pos, convertView, parent);
+                v.setTextSize(16);
+                v.setPadding(16, 14, 16, 14);
+                return v;
+            }
+        };
+        list.setAdapter(adapter);
+        list.setOnItemClickListener((parent, view, pos, id) -> {
+            String url = discoveredUrls.get(pos);
+            saveHa(url);
+            stopDiscovery();
+            web.loadUrl(url());
+        });
+
+        // Обновление списка найденных через 2 секунды поиска
+        handler.postDelayed(new Runnable() {
+            public void run() {
+                adapter.notifyDataSetChanged();
+                status.setText(discovered.isEmpty()
+                    ? getString(R.string.discovery_none)
+                    : getString(R.string.discovery_found, discovered.size()));
+            }
+        }, 2500);
+
         new AlertDialog.Builder(this)
             .setTitle(R.string.url_title)
-            .setMessage(R.string.url_hint)
-            .setView(input)
+            .setView(dialogView)
             .setCancelable(false)
             .setPositiveButton(R.string.open, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface d, int which) {
-                    saveHa(input.getText().toString());
-                    web.loadUrl(url());
+                    stopDiscovery();
+                    String url = input.getText().toString().trim();
+                    if (!url.isEmpty()) {
+                        saveHa(url);
+                        web.loadUrl(url());
+                    }
                 }
+            })
+            .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface d, int which) {
+                    stopDiscovery();
+                    finish();
+                }
+            })
+            .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                public void onDismiss(DialogInterface d) { stopDiscovery(); }
             })
             .show();
     }
 
-    // Нет сети или HA перезагружается — предлагаем повторить; сами тоже пробуем раз в 30 секунд.
+    // Нет сети или HA перезагружается — показываем экран-заглушку с логотипом и кнопками.
     private void showError() {
         if (failed) return;
         failed = true;
-        web.loadData("<body style='background:#000'></body>", "text/html", "utf-8");
-        final AlertDialog dialog = new AlertDialog.Builder(this)
-            .setTitle(R.string.load_error)
-            .setMessage(url())
-            .setPositiveButton(R.string.retry, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface d, int which) { retry(); }
-            })
-            .setNegativeButton(R.string.change_url, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface d, int which) { failed = false; askUrl(); }
-            })
-            .show();
+        // Заглушка прямо в WebView: логотип, сообщение, кнопки «Повторить» и «Сменить адрес».
+        // Кнопки по ссылкам smartframe://retry и smartframe://change — WebViewClient перехватывает.
+        web.loadDataWithBaseURL(null,
+            "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'>"
+            + "<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0b0d14;color:#f5f7fb;"
+            + "font-family:-apple-system,Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;"
+            + "justify-content:center;min-height:100vh;padding:24px;text-align:center}"
+            + ".logo{margin-bottom:24px}.logo svg{width:64px;height:64px}.msg{font-size:16px;color:#94a3b8;"
+            + "margin-bottom:24px;word-break:break-all}.btn{display:inline-block;padding:14px 28px;margin:6px;"
+            + "border-radius:14px;font-size:15px;font-weight:600;text-decoration:none;min-width:200px}"
+            + ".btn-primary{background:#7dd3fc;color:#0b0d14}.btn-secondary{background:rgba(255,255,255,.08);"
+            + "color:#f5f7fb}.btn-secondary:active,.btn-primary:active{opacity:.7}"
+            + "</style></head><body>"
+            + "<div class=logo><svg viewBox='0 0 24 24' fill='none' stroke='#7dd3fc' stroke-width='1.5' "
+            + "stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='3' width='18' height='18' rx='2'/>"
+            + "<circle cx='8.5' cy='8.5' r='1.5'/><polyline points='21 15 16 10 5 21'/></svg></div>"
+            + "<div class=msg>" + url() + "</div>"
+            + "<a class='btn btn-primary' href='smartframe://retry'>" + getString(R.string.retry) + "</a>"
+            + "<a class='btn btn-secondary' href='smartframe://change'>" + getString(R.string.change_url) + "</a>"
+            + "</body></html>",
+            "text/html", "utf-8", null);
         handler.postDelayed(new Runnable() {
             public void run() {
                 if (!failed) return;
-                if (dialog.isShowing()) dialog.dismiss();
                 retry();
             }
         }, 30000);
+    }
+
+    private boolean handleSmartFrameUrl(String url) {
+        if ("smartframe://retry".equals(url)) { retry(); return true; }
+        if ("smartframe://change".equals(url)) { failed = false; askUrl(); return true; }
+        return false;
     }
 
     private void retry() {
@@ -463,6 +605,12 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
+        // Чёрный экран (ошибка загрузки) — показываем диалог смены адреса.
+        if (failed) {
+            failed = false;
+            askUrl();
+            return;
+        }
         // «Назад» пульта — странице рамки (закрыть окно, вернуться к фото, спрятать ленту). Нет её обработчика
         // (вход в HA, другая страница) — назад по истории.
         web.evaluateJavascript("window.SmartFrameBack ? String(window.SmartFrameBack()) : 'false'", new android.webkit.ValueCallback<String>() {

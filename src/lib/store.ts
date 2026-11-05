@@ -473,7 +473,11 @@ class Store {
     return () => { this.commandListeners = this.commandListeners.filter((l) => l !== fn); };
   }
 
+  // HA device_id этой рамки — для привязки к комнате в Assist.
+  frameDeviceId = '';
+
   private applyFrameState(s: FrameState) {
+    if (s.device_id) this.frameDeviceId = s.device_id;
     // Имя рамки в HA главнее — переименовали устройство, рамка знает своё новое имя
     // (если только своё переименование ещё не дошло до HA).
     let pending = '';

@@ -472,5 +472,6 @@
   "voice.error.setup": "Assist has no speech recognition or agent configured.",
   "voice.error.closed": "The connection was interrupted.",
   "voice.error.run": "The request failed. Try again.",
-  "voice.sign_in": "Sign in to Home Assistant"
+  "voice.sign_in": "Sign in to Home Assistant",
+  "admin.download_apk": "Download APK"
 }

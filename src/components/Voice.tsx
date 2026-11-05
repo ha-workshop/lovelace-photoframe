@@ -99,6 +99,9 @@ export function Voice(props: { onClose: () => void; onSettings?: () => void }) {
     try { localStorage.setItem('photoframe.voiceSpeak', next ? '1' : '0'); } catch (e) { /* ignore */ }
     return next;
   });
+  // Для Assist эта рамка — устройство в HA: по нему ассистент понимает, в какой комнате включать свет.
+  const deviceId = store.frameDeviceId || undefined;
+
   const [text, setText] = useState('');
   const session = useRef<VoiceRun | null>(null);
   const conversation = useRef<string | undefined>(undefined);
@@ -106,7 +109,11 @@ export function Voice(props: { onClose: () => void; onSettings?: () => void }) {
 
   const apply = (patch: VoicePatch) => {
     if (patch.phase) phase.current = patch.phase;
-    if (patch.conversationId) conversation.current = patch.conversationId;
+    if (patch.conversationId) {
+      conversation.current = patch.conversationId;
+      // Сохраняем на рамку — следующий открытый диалог продолжит беседу (HA хранит историю ~5 минут).
+      try { localStorage.setItem('photoframe.conversation', patch.conversationId); } catch (e) { /* ignore */ }
+    }
     setStatus((s) => ({ ...s, ...patch, error: patch.phase && patch.phase !== 'error' ? '' : patch.error || s.error }));
   };
 
@@ -116,7 +123,7 @@ export function Voice(props: { onClose: () => void; onSettings?: () => void }) {
     voiceCue('listen');
     phase.current = 'connecting';
     setStatus({ phase: 'connecting', reply: '', error: '', transcript: '' });
-    session.current = listenVoice({ onStatus: apply }, conversation.current, store.state.settings.voicePipeline);
+    session.current = listenVoice({ onStatus: apply }, conversation.current, store.state.settings.voicePipeline, deviceId);
   };
 
   useEffect(() => {
@@ -146,7 +153,7 @@ export function Voice(props: { onClose: () => void; onSettings?: () => void }) {
     primeVoice();
     phase.current = 'thinking';
     setStatus({ phase: 'thinking', transcript: value, reply: '', error: '' });
-    session.current = askVoice(value, { onStatus: apply }, conversation.current, store.state.settings.voicePipeline, speak);
+    session.current = askVoice(value, { onStatus: apply }, conversation.current, store.state.settings.voicePipeline, speak, deviceId);
   };
 
   const orb = () => {
@@ -186,6 +193,14 @@ export function Voice(props: { onClose: () => void; onSettings?: () => void }) {
     setStatus((s) => ({ ...s, shortened: false, error: '', phase: 'thinking' }));
     session.current = speakVoice(text, { onStatus: apply }, store.state.settings.voicePipeline);
   };
+
+  // Восстанавливаем conversation_id при открытии — если HA ещё не забыл диалог.
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('photoframe.conversation');
+      if (saved) conversation.current = saved;
+    } catch (e) { /* ignore */ }
+  }, []);
 
   const answering = status.phase === 'thinking' || status.phase === 'speaking';
   const orbTitle = phase.current === 'listening' ? t('voice.stop') : answering ? t('voice.stop_answer') : t('voice.listen');

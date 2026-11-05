@@ -472,5 +472,6 @@
   "voice.error.setup": "В Assist не настроено распознавание речи или агент.",
   "voice.error.closed": "Связь прервалась.",
   "voice.error.run": "Запрос не выполнился. Попробуйте ещё раз.",
-  "voice.sign_in": "Войти в Home Assistant"
+  "voice.sign_in": "Войти в Home Assistant",
+  "admin.download_apk": "Скачать APK"
 }

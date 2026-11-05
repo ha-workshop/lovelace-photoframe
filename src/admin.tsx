@@ -135,7 +135,13 @@ function AdminApp(props: { hass: Hass }) {
     <div class="admin">
       <header class="admin-head">
         <h1>{t('admin.title')}</h1>
-        <button class="btn btn-ghost" onClick={load}><RefreshCw size={14} /><span>{t('admin.refresh')}</span></button>
+        <div class="admin-head-btns">
+          <a class="btn btn-ghost" href={'/photoframe/photoframe.apk'} target="_blank" rel="noopener" download>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            <span>{t('admin.download_apk')}</span>
+          </a>
+          <button class="btn btn-ghost" onClick={load}><RefreshCw size={14} /><span>{t('admin.refresh')}</span></button>
+        </div>
       </header>
       {error && <div class="c-red small">{error}</div>}
       {frames && !frames.length && <p class="hint">{t('admin.no_frames')}</p>}
@@ -254,8 +260,10 @@ function AdminApp(props: { hass: Hass }) {
 const ADMIN_CSS = ':host{display:block;min-height:100vh;background:#0b0d14;color:#f5f7fb;'
   + 'font-family:Inter,Roboto,-apple-system,"Segoe UI",sans-serif}'
   + '.admin{max-width:1200px;margin:0 auto;padding:16px 20px}'
-  + '.admin-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}'
+  + '.admin-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px}'
   + '.admin-head h1{font-size:22px;font-weight:600;margin:0}'
+  + '.admin-head-btns{display:flex;gap:8px;align-items:center}'
+  + '.admin-head-btns a{text-decoration:none}'
   + '.admin-body{display:flex;align-items:flex-start}'
   + '.admin-list{width:230px;flex-shrink:0;margin-right:18px;display:flex;flex-direction:column}'
   + '.admin-frame{display:flex;align-items:center;flex-wrap:wrap;text-align:left;padding:10px 12px;border-radius:12px;margin-bottom:6px;background:rgba(255,255,255,0.05)}'

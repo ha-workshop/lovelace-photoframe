@@ -25,7 +25,7 @@ const PREVIEW_ID = previewFrame();
 
 // layout — сетки экрана с фото, заданные в HA (rev растёт с каждой правкой из редактора).
 export interface FrameState {
-  type: 'state'; name?: string; album?: string; start_screen?: string | null; screen_on?: boolean; brightness?: number;
+  type: 'state'; device_id?: string; name?: string; album?: string; start_screen?: string | null; screen_on?: boolean; brightness?: number;
   // Экран с фото, заданный в HA (редактор или «Скопировать на…»): rev растёт с каждой правкой.
   lockscreen_push?: { rev: number; patch: unknown } | null;
 }
