@@ -128,8 +128,9 @@ function fmtTemp(v: unknown) {
   return isNaN(n) ? '—' : (Math.round(n * 10) / 10).toFixed(1);
 }
 
-// Погода под часами на фото: иконка, температура, состояние, мин–макс на сегодня.
-export function AmbientWeather({ entity }: { entity: string }) {
+// Погода на фото: только значок, под ним мин–макс на сегодня. Текущая температура и описание
+// состояния спрятаны — по нажатию открывается карточка погоды целиком (как остальные плашки).
+export function AmbientWeather({ entity, onOpen }: { entity: string; onOpen?: () => void }) {
   const ha = useHA();
   const s = ha.states[entity];
   const { days } = useForecast(ha, entity);
@@ -137,13 +138,10 @@ export function AmbientWeather({ entity }: { entity: string }) {
   const c = condition(s.state);
   const today = days[0];
   return (
-    <div class="ambient-weather">
+    <div class={'ambient-weather' + (onOpen ? ' link' : '')} onClick={onOpen} title={c.label}
+      role={onOpen ? 'button' : undefined}>
       <c.Icon size={30} />
-      <span class="aw-temp">{round(s.attributes.temperature)}°</span>
-      <span class="aw-desc">
-        {c.label}
-        {today && today.hi != null && <small>{round(today.lo)}° … {round(today.hi)}°</small>}
-      </span>
+      {today && today.hi != null && <span class="aw-range">{round(today.lo)}° … {round(today.hi)}°</span>}
     </div>
   );
 }

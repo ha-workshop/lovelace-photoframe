@@ -18,6 +18,7 @@ interface Targets {
   controls: RefObject<HTMLElement>;
   ambient: RefObject<HTMLElement>;
   soft: RefObject<HTMLElement>;
+  shade: RefObject<HTMLElement>;
 }
 
 // Element.closest есть только с Chrome 41 — на Android 5 его нет.
@@ -47,19 +48,46 @@ export function useSwipe(t: Targets, open: boolean, setOpen: (v: boolean) => voi
     let startY = 0, startX = 0, startT = 0, dy = 0, dx = 0, active = false, pressTimer = 0;
     // Ось жеста: '' — ещё не ясно, 'y' — вверх-вниз (панель), 'x' — влево-вправо (фото).
     let axis = '';
+    // Размытие фото за пальцем — как на iPhone: тянем вверх, кадр постепенно уходит в блюр
+    // дашборда. Только на «Красиво» и там, где браузер умеет backdrop-filter.
+    const BLUR = 28;
+    const blurOk = root.classList.contains('q-full')
+      && !document.documentElement.classList.contains('native-photos')
+      && (() => {
+        try {
+          return (window.CSS && CSS.supports && (CSS.supports('backdrop-filter', 'blur(1px)')
+            || CSS.supports('-webkit-backdrop-filter', 'blur(1px)'))) || false;
+        } catch (e) { return false; }
+      })();
 
     const paint = (p: number) => {
       // p: 0 — фото, 1 — панель. Экран с фото идёт за пальцем на всю высоту, панель проявляется.
-      const c = t.controls.current, a = t.ambient.current, s = t.soft.current;
+      const c = t.controls.current, a = t.ambient.current, s = t.soft.current, sh = t.shade.current;
       const h = root.clientHeight;
       if (c) { c.style.opacity = String(p); c.style.transform = 'scale(' + (0.96 + 0.04 * p).toFixed(4) + ')'; }
       if (a) a.style.transform = 'translateY(' + Math.round(-p * h) + 'px)';
       if (s) s.style.opacity = String(p);
+      if (sh) {
+        if (blurOk) {
+          const f = 'blur(' + (p * BLUR).toFixed(1) + 'px) saturate(' + (1 + 0.2 * p).toFixed(3) + ')';
+          sh.style.setProperty('backdrop-filter', f);
+          sh.style.setProperty('-webkit-backdrop-filter', f);
+        }
+        // Затемнение тоже нарастает за пальцем — к цвету .shade.deep в дашборде.
+        sh.style.backgroundColor = 'rgba(4,6,12,' + (0.38 * p).toFixed(3) + ')';
+      }
     };
     const clear = () => {
       [t.controls.current, t.ambient.current, t.soft.current].forEach((el) => {
         if (el) { el.style.opacity = ''; el.style.transform = ''; }
       });
+      // Снимаем инлайн-стили: класс .deep и transition доведут блюр до финального сам.
+      const sh = t.shade.current;
+      if (sh) {
+        sh.style.removeProperty('backdrop-filter');
+        sh.style.removeProperty('-webkit-backdrop-filter');
+        sh.style.backgroundColor = '';
+      }
     };
 
     const down = (e: TouchEvent | MouseEvent) => {

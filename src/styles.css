@@ -154,6 +154,14 @@ svg { display: block; flex-shrink: 0; }
 @-webkit-keyframes nudge { 0%, 60%, 100% { -webkit-transform: translateY(0); } 30% { -webkit-transform: translateY(-5px); } }
 @keyframes nudge { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
 
+/* Голос — первая плашка в ряду виджетов: заметна рядом с устройствами, но не спорит с ними. */
+/* Тень вокруг букв и значков — противоположным цветом к выбранному. --halo ставит Ambient
+   только в режиме «Авто — в обратку к фото» (и виджетам, у которых цвет «как часы»).
+   Растушёванная, без резкой обводки: фото остаётся видно. */
+.ambient-clock.halo .ambient-weather svg { filter: drop-shadow(0 0 2px var(--halo)) drop-shadow(0 0 7px var(--halo)); }
+.glances.halo .glance svg { filter: drop-shadow(0 0 2px var(--halo)) drop-shadow(0 0 7px var(--halo)); }
+.glance.voice-chip svg { color: #7dd3fc; }
+
 /* Фото листнулось свайпом: стрелка вспыхивает у края, с которого пришло фото — справа (следующее)
    или слева (предыдущее) — и уходит */
 .photo-step {
@@ -170,7 +178,7 @@ svg { display: block; flex-shrink: 0; }
 @keyframes photo-step-prev { 0% { opacity: 0; transform: translateX(-16px) scale(0.8); } 30% { opacity: 1; transform: translateX(0) scale(1); } 100% { opacity: 0; transform: translateX(8px) scale(1); } }
 
 /* Во время жеста — без анимаций, элементы идут за пальцем */
-.dragging .ambient, .dragging .controls, .dragging .soft { transition: none; }
+.dragging .ambient, .dragging .controls, .dragging .soft, .dragging .shade { transition: none; }
 .dragging .controls { pointer-events: none; }
 
 /* ── Панель управления ───────────────────────────── */
@@ -492,6 +500,123 @@ svg { display: block; flex-shrink: 0; }
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
 }
 .modal-wide { max-width: 960px; }
+.voice-modal { z-index: 130; background: rgba(0, 0, 0, 0.78); }
+/* Окно — почти на весь экран: длинный ответ агента читается как страница, а не в узкой колонке.
+   Шапка с микрофоном и поле ввода закреплены, прокручивается только текст ответа. */
+.voice-card {
+  position: relative; width: 100%; height: 100%; max-width: 1100px; max-height: 100%;
+  display: flex; flex-direction: column; align-items: stretch; overflow: hidden;
+  padding: 52px 28px 16px; text-align: center;
+  background: rgba(18, 20, 30, 0.97); border: 1px solid var(--panel-line); border-radius: 26px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  -webkit-animation: sheet-in 0.28s var(--ease); animation: sheet-in 0.28s var(--ease);
+}
+.voice-close { position: absolute; top: 12px; right: 12px; padding: 8px; z-index: 1; }
+.voice-head { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
+.voice-orb {
+  position: relative; flex-shrink: 0; width: 88px; height: 88px; margin-bottom: 12px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; color: #bae6fd; background: rgba(125, 211, 252, 0.16);
+  transition: color 0.2s ease, background 0.2s ease, -webkit-transform 0.2s ease, transform 0.2s ease;
+}
+.voice-orb:active { -webkit-transform: scale(0.95); transform: scale(0.95); }
+.voice-orb.listening { color: #fff; background: rgba(56, 189, 248, 0.42); }
+.voice-orb.thinking { color: #fde68a; background: rgba(251, 191, 36, 0.18); }
+.voice-orb.speaking { color: #bbf7d0; background: rgba(52, 211, 153, 0.22); }
+.voice-orb.error { color: #fecaca; background: rgba(248, 113, 113, 0.18); }
+.voice-ring {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%;
+  border: 2px solid currentColor; opacity: 0; pointer-events: none;
+  -webkit-animation: voice-pulse 1.7s ease-out infinite; animation: voice-pulse 1.7s ease-out infinite;
+}
+.voice-orb.listening .voice-ring, .voice-orb.speaking .voice-ring { opacity: 1; }
+.voice-orb.connecting .voice-ring { opacity: 0.6; }
+@-webkit-keyframes voice-pulse {
+  0% { -webkit-transform: scale(1); opacity: 0.7; }
+  100% { -webkit-transform: scale(1.55); opacity: 0; }
+}
+@keyframes voice-pulse {
+  0% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(1.55); opacity: 0; }
+}
+.voice-state { font-size: 16px; font-weight: 600; color: var(--ink); }
+.voice-said { margin-top: 6px; font-size: 14px; color: var(--ink-3); }
+.voice-stop-hint { margin-top: 8px; font-size: 12px; color: var(--ink-3); }
+.voice-short-note { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; margin-top: 6px; font-size: 12px; color: var(--ink-3); }
+.voice-read-full {
+  height: 26px; padding: 0 10px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--chip-line); background: rgba(255, 255, 255, 0.08);
+  color: var(--ink); font-size: 12px; font-weight: 500;
+}
+.voice-read-full:active { background: rgba(255, 255, 255, 0.16); }
+.voice-error { margin-top: 10px; font-size: 13px; line-height: 1.45; color: #fecaca; }
+.voice-signin { margin: 14px 0 0; height: 40px; }
+/* Текст ответа: слева, обычным размером — это не заголовок, а несколько абзацев. */
+.voice-body {
+  flex: 1 1 auto; min-height: 0; width: 100%; margin-top: 14px;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  display: flex; justify-content: center; align-items: flex-start;
+}
+.voice-reply {
+  width: 100%; max-width: 820px; text-align: left;
+  font-size: 16px; line-height: 1.5; color: var(--ink);
+  -webkit-user-select: text; user-select: text;
+}
+.voice-reply p { margin: 0 0 0.7em; }
+.voice-reply p:last-child { margin-bottom: 0; }
+.voice-reply .voice-h { margin: 1.1em 0 0.45em; font-weight: 600; color: #fff; line-height: 1.3; }
+.voice-reply .voice-h:first-child { margin-top: 0; }
+.voice-reply .voice-h.h1 { font-size: 1.18em; }
+.voice-reply .voice-h.h2 { font-size: 1.1em; }
+.voice-reply .voice-h.h3 { font-size: 1.03em; }
+.voice-reply ul { margin: 0 0 0.7em; padding: 0; list-style: none; }
+.voice-reply li { position: relative; margin: 0 0 0.5em; padding-left: 18px; }
+.voice-reply li::before { content: '•'; position: absolute; left: 2px; color: var(--ink-3); }
+.voice-reply ol { margin: 0 0 0.7em; padding: 0 0 0 22px; }
+.voice-reply ol li { padding-left: 2px; }
+.voice-reply ol li::before { content: none; }
+.voice-reply strong { font-weight: 600; color: #fff; }
+.voice-reply em { font-style: italic; color: var(--ink-2); }
+.voice-reply code {
+  padding: 1px 5px; border-radius: 5px; font: 0.92em Menlo, monospace;
+  background: rgba(255, 255, 255, 0.08);
+}
+.voice-ask {
+  flex-shrink: 0; display: flex; align-items: center; width: 100%; max-width: 820px;
+  margin: 16px auto 0; padding: 4px; text-align: left;
+  border-radius: 999px; background: rgba(255, 255, 255, 0.07); border: 1px solid var(--panel-line);
+}
+.voice-ask input {
+  -webkit-flex: 1 1 auto; flex: 1 1 auto; min-width: 0; height: 40px; padding-left: 8px; border: 0; background: none;
+  font-size: 14px; color: var(--ink); -webkit-user-select: text; user-select: text;
+}
+.voice-ask input::-webkit-input-placeholder { color: var(--ink-3); }
+.voice-ask input::placeholder { color: var(--ink-3); }
+.voice-ask button {
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: 50%; color: #0b0d14; background: #7dd3fc;
+}
+.voice-ask .voice-mode {
+  width: auto; height: 32px; margin-right: 4px; padding: 0 10px; gap: 5px;
+  border-radius: 999px; background: transparent; color: var(--ink-3);
+  font-size: 12px; font-weight: 500;
+}
+.voice-ask .voice-mode svg { width: 16px; height: 16px; }
+.voice-ask .voice-mode.on { color: #7dd3fc; background: rgba(125, 211, 252, 0.12); }
+.voice-ask button:disabled { opacity: 0.35; }
+.voice-note { flex-shrink: 0; margin-top: 8px; font-size: 11px; color: var(--ink-3); }
+@media (max-height: 620px) {
+  .voice-card { padding-top: 40px; padding-bottom: 12px; }
+  .voice-orb { width: 64px; height: 64px; margin-bottom: 8px; }
+  .voice-orb svg { width: 26px; height: 26px; }
+  .voice-body { margin-top: 10px; }
+  .voice-ask { margin-top: 10px; }
+}
+@media (max-width: 520px) {
+  .voice-card { padding-left: 18px; padding-right: 18px; }
+  .voice-reply { font-size: 15px; }
+  .voice-ask .voice-mode { padding: 0 8px; }
+}
 .modal-head { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; margin: 0; padding: 24px 24px 16px; }
 .modal-head h2 { font-size: 19px; font-weight: 600; }
 .modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 24px 24px; }
@@ -527,8 +652,16 @@ svg { display: block; flex-shrink: 0; }
 .option { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--panel-line); font-size: 14px; color: var(--ink-2); gap: 12px; }
 .option label { flex-shrink: 0; }
 .option select {
-  padding: 10px 14px; border-radius: 10px; background: rgba(255, 255, 255, 0.08); color: var(--ink); font-size: 13px;
+  /* Своя стрелка вместо системной: у нативного select отступ справа разный на iOS и Android. */
+  -webkit-appearance: none; appearance: none;
+  padding: 10px 34px 10px 14px; border-radius: 10px;
+  background-color: rgba(255, 255, 255, 0.08);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5l5-5' stroke='rgba(255,255,255,0.7)' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  color: var(--ink); font-size: 13px;
   min-width: 0; max-width: 60%;
+  text-overflow: ellipsis;
 }
 .option select option { color: #000; }
 .option-col { display: block; }
@@ -751,11 +884,12 @@ svg { display: block; flex-shrink: 0; }
 .day-hi { width: 34px; }
 .day-bar { position: relative; flex: 1; height: 4px; margin: 0 10px; border-radius: 2px; background: rgba(255, 255, 255, 0.08); }
 .day-bar i { position: absolute; top: 0; bottom: 0; border-radius: 2px; background: linear-gradient(to right, #0891b2, #d97706); }
-.ambient-weather { display: flex; align-items: center; margin-top: 2.4vh; font-size: 2.8vh; color: var(--ink); }
-.ambient-weather svg { width: 4.2vh; height: 4.2vh; }
-.aw-temp { font-size: 4.6vh; font-weight: 300; margin: 0 1.6vh 0 1.2vh; }
-.aw-desc { display: flex; flex-direction: column; font-size: 2.2vh; color: var(--ink-2); line-height: 1.25; }
-.aw-desc small { font-size: 1.9vh; color: var(--ink-3); }
+/* Погода на фото — только значок, под ним мин–макс: нажимается, открывает карточку погоды. */
+.ambient-weather { display: flex; flex-direction: column; align-items: center; margin-top: 2.4vh; font-size: 2.8vh; color: var(--ink); }
+.ambient-weather.link { pointer-events: auto; cursor: pointer; transition: opacity 0.15s; }
+.ambient-weather.link:active { opacity: 0.7; }
+.ambient-weather svg { width: 5.2vh; height: 5.2vh; }
+.aw-range { margin-top: 0.4vh; font-size: 2.1vh; color: var(--ink-2); line-height: 1.2; white-space: nowrap; }
 
 /* ── Подробности: график и статистика ────────────── */
 .tappable { cursor: pointer; border-radius: 10px; transition: background 0.15s; }
@@ -976,20 +1110,18 @@ svg { display: block; flex-shrink: 0; }
    плавно вместе с кадром. Тёмный текст — со светлой тенью и светлыми плашками, иначе не прочитать. */
 .ambient-time, .ambient-clock, .glances { transition: color 1.2s ease; }
 .text-contrast .ambient-time, .text-contrast .ambient-date, .text-contrast .ambient-weather,
-.text-contrast .aw-desc, .text-contrast .aw-desc small, .text-contrast .glance, .text-contrast .glance svg { color: inherit; }
+.text-contrast .aw-range, .text-contrast .glance, .text-contrast .glance svg { color: inherit; }
 .text-contrast .ambient-date { opacity: 0.85; }
-.text-contrast .aw-desc { opacity: 0.8; }
-.text-contrast .aw-desc small { opacity: 0.8; }
+.text-contrast .aw-range { opacity: 0.8; }
 .text-contrast .glance.lit svg { color: var(--warm); }
 .text-contrast.ink-dark, .text-contrast.ink-dark .ambient-time { text-shadow: 0 1px 24px rgba(255, 255, 255, 0.45); }
 .glances.text-contrast.ink-dark .glance { background: rgba(255, 255, 255, 0.5); border-color: rgba(0, 0, 0, 0.1); }
 .glances.text-contrast.ink-dark .glance.alert { color: #fff; }
 /* Свой цвет часов — на весь блок: время, дата и погода (второстепенное чуть приглушено) */
 .ambient-clock.ink-fixed .ambient-time, .ambient-clock.ink-fixed .ambient-date, .ambient-clock.ink-fixed .ambient-weather,
-.ambient-clock.ink-fixed .aw-desc, .ambient-clock.ink-fixed .aw-desc small, .ambient-clock.ink-fixed .ambient-weather svg { color: inherit; }
+.ambient-clock.ink-fixed .aw-range, .ambient-clock.ink-fixed .ambient-weather svg { color: inherit; }
 .ambient-clock.ink-fixed .ambient-date { opacity: 0.85; }
-.ambient-clock.ink-fixed .aw-desc { opacity: 0.8; }
-.ambient-clock.ink-fixed .aw-desc small { opacity: 0.8; }
+.ambient-clock.ink-fixed .aw-range { opacity: 0.8; }
 /* Свой цвет виджетов: текст и значки одним цветом; горящий свет — тёплым, тревога — как была */
 .glances.ink-fixed .glance, .glances.ink-fixed .glance svg { color: inherit; }
 .glances.ink-fixed .glance.lit svg { color: var(--warm); }

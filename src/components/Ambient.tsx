@@ -1,6 +1,6 @@
 import type { RefObject } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { ChevronDown, ChevronUp, Grid3x3, Plus, WifiOff, X } from 'lucide-preact';
+import { ChevronDown, ChevronUp, Grid3x3, Mic, Plus, WifiOff, X } from 'lucide-preact';
 import { useHA } from '../lib/hooks';
 import { useStore } from '../lib/store';
 import { Icon } from '../lib/icons';
@@ -72,8 +72,57 @@ function luminance([r, g, b]: number[]) {
   return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
 }
 
-// Цвет часов «в обратку» к участку фото под ними: обратный цвет; если он сливается с фоном (серое на сером) —
-// белый или почти чёрный, что виднее. Считается по крошечной копии кадра — дёшево и на старых рамках.
+// Цвет из палитры (hex) или посчитанный «под цвет фото» (hsl) — чтобы подобрать к нему тень.
+function parseColor(c: string | undefined): [number, number, number] | null {
+  if (!c) return null;
+  const v = c.trim();
+  const hex = /^#([0-9a-f]{6})$/i.exec(v);
+  if (hex) { const n = parseInt(hex[1], 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+  const rgb = /^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i.exec(v);
+  if (rgb) return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])];
+  const hsl = /^hsla?\(\s*([\d.]+)\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%/i.exec(v);
+  if (!hsl) return null;
+  const h = (((Number(hsl[1]) % 360) + 360) % 360) / 360;
+  const s = Number(hsl[2]) / 100, l = Number(hsl[3]) / 100;
+  if (s === 0) { const g = Math.round(l * 255); return [g, g, g]; }
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+  const hue = (t: number) => {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    return p;
+  };
+  return [Math.round(hue(h + 1 / 3) * 255), Math.round(hue(h) * 255), Math.round(hue(h - 1 / 3) * 255)];
+}
+
+function isLightInk(color: string | undefined, dark?: boolean): boolean {
+  if (dark !== undefined) return !dark;
+  const rgb = parseColor(color);
+  return rgb ? luminance(rgb) > 0.5 : true; // «под цвет фото» — всегда светлый
+}
+
+// Тень вокруг букв — противоположный цвет: инверсия выбранного. Если инверсия близка по яркости
+// (серый на сером), берём чёрный или белый, иначе тень не отделит текст от фото.
+// Возвращаем сам цвет: из него собираются и мягкая тень текста, и свечение значков.
+function haloColor(color: string | undefined, light: boolean): string {
+  const rgb = parseColor(color);
+  const text = rgb ? luminance(rgb) : light ? 1 : 0;
+  let inv = rgb ? rgb.map((v) => 255 - v) : light ? [0, 0, 0] : [255, 255, 255];
+  if (Math.abs(text - luminance(inv)) < 0.35) inv = text > 0.5 ? [0, 0, 0] : [255, 255, 255];
+  return 'rgba(' + inv.map(Math.round).join(',') + ',0.62)';
+}
+
+// Растушёванная тень: без резкой обводки, только мягкое свечение — фото остаётся видно.
+function haloCss(color: string): string {
+  return '0 0 2px ' + color + ', 0 0 9px ' + color + ', 0 0 18px ' + color;
+}
+
+// Цвет часов «в обратку» к участку фото под ними. Обратный цвет красит светлый фон в тёмно-синий
+// (бежевый кадр → #2f4c8e) и текст сливается с фото. Поэтому берём не оттенок, а нейтральный
+// белый или почти чёрный — тот, что даёт больший контраст по WCAG. Считается по крошечной
+// копии кадра — дёшево и на старых рамках.
 interface Ink { color: string; dark: boolean }
 const WHITE: Ink = { color: '#ffffff', dark: false };
 
@@ -96,10 +145,12 @@ function useContrastColor(thumb: string | undefined, region: Region, active: boo
         for (let i = 0; i < px.length; i += 4) { sum[0] += px[i]; sum[1] += px[i + 1]; sum[2] += px[i + 2]; }
         const n = px.length / 4;
         const bg = sum.map((v) => v / n);
-        const inv = bg.map((v) => 255 - v);
-        const lb = luminance(bg), li = luminance(inv);
-        const ratio = (Math.max(lb, li) + 0.05) / (Math.min(lb, li) + 0.05);
-        const pick = ratio >= 3 ? inv : lb > 0.35 ? [17, 17, 17] : [255, 255, 255];
+        const black = [17, 17, 17], white = [255, 255, 255];
+        const ratio = (a: number[], b: number[]) => {
+          const la = luminance(a), lb = luminance(b);
+          return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+        };
+        const pick = ratio(white, bg) >= ratio(black, bg) ? white : black;
         setInk({ color: 'rgb(' + pick.map(Math.round).join(',') + ')', dark: luminance(pick) < 0.25 });
       } catch (e) { setInk(WHITE); }
     };
@@ -129,6 +180,8 @@ interface Props {
   innerRef: RefObject<HTMLDivElement>;
   // Крошечная копия кадра на экране — для цвета часов «в обратку».
   photoThumb?: string;
+  // Акцент «под цвет фото» (hsl) — из него считается противоположная тень вокруг букв.
+  accent?: string;
   onSheet: (card: Card) => void;
   onConnection: () => void;
   // Стрелка к управлению домом — то же, что смахнуть вверх.
@@ -137,6 +190,8 @@ interface Props {
   // Режим настройки экрана с фото (долгое нажатие) и выход из него.
   customizing: boolean;
   onDone: () => void;
+  // Голосовой помощник — рядом со стрелкой к дому, показывается вместе с ней.
+  onVoice?: () => void;
 }
 
 // Виджеты экрана с фото — карточки с галочкой «на фото» со всех экранов показанного дома (кроме погоды:
@@ -180,6 +235,14 @@ export function Ambient(props: Props) {
   const clockInk = useContrastColor(props.photoThumb, clockRegion(prefs, grid), contrast);
   const widgetsInk = useContrastColor(props.photoThumb, widgetsRegion(prefs, grid), wContrast);
   const hintInk = useContrastColor(props.photoThumb, HINT_REGION, contrast);
+  // Цвет букв и противоположная тень вокруг них. У «под цвет фото» акцент всегда светлый,
+  // поэтому тень получается тёмной; у своего тёмного цвета — наоборот, светлой.
+  const clockInkColor = contrast ? clockInk.color : prefs.color === 'accent' ? (props.accent || '#ffffff') : (cValue || '#ffffff');
+  const widgetInkColor = wContrast ? widgetsInk.color : wColor === 'accent' ? (props.accent || '#ffffff') : (wValue || '#ffffff');
+  const clockHaloColor = haloColor(clockInkColor, isLightInk(clockInkColor, contrast ? clockInk.dark : undefined));
+  const widgetHaloColor = haloColor(widgetInkColor, isLightInk(widgetInkColor, wContrast ? widgetsInk.dark : undefined));
+  const clockHalo = haloCss(clockHaloColor);
+  const widgetHalo = haloCss(widgetHaloColor);
   // Редактор сетки: пока идёт настройка, экран виден — содержимое не выгружаем.
   const alive = useLinger(props.visible || edit);
   const cls = 'ambient' + (props.visible ? ' visible' : '')
@@ -190,15 +253,22 @@ export function Ambient(props: Props) {
       <div ref={props.innerRef} class={cls}>
         {alive && <>
         <div class={'ambient-clock' + (contrast ? ' text-contrast' : '') + (cFixed ? ' ink-fixed' + (prefs.color === 'accent' ? ' accent-text' : '') : '')
-            + (clockInk.dark ? ' ink-dark' : '') + (grid ? rectAlign(grid.clock) : '')}
-          style={{ ...(grid ? rectStyle(grid.clock) : {}), ...(contrast ? { color: clockInk.color } : cFixed && cValue ? { color: cValue } : {}) }} onClick={edit ? () => setPanel('clock') : undefined}>
+            + (clockInk.dark ? ' ink-dark' : '') + (contrast ? ' halo' : '') + (grid ? rectAlign(grid.clock) : '')}
+          style={{ ...(grid ? rectStyle(grid.clock) : {}), ...(contrast ? { color: clockInk.color } : cFixed && cValue ? { color: cValue } : {}), ...(contrast ? { textShadow: clockHalo, '--halo': clockHaloColor } : { textShadow: 'none' }) } as any} onClick={edit ? () => setPanel('clock') : undefined}>
           <AmbientTime prefs={prefs} />
-          {prefs.weather && weather && <AmbientWeather entity={weather.items[0].entity} />}
+          {prefs.weather && weather && <AmbientWeather entity={weather.items[0].entity}
+            onOpen={edit ? undefined : () => props.onSheet(weather)} />}
         </div>
 
         <div class={'glances' + (wContrast ? ' text-contrast' : '') + (wFixed ? ' ink-fixed' + (wColor === 'accent' ? ' accent-text' : '') : '')
-            + (widgetsInk.dark ? ' ink-dark' : '') + (grid ? rectAlign(grid.widgets) : '')}
-          style={{ ...(grid ? rectStyle(grid.widgets) : {}), ...(wContrast ? { color: widgetsInk.color } : wFixed && wValue ? { color: wValue } : {}) }} onClick={edit ? () => setPanel('widgets') : undefined}>
+            + (widgetsInk.dark ? ' ink-dark' : '') + (wContrast ? ' halo' : '') + (grid ? rectAlign(grid.widgets) : '')}
+          style={{ ...(grid ? rectStyle(grid.widgets) : {}), ...(wContrast ? { color: widgetsInk.color } : wFixed && wValue ? { color: wValue } : {}), ...(wContrast ? { textShadow: widgetHalo, '--halo': widgetHaloColor } : { textShadow: 'none' }) } as any} onClick={edit ? () => setPanel('widgets') : undefined}>
+          {/* Голос — первым в ряду виджетов, рядом с устройствами: всегда под рукой, как остальные плашки. */}
+          {!edit && props.onVoice && (
+            <button class="glance voice-chip" onClick={props.onVoice} title={t('voice.open')} aria-label={t('voice.open')}>
+              <Mic size={18} /><span>{t('voice.chip')}</span>
+            </button>
+          )}
           {ha.status !== 'connected' && ha.status !== 'connecting' && !edit && (
             <button class="glance warn" onClick={props.onConnection}><WifiOff size={18} /><span>{t('ambient.offline')}</span></button>
           )}

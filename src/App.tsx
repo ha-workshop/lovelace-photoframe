@@ -23,6 +23,8 @@ import { TvHome } from './components/TvHome';
 import { arrowDir, focusFirst, isBack, markKeyboard, moveFocus, pressFocused } from './lib/spatialNav';
 import { leaveTv, tvMode } from './lib/tvShell';
 import { SettingsModal } from './components/Modals';
+import { Voice } from './components/Voice';
+import { primeVoice } from './lib/voice';
 import { CameraViewer } from './components/CameraViewer';
 import { AddCardModal, CardEditor } from './components/Editor';
 import { Sheet } from './components/Sheet';
@@ -143,6 +145,11 @@ export function App() {
   const [editCard, setEditCard] = useState<{ card: Card; isNew: boolean } | null>(null);
   const [adding, setAdding] = useState(false);
   const [detail, setDetail] = useState<string[] | null>(null);
+  const [voice, setVoice] = useState(false);
+  // Голосовой помощник — в приложении рамки (PWA и APK), не в карточке дашборда HA.
+  // И только если в настройках выбран ассистент: без выбора кнопок голоса нет.
+  const canVoice = !PREVIEW && !(store.card && !store.card.standalone) && !!store.state.settings.voicePipeline;
+  const openVoice = () => { primeVoice(); setVoice(true); };
   const [hint, setHint] = useState(true);
   // Цвет интерфейса — по кадру, который уже на экране (уменьшенному), а не по оригиналу.
   const [shown, setShown] = useState('');
@@ -222,7 +229,7 @@ export function App() {
     };
   }, []);
 
-  const modal = showSettings || !!cameraView || !!editCard || adding || !!detail;
+  const modal = showSettings || !!cameraView || !!editCard || adding || !!detail || voice;
   const busy = modal || !!sheet;
   // Окно или карточка поверх — фон под ними не прокручивается.
   useLayoutEffect(() => { lockScroll(busy); }, [busy]);
@@ -230,6 +237,7 @@ export function App() {
   const controlsRef = useRef<HTMLDivElement>(null);
   const ambientRef = useRef<HTMLDivElement>(null);
   const softRef = useRef<HTMLDivElement>(null);
+  const shadeRef = useRef<HTMLDivElement>(null);
 
   // Скрытые слои (сдвинутая панель, Ken Burns) выходят за край, и фокус на кнопке
   // может прокрутить .app — держим его на месте.
@@ -242,14 +250,15 @@ export function App() {
   }, []);
   // Настройка экрана с фото (как на iPhone): долгое нажатие на фото или «Настроить» в настройках.
   const [customizing, setCustomizing] = useState(false);
-  useSwipe({ root: rootRef, controls: controlsRef, ambient: ambientRef, soft: softRef }, controls, setControls, !busy && !customizing, () => setCustomizing(true), stepPhoto);
+  useSwipe({ root: rootRef, controls: controlsRef, ambient: ambientRef, soft: softRef, shade: shadeRef }, controls, setControls, !busy && !customizing, () => setCustomizing(true), stepPhoto);
 
   // Пульт телевизора и клавиатура. Экран с фото — лента TvBar (там же ← → листают фото). Дашборд, карточка и
   // окна — стрелки ведут фокус по элементам (lib/spatialNav), OK нажимает, Назад / Esc закрывает верхнее окно,
   // потом выходит из правки и возвращает к фото. Пока идёт ввод текста — стрелки не перехватываем.
   const closeTop = useRef<() => boolean>(() => false);
   closeTop.current = () => {
-    if (cameraView) setCameraView(null);
+    if (voice) setVoice(false);
+    else if (cameraView) setCameraView(null);
     else if (detail) setDetail(null);
     else if (editCard) setEditCard(null);
     else if (adding) setAdding(false);
@@ -319,7 +328,7 @@ export function App() {
       if (layers.length) focusFirst(layers[layers.length - 1] as HTMLElement);
     }, 60);
     return () => clearTimeout(t);
-  }, [sheetId, showSettings, !!editCard, adding, !!detail, !!cameraView]);
+  }, [sheetId, showSettings, !!editCard, adding, !!detail, !!cameraView, voice]);
   // Кнопка «Назад» пульта в APK рамки (MainActivity.onBackPressed): true — страница обработала сама.
   useEffect(() => {
     const w = window as Window & { SmartFrameBack?: () => boolean };
@@ -369,7 +378,7 @@ export function App() {
     <div class={'root q-' + qualityMode}>
       <style>{TINTS + (tone ? accentCss('', tone.accent, tone.accentSoft) : '')}</style>
       <div class={'app' + (controls && tv ? ' tv-home' : '')} ref={rootRef} lang={language}>
-        <Backdrop urls={urls} index={index % Math.max(n, 1)} tone={tone} soft={controls} softRef={softRef} onShow={setShown} />
+        <Backdrop urls={urls} index={index % Math.max(n, 1)} tone={tone} soft={controls} softRef={softRef} shadeRef={shadeRef} onShow={setShown} />
         <LiveContext.Provider value={!controls || tv}>
         <Ambient
           visible={!controls || tv}
@@ -379,8 +388,10 @@ export function App() {
           showHint={hint && !sheet}
           onHome={() => { setHint(false); setControls(true); }}
           photoThumb={tone ? tone.thumb : undefined}
+          accent={tone ? tone.accent : undefined}
           customizing={customizing}
           onDone={() => setCustomizing(false)}
+          onVoice={canVoice ? openVoice : undefined}
         />
         <TvBar enabled={!controls && !busy && !customizing} onStep={stepPhoto} onSheet={(card) => setSheetId(card.id)}
           onHome={() => { setHint(false); setTv(true); setControls(true); }} />
@@ -407,6 +418,7 @@ export function App() {
           onSwitchHome={switchHome}
           onStep={step}
           onAddCard={() => setAdding(true)}
+          onVoice={canVoice ? openVoice : undefined}
         />
         </LiveContext.Provider>
         {controls && tv && (
@@ -436,6 +448,7 @@ export function App() {
           onClose={() => setShowSettings(false)}
         />
       )}
+      {voice && canVoice && <Voice onClose={() => setVoice(false)} onSettings={() => { setVoice(false); setShowSettings(true); }} />}
       {adding && <AddCardModal onClose={() => setAdding(false)} onPick={(card) => { setAdding(false); setEditCard({ card, isNew: true }); }} />}
       {editCard && (
         <CardEditor

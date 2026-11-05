@@ -12,6 +12,7 @@ import { autostart, setAutostart } from '../lib/screen';
 import { autoQuality, photoFit, qualityPref, setPhotoFit, setQualityPref, type PhotoFit, type QualityPref } from '../lib/quality';
 import { applyLanguage, languages, preferredLanguage, setPreferredLanguage, t } from '../i18n';
 import { cameraDisplayPref, setCameraDisplayPref, type CameraDisplayPref } from '../lib/cameraPrefs';
+import { deviceTtsSupported, listVoicePipelines, setTtsSource, ttsSource, type TtsSource, type VoicePipeline } from '../lib/voice';
 import { MAIN_HOME, mainHome, startScreen, store as frame, useStore, type Home, type Settings } from '../lib/store';
 import { FolderPicker } from './FolderPicker';
 
@@ -136,6 +137,21 @@ export function SettingsModal(props: { onClose: () => void }) {
   const [language, setLanguage] = useState(preferredLanguage());
   const [kiosk, setKiosk] = useState<KioskPref>(kioskPref());
   const [qPref, setQPref] = useState<QualityPref>(qualityPref());
+  // Голос озвучки: синтез самого устройства (Web Speech API) или TTS Home Assistant (Piper/Google).
+  const [tts, setTts] = useState<TtsSource>(ttsSource());
+  // Список голосов Chrome отдаёт асинхронно: без подписки на voiceschanged предупреждение
+  // «нет русского голоса» могло висеть, даже когда голос уже загрузился.
+  const [ttsDevice, setTtsDevice] = useState(deviceTtsSupported());
+  useEffect(() => {
+    if (ttsDevice || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    const check = () => { if (deviceTtsSupported()) setTtsDevice(true); };
+    window.speechSynthesis.addEventListener('voiceschanged', check);
+    const timer = window.setTimeout(check, 1500);
+    return () => {
+      window.speechSynthesis.removeEventListener('voiceschanged', check);
+      clearTimeout(timer);
+    };
+  }, [ttsDevice]);
   const [camPref, setCamPref] = useState<CameraDisplayPref>(cameraDisplayPref());
   const [fit, setFit] = useState<PhotoFit>(photoFit());
   // Только в APK: открывать рамку сама после включения.
@@ -152,6 +168,17 @@ export function SettingsModal(props: { onClose: () => void }) {
     if (store.card) store.card.mediaBrowserUrl(uploadAlbum).then(setMediaUrl, () => setMediaUrl(''));
   }, [uploadAlbum, !!store.card]);
   const [frameName, setFrameNameDraft] = useState(currentFrameName());
+  // Ассистенты Assist из HA — для выбора голосового помощника этой рамки.
+  const [pipes, setPipes] = useState<VoicePipeline[] | null>(null);
+  useEffect(() => {
+    if (inCard || !signedIn) return;
+    let alive = true;
+    listVoicePipelines().then(
+      (list) => { if (alive) setPipes(list); },
+      () => {},
+    );
+    return () => { alive = false; };
+  }, [inCard, signedIn]);
   const [homes, setHomes] = useState<Home[]>(store.state.homes);
   const homesChanged = JSON.stringify(homes) !== JSON.stringify(store.state.homes);
   const setHome = (id: string, patch: Partial<Home>) => setHomes(homes.map((h) => (h.id === id ? { ...h, ...patch } : h)));
@@ -259,32 +286,45 @@ export function SettingsModal(props: { onClose: () => void }) {
             )}
             </Section>
             <Section title={t('settings.section.slideshow')}>
-            <div className="option">
-              <label>{t('settings.slide_interval')}</label>
-              <select value={draft.slideIntervalMs} onChange={(e) => set({slideIntervalMs: +e.currentTarget.value})}>
-                {INTERVALS.map((v) => <option key={v} value={v}>{t('settings.interval.' + v)}</option>)}
-              </select>
-            </div>
-            <div className="option">
-              <label>{t('settings.idle_return')}</label>
-              <select value={draft.idleSec} onChange={(e) => set({idleSec: +e.currentTarget.value})}>
-                {IDLE.map((v) => <option key={v} value={v}>{t('settings.idle.' + v)}</option>)}
-              </select>
-            </div>
-            <div className="option">
-              <label>{t('settings.fit')}</label>
-              <select value={fit} onChange={(e) => {
-                const v = e.currentTarget.value as PhotoFit;
-                setFit(v);
-                setPhotoFit(v);
-              }}>
-                <option value="auto">{t('settings.fit_auto')}</option>
-                <option value="contain">{t('settings.fit_contain')}</option>
-                <option value="cover">{t('settings.fit_cover')}</option>
-              </select>
-            </div>
+              <div className="option">
+                <label>{t('settings.fit')}</label>
+                <select value={fit} onChange={(e) => {
+                  const v = e.currentTarget.value as PhotoFit;
+                  setFit(v);
+                  setPhotoFit(v);
+                }}>
+                  <option value="auto">{t('settings.fit_auto')}</option>
+                  <option value="contain">{t('settings.fit_contain')}</option>
+                  <option value="cover">{t('settings.fit_cover')}</option>
+                </select>
+              </div>
+                <div className="option">
+                    <label>{t('settings.idle_return')}</label>
+                    <select value={draft.idleSec} onChange={(e) => set({idleSec: +e.currentTarget.value})}>
+                        {IDLE.map((v) => <option key={v} value={v}>{t('settings.idle.' + v)}</option>)}
+                    </select>
+                </div>
+                <div className="option">
+                    <label>{t('settings.slide_interval')}</label>
+                    <select value={draft.slideIntervalMs} onChange={(e) => set({slideIntervalMs: +e.currentTarget.value})}>
+                        {INTERVALS.map((v) => <option key={v} value={v}>{t('settings.interval.' + v)}</option>)}
+                    </select>
+                </div>
             </Section>
             <Section title={t('settings.section.device')}>
+            <div className="option">
+                <label>{t('settings.cameras')}</label>
+                <select value={camPref} onChange={(e) => {
+                    const v = e.currentTarget.value as CameraDisplayPref;
+                    setCamPref(v);
+                    setCameraDisplayPref(v);
+                }}>
+                    <option value="auto">{t('settings.cameras_auto', {mode: t(autoQuality() === 'lite' ? 'settings.cameras_paused' : 'settings.cameras_live')})}</option>
+                    <option value="live">{t('settings.cameras_live')}</option>
+                    <option value="paused">{t('settings.cameras_paused')}</option>
+                    <option value="snapshot">{t('settings.cameras_snapshot')}</option>
+                </select>
+            </div>
             <div className="option">
               <label>{t('settings.quality')}</label>
               <select value={qPref} onChange={(e) => {
@@ -296,19 +336,6 @@ export function SettingsModal(props: { onClose: () => void }) {
                     value="auto">{t('settings.quality_auto', {mode: t(autoQuality() === 'lite' ? 'settings.quality_lite' : 'settings.quality_full')})}</option>
                 <option value="full">{t('settings.quality_full')}</option>
                 <option value="lite">{t('settings.quality_lite')}</option>
-              </select>
-            </div>
-            <div className="option">
-              <label>{t('settings.cameras')}</label>
-              <select value={camPref} onChange={(e) => {
-                const v = e.currentTarget.value as CameraDisplayPref;
-                setCamPref(v);
-                setCameraDisplayPref(v);
-              }}>
-                <option value="auto">{t('settings.cameras_auto', {mode: t(autoQuality() === 'lite' ? 'settings.cameras_paused' : 'settings.cameras_live')})}</option>
-                <option value="live">{t('settings.cameras_live')}</option>
-                <option value="paused">{t('settings.cameras_paused')}</option>
-                <option value="snapshot">{t('settings.cameras_snapshot')}</option>
               </select>
             </div>
             {boot !== null && (
@@ -350,6 +377,33 @@ export function SettingsModal(props: { onClose: () => void }) {
               </select>
             </div>
             </Section>
+            {/* Голосовое управление — отдельным блоком: свои настройки у каждого устройства. */}
+            {!inCard && signedIn && (
+              <Section title={t('settings.section.voice')}>
+                <div className="option">
+                  <label>{t('settings.voice')}</label>
+                  <select value={draft.voicePipeline} onChange={(e) => set({voicePipeline: e.currentTarget.value})}>
+                    <option value="">{t('settings.voice_off')}</option>
+                    {(pipes || []).filter((p) => p.ready).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+                {!draft.voicePipeline && <div className="hint small">{t('settings.voice_hint')}</div>}
+                {draft.voicePipeline && (
+                  <div className="option">
+                    <label>{t('settings.tts')}</label>
+                    <select value={tts} onChange={(e) => {
+                      const v = e.currentTarget.value as TtsSource;
+                      setTts(v);
+                      setTtsSource(v);
+                    }}>
+                      <option value="device">{t('settings.tts_device')}</option>
+                      <option value="ha">{t('settings.tts_ha')}</option>
+                    </select>
+                    {tts === 'device' && !ttsDevice && <div className="hint small">{t('settings.tts_device_none')}</div>}
+                  </div>
+                )}
+              </Section>
+            )}
           </div>
       )}
 

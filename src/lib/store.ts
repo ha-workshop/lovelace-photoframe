@@ -21,6 +21,8 @@ export interface Settings {
   slideIntervalMs: number;
   // Через сколько секунд без касаний прятать управление и возвращаться к фото; 0 — не прятать.
   idleSec: number;
+  // Ассистент Assist из HA (id pipeline); пусто — голосовых кнопок нет.
+  voicePipeline: string;
 }
 
 // id: число — фото из IndexedDB, строка — media_content_id из медиатеки HA.
@@ -56,6 +58,8 @@ const START_KEY = 'photoframe.startScreen';
 // Слайдшоу и возврат к фото — тоже у каждого устройства свои (в HA остаётся только образец для нового).
 const SLIDE_KEY = 'photoframe.slideMs';
 const IDLE_KEY = 'photoframe.idleSec';
+// Голосовой ассистент — тоже у каждого устройства свой (на планшете и на телефоне он может быть разным).
+const VOICE_KEY = 'photoframe.voicePipeline';
 
 function num(key: string): number | undefined {
   try {
@@ -65,8 +69,13 @@ function num(key: string): number | undefined {
   } catch (e) { return undefined; }
 }
 
-function localSettings(): { slideIntervalMs?: number; idleSec?: number } {
-  return { slideIntervalMs: num(SLIDE_KEY), idleSec: num(IDLE_KEY) };
+function localSettings(): { slideIntervalMs?: number; idleSec?: number; voicePipeline?: string } {
+  let voicePipeline: string | undefined;
+  try {
+    const raw = localStorage.getItem(VOICE_KEY);
+    if (raw !== null) voicePipeline = raw;
+  } catch (e) { /* ignore */ }
+  return { slideIntervalMs: num(SLIDE_KEY), idleSec: num(IDLE_KEY), voicePipeline };
 }
 
 // Запомнить настройки панели на этом устройстве (в HA их больше не пишем).
@@ -74,6 +83,8 @@ function writeLocalSettings(settings: Settings) {
   try {
     localStorage.setItem(SLIDE_KEY, String(settings.slideIntervalMs));
     localStorage.setItem(IDLE_KEY, String(settings.idleSec));
+    if (settings.voicePipeline) localStorage.setItem(VOICE_KEY, settings.voicePipeline);
+    else localStorage.removeItem(VOICE_KEY);
   } catch (e) { /* ignore */ }
 }
 
@@ -114,6 +125,7 @@ function defaults(): State {
       haUrl: '',
       slideIntervalMs: localSettings().slideIntervalMs ?? 10000,
       idleSec: localSettings().idleSec ?? 45,
+      voicePipeline: localSettings().voicePipeline ?? '',
     },
     homes: [{ id: MAIN_HOME, name: t('home.default_name') }],
     screens: { [MAIN_HOME]: mainScreens() },
@@ -148,6 +160,8 @@ function readCache(): State {
       else if (typeof cs.slideIntervalMs === 'number') settings.slideIntervalMs = cs.slideIntervalMs;
       if (own.idleSec !== undefined) settings.idleSec = own.idleSec;
       else if (typeof cs.idleSec === 'number') settings.idleSec = cs.idleSec;
+      if (own.voicePipeline !== undefined) settings.voicePipeline = own.voicePipeline;
+      else if (typeof cs.voicePipeline === 'string') settings.voicePipeline = cs.voicePipeline;
       const homes = c.homes ? c.homes.map((h: Home) => ({ id: h.id, name: h.name })) : d.homes;
       return { ...d, settings, homes, screens, photos: c.photos || [] };
     }
@@ -301,7 +315,8 @@ class Store {
     const settings = { ...this.state.settings };
     settings.slideIntervalMs = own.slideIntervalMs ?? (typeof cs.slideIntervalMs === 'number' ? cs.slideIntervalMs : settings.slideIntervalMs);
     settings.idleSec = own.idleSec ?? (typeof cs.idleSec === 'number' ? cs.idleSec : settings.idleSec);
-    if (own.slideIntervalMs === undefined || own.idleSec === undefined) writeLocalSettings(settings);
+    settings.voicePipeline = own.voicePipeline ?? (typeof cs.voicePipeline === 'string' ? cs.voicePipeline : settings.voicePipeline);
+    if (own.slideIntervalMs === undefined || own.idleSec === undefined || own.voicePipeline === undefined) writeLocalSettings(settings);
     this.set({ sync: 'card', homes, screens, settings });
   }
 

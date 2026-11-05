@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { RefObject } from 'preact';
-import { Check, ChevronLeft, ChevronRight, Image, Menu, Pencil, Plus, Settings, Trash2, X } from 'lucide-preact';
+import { Check, ChevronLeft, ChevronRight, Image, Menu, Mic, Pencil, Plus, Settings, Trash2, X } from 'lucide-preact';
 import { useHA } from '../lib/hooks';
 import { screenTitle, type Card } from '../lib/layout';
 import { store } from '../lib/store';
@@ -45,6 +45,8 @@ interface Props {
   onSwitchHome: (dir: number) => void;
   // Свайп: следующий/предыдущий экран (за последним экраном дома — экраны следующего дома).
   onStep: (dir: number) => void;
+  // Голосовой помощник (Assist в HA). Не передали — кнопки нет.
+  onVoice?: () => void;
 }
 
 // Экраны показанного дома. Одного экрана не видно (пока не редактируем); в редактировании —
@@ -130,6 +132,8 @@ export function Controls(props: Props) {
     <>
       {canEdit && <button class="round" onClick={() => props.onEditing(true)} title={t('controls.customize')}><Pencil size={18} /></button>}
       <button class="round" onClick={props.onSettings} title={t('controls.settings')}><Settings size={20} /></button>
+      {/* Голос — рядом с «К фото», с тем же микрофоном, что и на экране с фото. */}
+      {props.onVoice && <button class="round" onClick={props.onVoice} title={t('voice.open')} aria-label={t('voice.open')}><Mic size={20} /></button>}
       <button class="round accent" onClick={props.onPhotos} title={t('controls.to_photos')}><Image size={20} /></button>
     </>
   );

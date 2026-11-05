@@ -10,6 +10,8 @@ interface Props {
   tone: Tone | null;
   soft: boolean;
   softRef: RefObject<HTMLDivElement>;
+  // Затемнение и размытие поверх фото — свайп двигает их за пальцем (lib/swipe).
+  shadeRef: RefObject<HTMLDivElement>;
   // Какой кадр (уже уменьшенный) сейчас на экране — по нему считается цвет интерфейса.
   onShow: (url: string) => void;
 }
@@ -42,7 +44,7 @@ function measure(url: string): Promise<{ w: number; h: number; glow: string }> {
 // В памяти только два слоя: текущий кадр и уходящий (для плавной смены). Следующий кадр заранее
 // готовится уменьшенным под экран — раньше альбом целиком висел слоями и съедал память слабых рамок.
 // В режиме управления поверх ложится растянутая миниатюра кадра — выглядит как размытие, но ничего не стоит.
-export function Backdrop({ urls, index, tone, soft, softRef, onShow }: Props) {
+export function Backdrop({ urls, index, tone, soft, softRef, shadeRef, onShow }: Props) {
   // Перерисовываться, когда на устройстве поменяли «Как показывать фото».
   const fit = usePhotoFit();
   const quality = useQuality();
@@ -97,7 +99,7 @@ export function Backdrop({ urls, index, tone, soft, softRef, onShow }: Props) {
         <div key={l.id} class={'slide' + (l.on ? ' active' : '')} style={{ backgroundImage: 'url(' + l.url + ')' }} />
       )))}
       <div ref={softRef} class={'soft' + (soft ? ' on' : '')} style={tone ? { backgroundImage: 'url(' + tone.thumb + ')' } : undefined} />
-      <div class={'shade' + (soft ? ' deep' : '')} />
+      <div ref={shadeRef} class={'shade' + (soft ? ' deep' : '')} />
     </div>
   );
 }
