@@ -1984,7 +1984,7 @@ function _2() {
   }
 }
 function z2(e, t) {
-  const n = { type: "photoframe/frame/connect", frame_id: $e(), model: k2(), version: "1.0.0" };
+  const n = { type: "photoframe/frame/connect", frame_id: $e(), model: k2(), version: "1.6.0" };
   return Jt() && (n.name = Jt()), fa() && (n.apk = fa()), e.subscribeMessage(n, t);
 }
 function Rt(e, t) {
@@ -9745,7 +9745,7 @@ class Cd extends HTMLElement {
   }
 }
 customElements.get("photoframe-card") || customElements.define("photoframe-card", Cd);
-console.info("%c PHOTO-FRAME %c v1.0.0 ", "color:#fff;background:#0891b2;font-weight:700", "color:#0891b2;background:#fff");
+console.info("%c PHOTO-FRAME %c v1.6.0 ", "color:#fff;background:#0891b2;font-weight:700", "color:#0891b2;background:#fff");
 O2();
 const gi = window;
 gi.customCards = gi.customCards || [];
