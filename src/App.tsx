@@ -21,6 +21,7 @@ import { Controls } from './components/Controls';
 import { TvBar } from './components/TvBar';
 import { TvHome } from './components/TvHome';
 import { arrowDir, focusFirst, isBack, markKeyboard, moveFocus, pressFocused } from './lib/spatialNav';
+import { leaveTv, tvMode } from './lib/tvShell';
 import { SettingsModal } from './components/Modals';
 import { CameraViewer } from './components/CameraViewer';
 import { AddCardModal, CardEditor } from './components/Editor';
@@ -265,11 +266,23 @@ export function App() {
       const el = e.target as HTMLElement | null;
       const typing = !!el && (/^(TEXTAREA|SELECT)$/.test(el.tagName) || (el.tagName === 'INPUT' && (el as HTMLInputElement).type !== 'range'
         && (el as HTMLInputElement).type !== 'checkbox' && (el as HTMLInputElement).type !== 'radio'));
+      // Красная кнопка пульта — вернуться в MSX (там же адрес сервера) или в оболочку Tizen.
+      // В MSX цветные кнопки могут не дойти — тогда то же делает «Назад» с экрана с фото.
+      if (tvMode && (e.keyCode === 403 || k === 'ColorF0Red')) {
+        e.preventDefault();
+        leaveTv();
+        return;
+      }
       if (isBack(e, typing)) {
         if (typing && el) { el.blur(); e.preventDefault(); return; }
-        if (!controls && !busy) return; // экран с фото — лента прячется сама
+        if (!controls && !busy) {
+          // «Назад» на экране с фото в телевизоре — выход из рамки (в MSX или в оболочку).
+          if (tvMode) { e.preventDefault(); leaveTv(); }
+          return;
+        }
         if (customizing) return;
         if (closeTop.current()) { markKeyboard(true); e.preventDefault(); }
+        else if (tvMode) { e.preventDefault(); leaveTv(); }
         return;
       }
       if (!controls && !busy) return;

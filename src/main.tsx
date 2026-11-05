@@ -11,6 +11,7 @@ import { store } from './lib/store';
 import { finishLogin } from './lib/haAuth';
 import { PREVIEW } from './lib/preview';
 import { watchIosViewport } from './lib/iosViewport';
+import { registerTvKeys, tvMode } from './lib/tvShell';
 
 // Фото из src/photos попадают в сборку PWA и показываются всегда.
 store.bundled = Object.values(
@@ -31,6 +32,7 @@ function hideSplash() {
 
 // Отдельное приложение рамки (не карточка на дашборде HA): фото может уходить под панели браузера.
 document.documentElement.classList.add('pwa');
+if (tvMode) registerTvKeys();
 
 finishLogin().then(() => {
   render(<App />, document.getElementById('app')!);
