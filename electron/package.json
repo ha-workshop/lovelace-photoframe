@@ -18,6 +18,7 @@
   "build": {
     "appId": "ru.smartframe.photoframe",
     "productName": "Photo Frame",
+    "icon": "icon.png",
     "files": [
       "main.js",
       "preload.js"
