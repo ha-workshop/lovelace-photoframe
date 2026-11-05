@@ -328,7 +328,7 @@
   "settings.voice_failed": "Could not get the assistant list from Home Assistant.",
   "settings.voice_loading": "Loading assistants…",
   "settings.tts": "Answer voice",
-  "settings.tts_device": "System",
+  "settings.tts_device": "Local",
   "settings.tts_ha": "Home Assistant",
   "settings.tts_device_none": "This browser has no Russian voice — Home Assistant will read the answer.",
   "settings.tts_voice": "Voice",

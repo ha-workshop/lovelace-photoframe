@@ -58,8 +58,10 @@ const MAX_RUN_MS = 90000;
 const TTS_KEY = 'photoframe.voiceTts';
 export type TtsSource = 'device' | 'ha';
 
+// По умолчанию читает Home Assistant (тот TTS, что выбран в Assist). Локальный голос
+// устройства включается вручную — он есть не везде и зависит от системы.
 export function ttsSource(): TtsSource {
-  try { return localStorage.getItem(TTS_KEY) === 'ha' ? 'ha' : 'device'; } catch (e) { return 'device'; }
+  try { return localStorage.getItem(TTS_KEY) === 'device' ? 'device' : 'ha'; } catch (e) { return 'ha'; }
 }
 
 export function setTtsSource(v: TtsSource) {

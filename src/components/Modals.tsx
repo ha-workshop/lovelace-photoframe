@@ -431,8 +431,8 @@ export function SettingsModal(props: { onClose: () => void }) {
                         setTts(v);
                         setTtsSource(v);
                       }}>
-                        <option value="device">{t('settings.tts_device')}</option>
                         <option value="ha">{t('settings.tts_ha')}</option>
+                        <option value="device">{t('settings.tts_device')}</option>
                       </select>
                       {tts === 'device' && !ttsDevice && <div className="hint small">{t('settings.tts_device_none')}</div>}
                     </div>

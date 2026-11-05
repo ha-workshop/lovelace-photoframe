@@ -1051,7 +1051,7 @@ const i2 = "English", a2 = {
   "settings.voice_failed": "Could not get the assistant list from Home Assistant.",
   "settings.voice_loading": "Loading assistants…",
   "settings.tts": "Answer voice",
-  "settings.tts_device": "System",
+  "settings.tts_device": "Local",
   "settings.tts_ha": "Home Assistant",
   "settings.tts_device_none": "This browser has no Russian voice — Home Assistant will read the answer.",
   "settings.tts_voice": "Voice",
@@ -1526,7 +1526,7 @@ const i2 = "English", a2 = {
   "settings.voice_failed": "Не удалось получить список ассистентов из Home Assistant.",
   "settings.voice_loading": "Загружаю список ассистентов…",
   "settings.tts": "Озвучка ответов",
-  "settings.tts_device": "Системное",
+  "settings.tts_device": "Локальный",
   "settings.tts_ha": "Home Assistant",
   "settings.tts_device_none": "В этом браузере нет русского голоса — ответит Home Assistant.",
   "settings.tts_voice": "Голос",
@@ -6835,9 +6835,9 @@ function Bo() {
 const Xn = 16e3, l3 = 15e3, Po = 9e4, k1 = "photoframe.voiceTts";
 function _1() {
   try {
-    return localStorage.getItem(k1) === "ha" ? "ha" : "device";
+    return localStorage.getItem(k1) === "device" ? "device" : "ha";
   } catch {
-    return "device";
+    return "ha";
   }
 }
 function d3(e) {
@@ -8035,8 +8035,8 @@ function D3(e) {
                     const q = w.currentTarget.value;
                     Y(q), d3(q);
                   }, children: [
-                    /* @__PURE__ */ o("option", { value: "device", children: h("settings.tts_device") }),
-                    /* @__PURE__ */ o("option", { value: "ha", children: h("settings.tts_ha") })
+                    /* @__PURE__ */ o("option", { value: "ha", children: h("settings.tts_ha") }),
+                    /* @__PURE__ */ o("option", { value: "device", children: h("settings.tts_device") })
                   ] }),
                   oe === "device" && !$ && /* @__PURE__ */ o("div", { className: "hint small", children: h("settings.tts_device_none") })
                 ] }),

@@ -328,7 +328,7 @@
   "settings.voice_failed": "Не удалось получить список ассистентов из Home Assistant.",
   "settings.voice_loading": "Загружаю список ассистентов…",
   "settings.tts": "Озвучка ответов",
-  "settings.tts_device": "Системное",
+  "settings.tts_device": "Локальный",
   "settings.tts_ha": "Home Assistant",
   "settings.tts_device_none": "В этом браузере нет русского голоса — ответит Home Assistant.",
   "settings.tts_voice": "Голос",
