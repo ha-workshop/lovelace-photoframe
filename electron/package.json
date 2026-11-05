@@ -2,6 +2,12 @@
   "name": "photoframe",
   "version": "1.8.0",
   "description": "Photo Frame for Home Assistant — desktop app",
+  "author": {
+    "name": "ha-workshop",
+    "email": "enternetacum@yandex.ru"
+  },
+  "homepage": "https://github.com/ha-workshop/ha-photoframe",
+  "license": "MIT",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
