@@ -30,8 +30,8 @@ function setWakeSource(v: WakeSource) {
 function wakeUrls(source: WakeSource) {
   if (source === 'cdn') {
     return {
-      ort: 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/ort.all.bundle.min.mjs',
-      wasm: 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/',
+      ort: 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/dist/ort.all.min.js',
+      wasm: 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/dist/',
       engine: '/photoframe/models/wakeword.js',
       models: '/photoframe/models',
     };
@@ -47,18 +47,7 @@ function wakeUrls(source: WakeSource) {
 async function ensureEngine(source: WakeSource) {
   if (engine) return;
   const urls = wakeUrls(source);
-  // Load ONNX runtime
-  if (!(window as any).ORT) {
-    await new Promise<void>((resolve, reject) => {
-      const s = document.createElement('script');
-      s.src = urls.ort;
-      s.type = 'module';
-      s.onload = () => resolve();
-      s.onerror = () => reject(new Error('Failed to load ONNX runtime'));
-      document.head.appendChild(s);
-    });
-  }
-  // Load WakeWordEngine
+  // Load WakeWordEngine (it imports ort.mjs dynamically itself)
   if (!(window as any).WakeWordEngine) {
     await new Promise<void>((resolve, reject) => {
       const s = document.createElement('script');
@@ -75,6 +64,7 @@ async function ensureEngine(source: WakeSource) {
     ortWasmPath: urls.wasm,
     detectionThreshold: 0.5,
     cooldownMs: 3000,
+    debug: true,
   });
   engine.on('detect', ({ keyword }: { keyword: string }) => {
     triggerWake();
