@@ -1,11 +1,12 @@
 import type { ComponentType } from 'preact';
+import { useEffect, useState } from 'preact/hooks';
 import {
   Activity, AirVent, CloudSun, Baby, Bed, Blinds, CookingPot, DoorOpen, Droplets, Fan, Flame, Gauge, House, Lamp, LampCeiling, LampDesk,
   Lightbulb, Lock, Moon, Plug, Shield, Snowflake, Sofa, Sparkles, Speaker, Sun, Thermometer, Tv, Video, WashingMachine, Wind, Zap,
 } from 'lucide-preact';
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
-import { FA_SOLID, FA_SOLID_GROUPS } from './fa-solid';
-import { FA_REGULAR, FA_REGULAR_GROUPS } from './fa-regular';
+import type { FA_SOLID } from './fa-solid';
+import type { FA_REGULAR } from './fa-regular';
 
 // Иконки, из которых можно выбирать в редакторе. Ключ хранится в раскладке.
 // Lucide — линейные значки, Font Awesome — обычные (fa-) и контурные (far-).
@@ -27,12 +28,43 @@ export interface IconGroup {
   keys: IconKey[];
 }
 
-// В редакторе сначала свои линейные, потом Font Awesome по темам.
-export const ICON_GROUPS: IconGroup[] = [
-  { titleKey: 'icons.group.lucide', keys: Object.keys(ICONS) as LucideKey[] },
-  ...(FA_SOLID_GROUPS as IconGroup[]),
-  ...(FA_REGULAR_GROUPS as IconGroup[]),
-];
+// Font Awesome — отдельным файлом (lib/faIcons), догружается по первому значку fa-/far- или в выборе
+// иконки. Пока грузится, на месте значка — пустое место того же размера.
+let fa: Record<string, IconDefinition> | null = null;
+let faGroups: IconGroup[] = [];
+let faLoading: Promise<void> | null = null;
+const faWaiters: Array<() => void> = [];
+
+function loadFa(): Promise<void> {
+  if (!faLoading) {
+    faLoading = import('./faIcons').then((m) => {
+      fa = m.FA as Record<string, IconDefinition>;
+      faGroups = m.FA_GROUPS as IconGroup[];
+      faWaiters.splice(0).forEach((f) => f());
+    }).catch(() => { faLoading = null; });
+  }
+  return faLoading;
+}
+
+// Перерисовать компонент, когда Font Awesome догрузится (если нужен и ещё не здесь).
+function useFa(need: boolean) {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    if (!need || fa) return;
+    let alive = true;
+    faWaiters.push(() => { if (alive) tick((n) => n + 1); });
+    loadFa();
+    return () => { alive = false; };
+  }, [need]);
+}
+
+const LUCIDE_GROUP: IconGroup = { titleKey: 'icons.group.lucide', keys: Object.keys(ICONS) as LucideKey[] };
+
+// В редакторе сначала свои линейные, потом Font Awesome по темам (когда догрузится).
+export function useIconGroups(): IconGroup[] {
+  useFa(true);
+  return [LUCIDE_GROUP].concat(faGroups);
+}
 
 // Поиск иконки: по ключу и по-русски. Ключи FA английские, поэтому для частых значков есть подсказки.
 const SEARCH: Record<string, string> = {
@@ -108,8 +140,14 @@ function FaSvg(props: { def: IconDefinition; size: number; class?: string }) {
 export function Icon(props: { name?: string; size?: number; class?: string }) {
   const key = props.name || 'house';
   const Lucide = ICONS[key as LucideKey] as ComponentType<{ size?: number; class?: string }> | undefined;
+  const isFa = !Lucide && /^fa/.test(key);
+  useFa(isFa);
   if (Lucide) return <Lucide size={props.size || 18} class={props.class} />;
-  const def = FA_SOLID[key as keyof typeof FA_SOLID] || FA_REGULAR[key as keyof typeof FA_REGULAR];
+  if (isFa && !fa) {
+    const size = props.size || 18;
+    return <svg class={props.class} width={size} height={size} aria-hidden="true" focusable="false" />;
+  }
+  const def = fa && fa[key];
   if (def) return <FaSvg def={def} size={props.size || 18} class={props.class} />;
   const Fallback = ICONS.house;
   return <Fallback size={props.size || 18} class={props.class} />;

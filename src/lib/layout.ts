@@ -158,17 +158,20 @@ export function placeFree(cards: Card[], moved: Card): Card[] {
   return cards.map((c) => (c.id === moved.id ? { ...moved, y } : c));
 }
 
-// Размер в свободной сетке: тянуть можно только до соседей — карточка не наезжает на них и не «отпрыгивает»
-// вниз. Упёрлись — уменьшаем то, что выросло сильнее (ширину или высоту), пока не станет свободно.
-export function fitResize(cards: Card[], orig: Card, target: Card): Card {
-  const others = cards.filter((c) => c.id !== orig.id);
-  let t = { ...target };
-  for (let guard = 0; guard < 100 && others.some((o) => collides(t, o)); guard++) {
-    const growW = t.w - orig.w, growH = t.h - orig.h;
-    if (growW <= 0 && growH <= 0) return orig;
-    t = growW >= growH && growW > 0 ? { ...t, w: t.w - 1 } : { ...t, h: t.h - 1 };
-  }
-  return t;
+// Размер в правке: карточка растёт, а те, на кого она наехала, уходят вниз (и дальше по цепочке — их
+// соседи). Считается от исходных мест: уменьшили обратно — соседи возвращаются.
+export function pushResize(cards: Card[], target: Card): Card[] {
+  const out: Card[] = [target];
+  cards.filter((c) => c.id !== target.id).sort(byPosition).forEach((c) => {
+    let y = c.y;
+    for (let guard = 0; guard < 500; guard++) {
+      const hit = out.filter((o) => collides({ ...c, y }, o));
+      if (!hit.length) break;
+      y = Math.max.apply(null, hit.map((o) => o.y + o.h));
+    }
+    out.push({ ...c, y });
+  });
+  return cards.map((c) => out.filter((o) => o.id === c.id)[0]);
 }
 
 // Разводит только пересечения (без «гравитации»): порядок и пустые места в сетке сохраняются.

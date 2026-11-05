@@ -1,5 +1,7 @@
 package ru.smartframe.frame;
 
+import android.app.ActivityManager;
+import android.content.ComponentCallbacks2;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -55,6 +57,9 @@ public class PhotoLayer extends FrameLayout {
     private Bitmap nextBitmap;
     private String currentUrl = "";
     private int seq;
+    // Слабая рамка (≤ 1,5 ГБ памяти): кадр в 16 битах на пиксель (вдвое меньше памяти) и без медленного
+    // приближения — оно перерисовывает экран 20 секунд подряд, вместе с прозрачной страницей поверх.
+    private final boolean weak;
 
     public PhotoLayer(Context context, Listener listener) {
         super(context);
@@ -62,6 +67,32 @@ public class PhotoLayer extends FrameLayout {
         cacheDir = new File(context.getFilesDir(), "photos");
         cacheDir.mkdirs();
         setBackgroundColor(Color.BLACK);
+        weak = weakDevice(context);
+    }
+
+    private static boolean weakDevice(Context context) {
+        try {
+            ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+            if (am.isLowRamDevice()) return true;
+            ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+            am.getMemoryInfo(mi);
+            return mi.totalMem > 0 && mi.totalMem <= 1536L * 1024 * 1024;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // Системе не хватает памяти — отдаём заранее подготовленный кадр: при показе он скачается заново
+    // (обычно уже с диска), а приложение не закроют.
+    public void trim(int level) {
+        if (level < ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) return;
+        loader.execute(new Runnable() {
+            public void run() {
+                if (nextBitmap != null) nextBitmap.recycle();
+                nextBitmap = null;
+                nextUrl = null;
+            }
+        });
     }
 
     // fit: auto — кадр другой ориентации целиком (с подсветкой по краям), cover — во весь экран, contain — целиком.
@@ -271,18 +302,38 @@ public class PhotoLayer extends FrameLayout {
         }
     }
 
-    // Сервер присылает кадр под экран; если больше (без интеграции) — уменьшаем при декодировании.
+    // Сервер присылает кадр под экран; если больше (без интеграции) — уменьшаем при декодировании: сначала
+    // в 2, 4, 8… раз (быстро), остаток — плотностью, тоже при декодировании, без второй копии в памяти.
+    // Итог — ровно столько, чтобы закрыть экран, а не до двух раз больше по стороне.
     private Bitmap decode(byte[] data) {
         if (data == null || data.length == 0) return null;
         try {
             BitmapFactory.Options o = new BitmapFactory.Options();
             o.inJustDecodeBounds = true;
             BitmapFactory.decodeByteArray(data, 0, data.length, o);
-            int side = Math.max(getResources().getDisplayMetrics().widthPixels, getResources().getDisplayMetrics().heightPixels);
+            if (o.outWidth <= 0 || o.outHeight <= 0) return null;
+            int w = getWidth(), h = getHeight();
+            if (w <= 0 || h <= 0) {
+                w = getResources().getDisplayMetrics().widthPixels;
+                h = getResources().getDisplayMetrics().heightPixels;
+            }
+            // Во весь экран (cover): масштаб, при котором кадр закрывает экран по обеим сторонам.
+            float k = Math.min(1f, Math.max((float) w / o.outWidth, (float) h / o.outHeight));
             int sample = 1;
-            while (Math.max(o.outWidth, o.outHeight) / (sample * 2) >= side) sample *= 2;
+            while (o.outWidth / (sample * 2) >= o.outWidth * k && o.outHeight / (sample * 2) >= o.outHeight * k) sample *= 2;
+            int src = o.outWidth / sample;
+            int dst = Math.round(o.outWidth * k);
             o = new BitmapFactory.Options();
             o.inSampleSize = sample;
+            if (dst < src) {
+                o.inScaled = true;
+                o.inDensity = src;
+                o.inTargetDensity = dst;
+            }
+            if (weak) {
+                o.inPreferredConfig = Bitmap.Config.RGB_565;
+                o.inDither = true;
+            }
             return BitmapFactory.decodeByteArray(data, 0, data.length, o);
         } catch (Exception e) {
             return null;
@@ -365,7 +416,7 @@ public class PhotoLayer extends FrameLayout {
             }
         });
         // Медленное приближение (как на странице), кадр целиком — без него.
-        if (!whole && !lite) {
+        if (!whole && !lite && !weak) {
             photo.animate().scaleX(ZOOM).scaleY(ZOOM).setDuration(ZOOM_MS).setInterpolator(new LinearInterpolator());
         }
     }

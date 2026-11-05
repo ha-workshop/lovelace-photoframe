@@ -16,5 +16,7 @@ export default defineConfig({
     target: 'es2020',
     lib: { entry: 'src/card.tsx', formats: ['es'], fileName: () => 'photoframe-card.js' },
     rollupOptions: { output: { inlineDynamicImports: true } },
+    // Карточка — один файл (в релизе HACS только photoframe-card.js), делить её не на что: порог выше.
+    chunkSizeWarningLimit: 800,
   },
 });

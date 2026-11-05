@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import type { RefObject } from 'preact';
 import { Check, ChevronLeft, ChevronRight, Image, Menu, Pencil, Plus, Settings, Trash2, X } from 'lucide-preact';
 import { useHA } from '../lib/hooks';
@@ -11,7 +11,6 @@ import type { CameraFeed } from '../lib/camera';
 import { Grid } from './Grid';
 import { goToMainDashboard, useKioskActive } from '../lib/kiosk';
 import { useSize } from '../lib/useSize';
-import { docScrollOn } from '../lib/docScroll';
 import { useLinger } from '../lib/visibility';
 import { t } from '../i18n';
 
@@ -127,53 +126,6 @@ export function Controls(props: Props) {
   const canEdit = !store.card || store.card.canEdit;
   // Скрытая панель остаётся пустым контейнером: сетка карточек не рендерится и не держит подписки.
   const alive = useLinger(props.visible);
-  // Шапка с вкладками экранов лежит поверх карточек и уезжает вместе с ними, ровно за пальцем; потянули
-  // обратно — так же выезжает (как в приложениях iPhone). Пока под ней карточки — со стеклянным фоном.
-  // Карточки начинаются под шапкой (отступ сетки = её высота) и при прокрутке поднимаются до самого верха.
-  const headRef = useRef<HTMLDivElement>(null);
-  const [headH, setHeadH] = useState(0);
-  const scroll = useRef({ last: 0, offset: 0 });
-  const placeHead = (offset: number, over: boolean) => {
-    const head = headRef.current;
-    scroll.current.offset = offset;
-    if (!head) return;
-    head.style.transform = offset ? 'translateY(' + -offset + 'px)' : '';
-    head.className = 'controls-head' + (over ? ' over' : '') + (offset >= head.offsetHeight ? ' gone' : '');
-  };
-  useLayoutEffect(() => {
-    const head = headRef.current;
-    if (!head) return;
-    const measure = () => setHeadH(head.offsetHeight);
-    measure();
-    const RO = (window as unknown as { ResizeObserver?: typeof ResizeObserver }).ResizeObserver;
-    if (RO) { const ro = new RO(measure); ro.observe(head); return () => ro.disconnect(); }
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-  }, [alive]);
-  // Сменили дом или экран, ушли к фото — шапка снова на месте.
-  useEffect(() => { scroll.current.last = 0; placeHead(0, false); }, [props.visible, props.active, store.state.screen]);
-  useEffect(() => {
-    const root = props.innerRef.current;
-    if (!root) return;
-    const onScroll = (e: Event) => {
-      // Прокручивается сама страница (браузер, lib/docScroll) или сетка карточек (APK, карточка в HA).
-      const page = docScrollOn();
-      const el = e.target as HTMLElement;
-      if (page ? e.target !== document : !el || !el.classList || !el.classList.contains('grid')) return;
-      const head = headRef.current;
-      if (!head) return;
-      const st = scroll.current;
-      const top = Math.max(0, page ? window.pageYOffset : el.scrollTop);
-      const dy = top - st.last;
-      st.last = top;
-      const h = head.offsetHeight;
-      placeHead(top <= 0 ? 0 : Math.min(h, Math.max(0, st.offset + dy)), top > 4);
-    };
-    // scroll не всплывает — ловим на погружении; прокрутку страницы — на document.
-    root.addEventListener('scroll', onScroll, true);
-    document.addEventListener('scroll', onScroll);
-    return () => { root.removeEventListener('scroll', onScroll, true); document.removeEventListener('scroll', onScroll); };
-  }, [alive]);
   const actions = (
     <>
       {canEdit && <button class="round" onClick={() => props.onEditing(true)} title={t('controls.customize')}><Pencil size={18} /></button>}
@@ -185,7 +137,7 @@ export function Controls(props: Props) {
   return (
     <div ref={props.innerRef} class={'controls' + (props.visible ? ' visible' : '')}>
       {alive && <>
-      <div ref={headRef} class="controls-head">
+      <div class="controls-head">
       <header class={'bar' + (narrow ? ' bar-narrow' : '') + (menu ? ' menu-open' : '') + (props.editing ? ' bar-editing' : '')}>
         {/* В киоске мини-часы — выход на главный дашборд HA (меню HA скрыто, иначе не уйти). */}
         <div class={'bar-time' + (kiosk ? ' clock-link' : '')} onClick={kiosk ? goToMainDashboard : undefined}>
@@ -221,7 +173,7 @@ export function Controls(props: Props) {
       <ScreenTabs editing={props.editing} />
       </div>
       <div key={props.active + '/' + store.state.screen} class={'home-pane' + (props.slide ? ' slide-' + props.slide : '')}>
-        <Grid editing={props.editing} paused={props.paused} insetTop={headH} onCamera={props.onCamera} onEdit={props.onEditCard} />
+        <Grid editing={props.editing} paused={props.paused} onCamera={props.onCamera} onEdit={props.onEditCard} />
       </div>
       </>}
     </div>

@@ -11,12 +11,9 @@ import { kioskPref, setKioskPref, type KioskPref } from '../lib/kiosk';
 import { autostart, setAutostart } from '../lib/screen';
 import { autoQuality, photoFit, qualityPref, setPhotoFit, setQualityPref, type PhotoFit, type QualityPref } from '../lib/quality';
 import { applyLanguage, languages, preferredLanguage, setPreferredLanguage, t } from '../i18n';
-import { stepCamera, useStreamState, type CameraFeed } from '../lib/camera';
 import { cameraDisplayPref, setCameraDisplayPref, type CameraDisplayPref } from '../lib/cameraPrefs';
-import { useSwipeStep } from '../lib/gestures';
 import { MAIN_HOME, mainHome, startScreen, store as frame, useStore, type Home, type Settings } from '../lib/store';
 import { FolderPicker } from './FolderPicker';
-import { CameraStream } from './CameraStream';
 
 export function Modal(props: { title: ComponentChildren; onClose: () => void; wide?: boolean; footer?: ComponentChildren; children: ComponentChildren }) {
   return (
@@ -30,42 +27,6 @@ export function Modal(props: { title: ComponentChildren; onClose: () => void; wi
         {props.footer && <div class="modal-foot">{props.footer}</div>}
       </div>
     </div>
-  );
-}
-
-export function CameraModal(props: { feeds: CameraFeed[]; index: number; onIndex: (index: number) => void; onClose: () => void }) {
-  const ha = useHA();
-  // В полноэкранной камере видео идёт сразу — это осознанное открытие камеры;
-  // настройка «с паузы/снимок» относится к карточке на панели.
-  const count = props.feeds.length;
-  const index = Math.min(Math.max(0, props.index), Math.max(0, count - 1));
-  const current = props.feeds[index];
-  // Адрес и элемент img — только для текущей камеры. Сменили камеру — старый узел снимается,
-  // браузер закрывает его поток, новый открывается поверх.
-  const entity = current ? current.entity : '';
-  const url = current ? ha.cameraStreamUrl(current.entity) : '';
-  const stream = useStreamState(entity);
-  const swipe = useSwipeStep((dir) => { if (count > 1) props.onIndex(stepCamera(index, dir, count)); });
-  return (
-    <Modal title={current ? current.name : t('camera.live_title')} onClose={props.onClose} wide>
-      <div class="cam-full cam-swipe" {...swipe}>
-        <CameraStream src={url} {...stream.img} />
-        {(!url || stream.state === 'error') && (
-          <div class="cam-empty"><span>{t('camera.no_stream')}</span></div>
-        )}
-        {stream.state === 'loading' && (
-          <div class="cam-loading"><i class="cam-spinner" /><span>{t('camera.loading')}</span></div>
-        )}
-      </div>
-      {count > 1 && (
-        <div class="cam-dots">
-          {props.feeds.map((c, i) => (
-            <button key={c.entity + i} class={i === index ? 'active' : ''} title={c.name} aria-label={c.name}
-              onClick={() => props.onIndex(i)} />
-          ))}
-        </div>
-      )}
-    </Modal>
   );
 }
 

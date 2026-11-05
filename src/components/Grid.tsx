@@ -2,7 +2,7 @@ import { useRef, useState } from 'preact/hooks';
 import { EyeOff, Pencil, Plus, X } from 'lucide-preact';
 import { useHA } from '../lib/hooks';
 import { useStore } from '../lib/store';
-import { GRID_COLS, MOBILE_COLS, bottom, clampBox, fitResize, mobileView, placeFree, withMobile, type Card } from '../lib/layout';
+import { GRID_COLS, MOBILE_COLS, bottom, clampBox, mobileView, placeFree, pushResize, withMobile, type Card } from '../lib/layout';
 import type { CameraFeed } from '../lib/camera';
 import { CardAside, CardBody, Panel, cardTitle } from './CardView';
 import { useSize } from '../lib/useSize';
@@ -124,10 +124,10 @@ export function Grid({ editing, paused, insetTop = 0, onCamera, onEdit }: Props)
       const target = clampBox(cur.mode === 'move'
         ? { ...o, x: o.x + dx / step, y: o.y + dy / step }
         : { ...o, w: o.w + dx / step, h: o.h + dy / step }, cols);
-      // Соседей не двигаем: карточка встаёт точно по клеткам, как блок на экране фото;
-      // размер — только до соседей.
-      const placed = cur.mode === 'resize' ? fitResize(cards, o, target) : target;
-      const next = { ...cur, dx, dy, active, preview: placeFree(cards, placed) };
+      // Перенос — соседей не двигаем: карточка встаёт точно по клеткам (на занятое место — уходит ниже).
+      // Размер — растёт, а соседи, на кого наехала, уходят вниз.
+      const preview = cur.mode === 'resize' ? pushResize(cards, target) : placeFree(cards, target);
+      const next = { ...cur, dx, dy, active, preview };
       dragRef.current = next;
       setDrag(next);
     };
@@ -171,6 +171,9 @@ export function Grid({ editing, paused, insetTop = 0, onCamera, onEdit }: Props)
     store.saveLayout({ ...store.state.layout, cards: next });
   };
 
+  // Телефон вне правки: карточки идут потоком по сетке из MOBILE_COLS колонок и растут по содержимому —
+  // внутри ничего не прокручивается, листается вся страница. Высота с раскладки — наименьшая.
+  const flow = narrow && !editing;
   // В редактировании сетка клеток заполняет весь экран (новые карточки добавляются кнопкой «+» в шапке).
   const used = bottom(shown);
   const rows = editing ? Math.max(fitRows, used) : used;
@@ -191,6 +194,14 @@ export function Grid({ editing, paused, insetTop = 0, onCamera, onEdit }: Props)
           )}
         </div>
       )}
+      {flow ? (
+        <div class="grid-inner grid-flow" style={{ margin: (PAD + insetTop) + 'px ' + PAD + 'px ' + PAD + 'px', gridTemplateColumns: 'repeat(' + cols + ', minmax(0, 1fr))', gridGap: GAP + 'px', gap: GAP + 'px' }}>
+          {box.w > 0 && shown.slice().sort((a, b) => a.y - b.y || a.x - b.x).map((card) => (
+            <Cell key={card.id} card={card} style={rect(card)} flow editing={false} onCamera={onCamera} onEdit={onEdit}
+              onRemove={remove} paused={paused} narrow={narrow} ha={ha} />
+          ))}
+        </div>
+      ) : (
       <div class="grid-inner" style={{ height: Math.max(0, rows * step - GAP), margin: (PAD + top + insetTop) + 'px ' + PAD + 'px ' + PAD + 'px' }}>
         {editing && box.w > 0 && <GridDots rows={rows} cols={cols} cell={cell} step={step} />}
         {box.w > 0 && shown.map((card) => {
@@ -223,6 +234,7 @@ export function Grid({ editing, paused, insetTop = 0, onCamera, onEdit }: Props)
           );
         })}
       </div>
+      )}
     </main>
   );
 }
@@ -248,15 +260,17 @@ interface CellProps {
   onRemove: (card: Card) => void;
   paused?: boolean;
   narrow?: boolean;
+  // Поток на телефоне: место — от сетки CSS (ширина в колонках), высота — не меньше раскладки, дальше по содержимому.
+  flow?: boolean;
   onStart?: (e: TouchEvent | MouseEvent, card: Card, mode: 'move' | 'resize') => void;
 }
 
-function Cell({ card, style, editing, dragged, ha, onCamera, onEdit, onRemove, paused, narrow, onStart }: CellProps) {
+function Cell({ card, style, editing, dragged, ha, onCamera, onEdit, onRemove, paused, narrow, flow, onStart }: CellProps) {
   const tint = card.color ? ' tint-' + card.color : '';
   return (
     <div
       class={'cell' + tint + (dragged ? ' dragged' : '')}
-      style={style}
+      style={flow ? { gridColumn: 'span ' + card.w, minHeight: style.height } : style}
       onMouseDown={onStart ? (e) => onStart(e as unknown as MouseEvent, card, 'move') : undefined}
       onTouchStart={onStart ? (e) => onStart(e as unknown as TouchEvent, card, 'move') : undefined}
     >

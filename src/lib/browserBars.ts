@@ -23,6 +23,9 @@ function strip(id: string): HTMLDivElement {
 }
 
 export function paintBrowserBars(top: string, bottom: string) {
+  // В APK рамки панелей браузера нет, а фото рисует Android под прозрачной страницей: фон у html/body
+  // его закрасил бы.
+  if (/SmartFrame\//.test(navigator.userAgent)) return;
   let meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
   if (!meta) {
     meta = document.createElement('meta');

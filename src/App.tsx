@@ -12,13 +12,17 @@ import { ACCENTS, bottom, clampBox, placeFree, type Card } from './lib/layout';
 import type { CameraFeed } from './lib/camera';
 import { useTone } from './lib/photoTone';
 import { paintBrowserBars } from './lib/browserBars';
-import { setDocScroll, setPhotoPeek } from './lib/docScroll';
+import { lockScroll, setDocScroll, setPhotoPeek } from './lib/docScroll';
 import { useSwipe } from './lib/swipe';
 import { ChevronLeft, ChevronRight } from 'lucide-preact';
 import { Backdrop } from './components/Backdrop';
 import { Ambient } from './components/Ambient';
 import { Controls } from './components/Controls';
-import { CameraModal, SettingsModal } from './components/Modals';
+import { TvBar } from './components/TvBar';
+import { TvHome } from './components/TvHome';
+import { arrowDir, focusFirst, isBack, markKeyboard, moveFocus, pressFocused } from './lib/spatialNav';
+import { SettingsModal } from './components/Modals';
+import { CameraViewer } from './components/CameraViewer';
 import { AddCardModal, CardEditor } from './components/Editor';
 import { Sheet } from './components/Sheet';
 import { DetailModal } from './components/Detail';
@@ -87,8 +91,23 @@ export function App() {
   }, [active, store.state.screen, store.frameClient]);
   // Открыта ли панель и идёт ли редактирование — из общего хранилища, чтобы пережить пересоздание карточки.
   const [controls, setControls] = useState(store.ui.controls);
+  // Дашборд с пульта (открыли с ленты на фото) — плитками, как Apple TV (TvHome). Касание или мышь —
+  // обычный дашборд; к фото — снова как было.
+  const [tv, setTv] = useState(false);
+  const tvRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (!controls) setTv(false); }, [controls]);
+  useEffect(() => {
+    if (!tv) return;
+    const off = () => setTv(false);
+    document.addEventListener('mousedown', off, true);
+    document.addEventListener('touchstart', off, true);
+    return () => {
+      document.removeEventListener('mousedown', off, true);
+      document.removeEventListener('touchstart', off, true);
+    };
+  }, [tv]);
   // Открыта панель — прокручивается сама страница (Safari пускает её под свои панели), к фото — обратно.
-  useLayoutEffect(() => { setDocScroll(controls); setPhotoPeek(!controls); }, [controls]);
+  useLayoutEffect(() => { setDocScroll(controls && !tv); setPhotoPeek(!controls); }, [controls, tv]);
   const [editing, setEditing] = useState(store.ui.editing);
   useEffect(() => { store.ui.controls = controls; store.ui.editing = editing; }, [controls, editing]);
   const [showSettings, setShowSettings] = useState(false);
@@ -204,6 +223,8 @@ export function App() {
 
   const modal = showSettings || !!cameraView || !!editCard || adding || !!detail;
   const busy = modal || !!sheet;
+  // Окно или карточка поверх — фон под ними не прокручивается.
+  useLayoutEffect(() => { lockScroll(busy); }, [busy]);
   const rootRef = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<HTMLDivElement>(null);
   const ambientRef = useRef<HTMLDivElement>(null);
@@ -222,24 +243,79 @@ export function App() {
   const [customizing, setCustomizing] = useState(false);
   useSwipe({ root: rootRef, controls: controlsRef, ambient: ambientRef, soft: softRef }, controls, setControls, !busy && !customizing, () => setCustomizing(true), stepPhoto);
 
-  // С клавиатуры — то же, что свайпы: ← → листают фото, ↑ открывает панель, ↓ и Esc — обратно к фото.
-  // Пока открыто окно, редактор или идёт ввод текста — клавиши не перехватываем.
+  // Пульт телевизора и клавиатура. Экран с фото — лента TvBar (там же ← → листают фото). Дашборд, карточка и
+  // окна — стрелки ведут фокус по элементам (lib/spatialNav), OK нажимает, Назад / Esc закрывает верхнее окно,
+  // потом выходит из правки и возвращает к фото. Пока идёт ввод текста — стрелки не перехватываем.
+  const closeTop = useRef<() => boolean>(() => false);
+  closeTop.current = () => {
+    if (cameraView) setCameraView(null);
+    else if (detail) setDetail(null);
+    else if (editCard) setEditCard(null);
+    else if (adding) setAdding(false);
+    else if (showSettings) setShowSettings(false);
+    else if (sheet) setSheetId(null);
+    else if (editing) setEditing(false);
+    else if (controls) setControls(false);
+    else return false;
+    return true;
+  };
   useEffect(() => {
-    if (busy || customizing) return;
     const onKey = (e: KeyboardEvent) => {
-      const el = e.target as HTMLElement | null;
-      if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
       const k = e.key || '';
-      if (!controls && (k === 'ArrowLeft' || k === 'Left')) stepPhoto(-1);
-      else if (!controls && (k === 'ArrowRight' || k === 'Right')) stepPhoto(1);
-      else if (!controls && (k === 'ArrowUp' || k === 'Up')) setControls(true);
-      else if (controls && !editing && (k === 'ArrowDown' || k === 'Down' || k === 'Escape' || k === 'Esc')) setControls(false);
-      else return;
-      e.preventDefault();
+      const el = e.target as HTMLElement | null;
+      const typing = !!el && (/^(TEXTAREA|SELECT)$/.test(el.tagName) || (el.tagName === 'INPUT' && (el as HTMLInputElement).type !== 'range'
+        && (el as HTMLInputElement).type !== 'checkbox' && (el as HTMLInputElement).type !== 'radio'));
+      if (isBack(e, typing)) {
+        if (typing && el) { el.blur(); e.preventDefault(); return; }
+        if (!controls && !busy) return; // экран с фото — лента прячется сама
+        if (customizing) return;
+        if (closeTop.current()) { markKeyboard(true); e.preventDefault(); }
+        return;
+      }
+      if (!controls && !busy) return;
+      if (customizing || typing) return;
+      const dir = arrowDir(k);
+      const layers = document.querySelectorAll('.modal, .sheet-layer, .lock-modal');
+      const scope = (layers.length ? layers[layers.length - 1] : tv ? tvRef.current : controlsRef.current) as HTMLElement | null;
+      if (!scope) return;
+      // Ползунок: ← → меняют значение, ↑ ↓ — уходят с него.
+      if (dir && el && el.tagName === 'INPUT' && (dir === 'left' || dir === 'right')) return;
+      if (dir) {
+        markKeyboard(true);
+        moveFocus(scope, dir);
+        e.preventDefault();
+      } else if ((k === 'Enter' || k === ' ') && pressFocused(scope)) {
+        e.preventDefault();
+      }
     };
+    const onPointer = () => markKeyboard(false);
     document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [busy, customizing, controls, editing, stepPhoto]);
+    document.addEventListener('mousedown', onPointer, true);
+    document.addEventListener('touchstart', onPointer, true);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('mousedown', onPointer, true);
+      document.removeEventListener('touchstart', onPointer, true);
+    };
+  }, [busy, customizing, controls, tv]);
+  // С пульта открыли окно или карточку — фокус сразу внутри, на первом элементе содержимого.
+  useEffect(() => {
+    if (!document.documentElement.classList.contains('kbd-nav')) return;
+    const t = window.setTimeout(() => {
+      const layers = document.querySelectorAll('.modal, .sheet-layer, .lock-modal');
+      if (layers.length) focusFirst(layers[layers.length - 1] as HTMLElement);
+    }, 60);
+    return () => clearTimeout(t);
+  }, [sheetId, showSettings, !!editCard, adding, !!detail, !!cameraView]);
+  // Кнопка «Назад» пульта в APK рамки (MainActivity.onBackPressed): true — страница обработала сама.
+  useEffect(() => {
+    const w = window as Window & { SmartFrameBack?: () => boolean };
+    w.SmartFrameBack = () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      return true;
+    };
+    return () => { delete w.SmartFrameBack; };
+  }, []);
 
   // Без касаний — прячем управление/карточку и возвращаемся к фото (вместо сна экрана).
   // Во время редактирования раскладки не прячем.
@@ -279,11 +355,11 @@ export function App() {
     {/* Класс качества — на общем корне: модалки и карточки поверх фото живут вне .app. */}
     <div class={'root q-' + qualityMode}>
       <style>{TINTS + (tone ? accentCss('', tone.accent, tone.accentSoft) : '')}</style>
-      <div class="app" ref={rootRef} lang={language}>
+      <div class={'app' + (controls && tv ? ' tv-home' : '')} ref={rootRef} lang={language}>
         <Backdrop urls={urls} index={index % Math.max(n, 1)} tone={tone} soft={controls} softRef={softRef} onShow={setShown} />
-        <LiveContext.Provider value={!controls}>
+        <LiveContext.Provider value={!controls || tv}>
         <Ambient
-          visible={!controls}
+          visible={!controls || tv}
           innerRef={ambientRef}
           onSheet={(card) => setSheetId(card.id)}
           onConnection={() => setShowSettings(true)}
@@ -293,16 +369,18 @@ export function App() {
           customizing={customizing}
           onDone={() => setCustomizing(false)}
         />
+        <TvBar enabled={!controls && !busy && !customizing} onStep={stepPhoto} onSheet={(card) => setSheetId(card.id)}
+          onHome={() => { setHint(false); setTv(true); setControls(true); }} />
         </LiveContext.Provider>
         {flash && (
           <div key={flash.key} class={'photo-step ' + (flash.dir > 0 ? 'next' : 'prev')}>
             {flash.dir > 0 ? <ChevronRight size={40} strokeWidth={1.6} /> : <ChevronLeft size={40} strokeWidth={1.6} />}
           </div>
         )}
-        <LiveContext.Provider value={controls}>
+        <LiveContext.Provider value={controls && !tv}>
         <Controls
           innerRef={controlsRef}
-          visible={controls}
+          visible={controls && !tv}
           editing={editing}
           paused={modal || !!sheet}
           onEditing={setEditing}
@@ -318,6 +396,12 @@ export function App() {
           onAddCard={() => setAdding(true)}
         />
         </LiveContext.Provider>
+        {controls && tv && (
+          <LiveContext.Provider value={true}>
+            <TvHome innerRef={tvRef} covered={busy} onOpen={(card) => setSheetId(card.id)}
+              onPhotos={() => setControls(false)} />
+          </LiveContext.Provider>
+        )}
       </div>
       {sheet && <Sheet card={sheet} tone={tone} onCamera={openCamera} onClose={() => setSheetId(null)} />}
       {/* Экран из HA (сущность «Экран»): сон — чёрный экран, яркость в браузере — затемнение. Только когда нужно:
@@ -327,7 +411,7 @@ export function App() {
           onClick={awake ? undefined : () => store.wakeScreen()} />
       )}
       {cameraView && (
-        <CameraModal
+        <CameraViewer
           feeds={cameraView.feeds}
           index={cameraView.index}
           onIndex={(index) => setCameraView((v) => v ? { ...v, index } : v)}
