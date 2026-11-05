@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
-import { CloudUpload, Copy, Folder, ImagePlus, LogIn, LogOut, RotateCcw, Trash2, X } from 'lucide-preact';
+import { CloudUpload, Copy, Folder, ImagePlus, LogIn, LogOut, RotateCcw, Trash2, Volume2, X } from 'lucide-preact';
 import { haSession, login, logout } from '../lib/haAuth';
 import { useHA } from '../lib/hooks';
 import { frameId, frameName as currentFrameName } from '../lib/frame';
@@ -12,7 +12,7 @@ import { autostart, setAutostart } from '../lib/screen';
 import { autoQuality, photoFit, qualityPref, setPhotoFit, setQualityPref, type PhotoFit, type QualityPref } from '../lib/quality';
 import { applyLanguage, languages, preferredLanguage, setPreferredLanguage, t } from '../i18n';
 import { cameraDisplayPref, setCameraDisplayPref, type CameraDisplayPref } from '../lib/cameraPrefs';
-import { deviceSpeechRate, deviceVoiceId, deviceVoices, listVoicePipelines, setDeviceSpeechRate, setDeviceVoiceId, setTtsSource, ttsSource, type DeviceVoice, type TtsSource, type VoicePipeline } from '../lib/voice';
+import { deviceSpeechRate, deviceVoiceId, deviceVoices, listVoicePipelines, primeVoice, setDeviceSpeechRate, setDeviceVoiceId, setTtsSource, speakVoice, ttsSource, type DeviceVoice, type TtsSource, type VoicePipeline, type VoiceRun } from '../lib/voice';
 import { MAIN_HOME, mainHome, startScreen, store as frame, useStore, type Home, type Settings } from '../lib/store';
 import { FolderPicker } from './FolderPicker';
 
@@ -161,6 +161,31 @@ export function SettingsModal(props: { onClose: () => void }) {
   const ttsDevice = voices.length > 0;
   // Сохранённый голос мог исчезнуть из системы — тогда показываем «Авто».
   const voicePick = voices.some((v) => v.id === voiceId) ? voiceId : '';
+  // Прослушивание тестовой фразы текущим голосом/темпом (или TTS Home Assistant).
+  const testRun = useRef<VoiceRun | null>(null);
+  const [testing, setTesting] = useState(false);
+  useEffect(() => () => {
+    if (testRun.current) { testRun.current.cancel(); testRun.current = null; }
+  }, []);
+  const testVoice = () => {
+    // Повторное нажатие — замолчать.
+    if (testRun.current) {
+      testRun.current.cancel();
+      testRun.current = null;
+      setTesting(false);
+      return;
+    }
+    primeVoice();
+    setTesting(true);
+    testRun.current = speakVoice(t('settings.tts_test_phrase'), {
+      onStatus: (s) => {
+        if (s.phase === 'done' || s.phase === 'error') {
+          testRun.current = null;
+          setTesting(false);
+        }
+      },
+    }, draft.voicePipeline || undefined);
+  };
   const [camPref, setCamPref] = useState<CameraDisplayPref>(cameraDisplayPref());
   const [fit, setFit] = useState<PhotoFit>(photoFit());
   // Только в APK: открывать рамку сама после включения.
@@ -439,6 +464,11 @@ export function SettingsModal(props: { onClose: () => void }) {
                         </div>
                       </>
                     )}
+                    <button class="btn btn-ghost voice-test" type="button" onClick={testVoice}
+                      disabled={tts === 'device' && !ttsDevice}>
+                      <Volume2 size={16} />
+                      <span>{testing ? t('settings.tts_testing') : t('settings.tts_test')}</span>
+                    </button>
                   </>
                 )}
               </Section>
