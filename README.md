@@ -8,7 +8,7 @@
 Your photos, a big clock and the weather fill the screen. Swipe up and your lights, climate,
 air conditioner, cameras, speakers and TV are right there. Leave it alone for a minute — back to photos.
 
-[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories)
+[![HACS & Marketplace](https://img.shields.io/badge/HACS%20%26%20Marketplace-41BDF5.svg)](https://hacs.xyz/)
 [![Release](https://img.shields.io/github/v/release/ha-workshop/lovelace-photoframe)](https://github.com/ha-workshop/lovelace-photoframe/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -58,21 +58,22 @@ Photo Frame is **one dashboard card** (`custom:photoframe-card`) — not an add-
 - **The start screen is a per-device setting**, not a dashboard one: the kitchen tablet starts on
   *Apartment · Kitchen*, the one at the country house on *Country house · Cameras*.
 
+<!-- ha-marketplace:exclude-start -->
 ## Installation
 
 > **Tip:** the [Photo Frame integration](https://github.com/ha-workshop/ha-photoframe) brings this card *and*
 > the standalone app, makes every frame a device in Home Assistant and processes photos on the server.
 > Install the integration instead of the card if you want frames on tablets or old Android devices.
 
-1. Open the card in HACS:
+1. Open the card in the Marketplace (Home Assistant 2026.11+) or HACS:
 
    [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ha-workshop&repository=lovelace-photoframe&category=plugin)
 
-   Or by hand: HACS → search **Photo Frame Card**. Not in the list yet? HACS → ⋮ → **Custom repositories** →
-   `https://github.com/ha-workshop/lovelace-photoframe`, type **Dashboard**.
-2. Download **Photo Frame Card**. HACS adds the resource
-   `/hacsfiles/lovelace-photoframe/dist/photoframe-card.js` (if not: *Settings → Dashboards → Resources*,
-   type *JavaScript module*).
+   Or by hand: **Settings → Marketplace** (or HACS) → search **Photo Frame Card**.
+2. Download **Photo Frame Card**. The resource is added automatically:
+   `/local/community/lovelace-photoframe/photoframe-card.js`. On Home Assistant 2026.10 and older
+   with HACS the path is `/hacsfiles/lovelace-photoframe/photoframe-card.js`.
+   If the resource is missing: *Settings → Dashboards → Resources*, type *JavaScript module*.
 3. Create a folder for photos: `/media/photoframe` (Samba, File editor or terminal).
 4. Reload the browser and open any dashboard as an admin: Photo Frame offers to
    **create a “Photo frame” dashboard** in the sidebar — one tap. Prefer doing it by hand?
@@ -88,6 +89,7 @@ views:
 ```
 
 5. Open the dashboard on your tablet, swipe up, tap ✏️ and build your cards.
+<!-- ha-marketplace:exclude-end -->
 
 ## Configuration
 
@@ -132,7 +134,7 @@ Home Assistant's own login page. A change on the card or on any frame shows up e
 ```bash
 npm install
 npm run dev            # the PWA at http://localhost:5173 (sign in to your HA from its settings)
-npm run build:card     # dist/photoframe-card.js — the file HACS installs
+npm run build:card     # dist/photoframe-card.js — the file the Marketplace/HACS installs
 npm run apk:install    # Android shell for old frames, installed over adb
 ```
 
@@ -140,12 +142,12 @@ npm run apk:install    # Android shell for old frames, installed over adb
 HA, read-only); `?hadom` also mimics the HA frontend DOM for kiosk mode.
 
 **Deploy to your own HA** — `cp deploy.env.example .deploy.env`, fill it in, then:
-`./deploy.sh card` puts a fresh build into your HA (same place HACS does — handy before a release),
+`./deploy.sh card` puts a fresh build into your HA (same place the Marketplace does — handy before a release),
 `./deploy.sh pwa` updates the standalone app in `www/photoframe`.
 
-**Release** — `scripts/release.sh 0.2.0`: bumps the version, rebuilds `dist/photoframe-card.js`,
+**Release** — `scripts/release.sh 1.9.4`: bumps the version, rebuilds `dist/photoframe-card.js`,
 tags, pushes and creates a GitHub Release; the workflow attaches the built card to it.
-HACS shows the latest release as the available version.
+The Marketplace and HACS show the latest release as the available version.
 
 ## License
 

@@ -26,6 +26,8 @@ import { SettingsModal } from './components/Modals';
 import { Voice } from './components/Voice';
 import { WakeWordDetector } from './components/WakeWord';
 import { primeVoice, wakeWordModel } from './lib/voice';
+import { applyDesktopKiosk, isDesktop } from './lib/desktop';
+import { kioskWanted, onKioskPref } from './lib/kiosk';
 import { CameraViewer } from './components/CameraViewer';
 import { AddCardModal, CardEditor } from './components/Editor';
 import { Sheet } from './components/Sheet';
@@ -57,6 +59,14 @@ export function App() {
   const qualityMode = useQuality();
   const { settings, layout, sync, homes, active } = store.state;
   useEffect(() => store.start(), []);
+  // Electron opens as a normal window; kiosk only when enabled in this device's settings
+  // (auto = normal window, ?kiosk=1 still forces it for one launch).
+  useEffect(() => {
+    if (!isDesktop()) return;
+    const apply = () => applyDesktopKiosk(kioskWanted(false));
+    apply();
+    return onKioskPref(apply);
+  }, []);
   // Подключение к HA: в карточке — hass фронтенда HA; в PWA его держит store (через него же хранилище в HA).
   // Пока PWA не вошла в HA — пустой клиент.
   const idle = useMemo(() => new HAClient('', () => Promise.resolve('')), []);

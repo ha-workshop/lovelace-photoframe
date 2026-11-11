@@ -24,10 +24,15 @@ export interface VoicePatch {
   conversationId?: string;
   // Вслух произнесли только начало ответа — полный текст остался на экране.
   shortened?: boolean;
+  // Ход работы агента: вызов инструмента или кусок ответа, который он «печатает».
+  progress?: string;
+  progressKind?: 'tool' | 'text';
 }
 
 export interface VoiceHandlers {
   onStatus: (patch: VoicePatch) => void;
+  // Микрофонный уровень 0…1 для живой визуализации; приходит не чаще ~10 раз в секунду.
+  onLevel?: (level: number) => void;
 }
 
 export interface VoiceRun {
@@ -47,7 +52,12 @@ export interface VoicePipeline {
 }
 
 const SAMPLE_RATE = 16000;
-const MAX_LISTEN_MS = 15000;
+// Тайминги из ТЗ Voice UI: короткая пауза завершает фразу, полное молчание отменяет сессию,
+// жёсткий предел не даёт микрофону висеть бесконечно.
+const SILENCE_MS = 700;
+const NO_SPEECH_MS = 4000;
+export const FOLLOW_UP_NO_SPEECH_MS = 5000;
+const MAX_LISTEN_MS = 10000;
 const MAX_RUN_MS = 90000;
 
 // ── Озвучка устройства ──────────────────────────────────
@@ -363,7 +373,9 @@ interface Capture { stop: () => void }
 function startCapture(stream: MediaStream, onPcm: (pcm: Int16Array) => void): Capture {
   const ctx = audioContext();
   const source = ctx.createMediaStreamSource(stream);
-  const proc = ctx.createScriptProcessor(4096, 1, 1);
+  // Блок ~43 мс при 48 кГц: достаточно часто, чтобы пауза 700 мс ловилась точно,
+  // и при этом без нагрузки AnalyserNode-опроса каждые 16 мс.
+  const proc = ctx.createScriptProcessor(2048, 1, 1);
   // Выход процессора должен куда-то идти, чтобы он работал; gain 0 — чтобы не было эха в динамиках.
   const mute = ctx.createGain();
   mute.gain.value = 0;
@@ -452,8 +464,11 @@ function isFullWord(text: string): boolean {
 
 interface StopWatch { stop: () => void }
 
-// Сколько ответа произносим вслух. Полный текст остаётся на экране, а «эфир» короткий:
-// первое предложение, а если оно совсем короткое — ещё и второе; максимум ~240 символов.
+// Сколько ответа произносим вслух. Полный текст всегда на экране; вслух читаем ответ
+// целиком, пока он короче порога (~600 символов); длиннее — обрезаем по границе слова,
+// полный ответ можно дочитать кнопкой «Прочитать полностью».
+const MAX_SPEECH = 600;
+
 function shortSpeech(text: string): string {
   const clean = text
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
@@ -461,15 +476,49 @@ function shortSpeech(text: string): string {
     .replace(/\s+/g, ' ')
     .trim();
   if (!clean) return '';
-  const sentences = clean.match(/[^.!?…]+[.!?…]+/g) || [clean];
-  let out = (sentences[0] || clean).trim();
-  if (out.length < 90 && sentences[1]) out += ' ' + sentences[1].trim();
-  if (out.length > 240) {
-    out = out.slice(0, 240);
-    out = out.slice(0, out.lastIndexOf(' ') > 120 ? out.lastIndexOf(' ') : out.length).replace(/[,;:\-–—]+$/, '');
-    out += '…';
+  if (clean.length <= MAX_SPEECH) return clean;
+  const cut = clean.slice(0, MAX_SPEECH);
+  const lastSpace = cut.lastIndexOf(' ');
+  const at = lastSpace > MAX_SPEECH * 0.6 ? lastSpace : cut.length;
+  return cut.slice(0, at).replace(/[,;:\-–—]+$/, '') + '…';
+}
+
+// ── Ход работы агента ───────────────────────────────────
+// HA присылает intent-progress с приращением журнала разговора: либо реплику агента
+// (content), либо вызов инструмента (tool_name/tool_args). Из этого делаем человекочитаемую
+// строку для окна — «что он делает прямо сейчас», пока горит «Думаю…».
+function prettyTool(name: string): string {
+  return String(name)
+    .replace(/_/g, ' ')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function deltaText(delta: any): { text: string; kind: 'tool' | 'text' } | null {
+  if (!delta) return null;
+  const calls = Array.isArray(delta.tool_calls) ? delta.tool_calls : [];
+  const callName = delta.tool_name || (calls[0] && calls[0].tool_name) || (calls[0] && calls[0].name);
+  if (callName) {
+    const args = delta.tool_args || (calls[0] && (calls[0].tool_args || calls[0].arguments)) || {};
+    const target = [args.name, args.entity_id, args.area, args.device_class, args.preset, args.query]
+      .filter((v) => typeof v === 'string' && v)
+      .join(', ');
+    return { text: prettyTool(callName) + (target ? ' · ' + target : ''), kind: 'tool' };
   }
-  return out;
+  const content = delta.content;
+  if (typeof content === 'string') {
+    const text = content.trim();
+    return text ? { text, kind: 'text' } : null;
+  }
+  if (Array.isArray(content)) {
+    const text = content
+      .map((p: any) => (typeof p === 'string' ? p : (p && (p.text || p.content)) || ''))
+      .join(' ')
+      .trim();
+    return text ? { text, kind: 'text' } : null;
+  }
+  return null;
 }
 
 function watchSpeech(onStop: () => void, onFull: () => void, pipeline?: string): StopWatch {
@@ -599,7 +648,7 @@ function watchSpeech(onStop: () => void, onFull: () => void, pipeline?: string):
   return { stop };
 }
 
-function run(mode: 'audio' | 'text' | 'speak', text: string, handlers: VoiceHandlers, conversationId?: string, pipeline?: string, speak = true, deviceId?: string): VoiceRun {
+function run(mode: 'audio' | 'text' | 'speak', text: string, handlers: VoiceHandlers, conversationId?: string, pipeline?: string, speak = true, deviceId?: string, noSpeechMs = NO_SPEECH_MS): VoiceRun {
   const session = haSession();
   let dead = false;
   let finished = false;
@@ -614,6 +663,7 @@ function run(mode: 'audio' | 'text' | 'speak', text: string, handlers: VoiceHand
   let runTimer = 0;
   let silence = 0;
   let heard = false;
+  let lastLevelAt = 0;
   let stopWatch: StopWatch | null = null;
   // id второго запуска (только TTS). Первый — STT+агент: до озвучки он не доходит.
   let ttsId: number | null = null;
@@ -711,13 +761,21 @@ function run(mode: 'audio' | 'text' | 'speak', text: string, handlers: VoiceHand
   const onPcm = (pcm: Int16Array) => {
     if (audioClosed) return;
     const level = rms(pcm);
+    // Уровень для орба: корень сжимает разброс — тихая речь заметна, громкая не упирается в потолок.
+    if (handlers.onLevel) {
+      const now = performance.now();
+      if (now - lastLevelAt > 90) {
+        lastLevelAt = now;
+        handlers.onLevel(Math.max(0, Math.min(1, (Math.sqrt(level) - 0.06) * 2.4)));
+      }
+    }
     if (level > 0.02) {
       silence = 0;
       heard = true;
     } else {
       silence += pcm.length / SAMPLE_RATE;
-      if (heard && silence > 1.6) { stopListening(); return; }
-      if (!heard && silence > 5) { stopListening(); return; }
+      if (heard && silence > SILENCE_MS / 1000) { stopListening(); return; }
+      if (!heard && silence > noSpeechMs / 1000) { stopListening(); return; }
     }
     if (handler === null) {
       // Ещё ждём run-start: держим не больше ~4 секунд.
@@ -801,6 +859,14 @@ function run(mode: 'audio' | 'text' | 'speak', text: string, handlers: VoiceHand
       case 'stt-end':
         if (id === 1 && data.stt_output && data.stt_output.text) notify({ transcript: data.stt_output.text });
         break;
+      case 'intent-progress': {
+        if (id !== 1) break;
+        // Агент стримит ответ токенами — это не «шаг», а будущий текст ответа.
+        // В ход выполнения берём только вызовы инструментов: «включаю свет», «запускаю сценарий».
+        const line = deltaText(data.chat_log_delta);
+        if (line && line.kind === 'tool') notify({ progress: line.text, progressKind: 'tool' });
+        break;
+      }
       case 'intent-end': {
         if (id !== 1 || mode === 'speak') break;
         const out = data.intent_output || {};
@@ -1030,8 +1096,8 @@ function run(mode: 'audio' | 'text' | 'speak', text: string, handlers: VoiceHand
   };
 }
 
-export function listenVoice(handlers: VoiceHandlers, conversationId?: string, pipeline?: string, deviceId?: string): VoiceRun {
-  return run('audio', '', handlers, conversationId, pipeline, true, deviceId);
+export function listenVoice(handlers: VoiceHandlers, conversationId?: string, pipeline?: string, deviceId?: string, noSpeechMs = NO_SPEECH_MS): VoiceRun {
+  return run('audio', '', handlers, conversationId, pipeline, true, deviceId, noSpeechMs);
 }
 
 // Прочитать готовый текст: голосом устройства сразу, иначе — TTS-запуском в HA.

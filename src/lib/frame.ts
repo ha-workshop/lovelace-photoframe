@@ -25,7 +25,7 @@ const PREVIEW_ID = previewFrame();
 
 // layout — сетки экрана с фото, заданные в HA (rev растёт с каждой правкой из редактора).
 export interface FrameState {
-  type: 'state'; device_id?: string; name?: string; album?: string; start_screen?: string | null; screen_on?: boolean; brightness?: number;
+  type: 'state'; device_id?: string; name?: string; album?: string; media?: string; upload?: string | null; start_screen?: string | null; screen_on?: boolean; brightness?: number;
   // Экран с фото, заданный в HA (редактор или «Скопировать на…»): rev растёт с каждой правкой.
   lockscreen_push?: { rev: number; patch: unknown } | null;
 }
@@ -60,6 +60,8 @@ export function setFrameName(name: string) {
 
 // Что за устройство — для карточки устройства в HA.
 function frameModel(): string {
+  // Electron shell exposes the desktop marker; the UA alone looks like plain Chrome.
+  if ((window as unknown as { SmartFrame?: { desktop?: boolean } }).SmartFrame?.desktop) return 'Desktop (Electron)';
   const ua = navigator.userAgent;
   if (/SmartFrame\//.test(ua)) return 'Android (APK)';
   if (/iPad|iPhone|iPod/.test(ua)) return 'iOS';

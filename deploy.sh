@@ -35,7 +35,8 @@ deploy_card() {
   remote "mkdir -p '$dir'"
   run scp ${SSH_OPTS:-} dist/photoframe-card.js dist/photoframe-card.js.gz "$DEPLOY_HOST:$dir/"
   run rm -f dist/photoframe-card.js.gz
-  echo "✓ Карточка обновлена. Ресурс: /hacsfiles/lovelace-photoframe/photoframe-card.js"
+  echo "✓ Карточка обновлена. Ресурс: /local/community/lovelace-photoframe/photoframe-card.js"
+  echo "  HACS до 2026.11: /hacsfiles/lovelace-photoframe/photoframe-card.js"
   echo "  Обновите страницу дашборда без кэша (в приложении HA — «Перезагрузить ресурсы» / перезапуск приложения)."
 }
 

@@ -34,6 +34,40 @@ interface Lovelace { views?: Array<Record<string, any>> }
 // Папка медиатеки внутри папки фото: count — кадров в ней самой, total — вместе с подпапками.
 export interface FrameFolder { path: string; count: number; total: number }
 
+// Узел медиатеки HA (media_source/browse_media) в том виде, в каком его показывает выбор папки.
+export interface MediaNode {
+  id: string;
+  title: string;
+  class: string;
+  expand: boolean;
+  play: boolean;
+  thumb?: string;
+  children?: MediaNode[];
+  notShown?: number;
+}
+
+// Корень медиатеки HA: список источников («Мои медиа», Google Photos, SMB и т.п.).
+export const MEDIA_ROOT = 'media-source://';
+
+export interface MediaRaw {
+  media_content_id?: string; title?: string; media_class?: string; can_expand?: boolean; can_play?: boolean;
+  thumbnail?: string; not_shown?: number; children?: MediaRaw[];
+}
+
+// Ответ media_source/browse_media → плоский узел с детьми. Общий для приложения и раздела «Фоторамки».
+export function toMediaNode(raw: MediaRaw, fallback: string): MediaNode {
+  return {
+    id: raw.media_content_id || fallback,
+    title: raw.title || fallback,
+    class: raw.media_class || '',
+    expand: !!raw.can_expand,
+    play: !!raw.can_play,
+    thumb: raw.thumbnail || undefined,
+    notShown: raw.not_shown || 0,
+    children: (raw.children || []).map((c) => toMediaNode(c, c.media_content_id || '')),
+  };
+}
+
 // Ищем свою карточку в конфиге дашборда — она может лежать в карточках вида, в секциях или во вложенных стеках.
 function findCard(node: any): Record<string, any> | null {
   if (!node || typeof node !== 'object') return null;
@@ -91,6 +125,16 @@ export class CardBackend {
 
   // Альбом этой рамки (подпапка папки фото) — выбирается в HA, у устройства рамки; all — вся папка.
   album = '';
+  // Любая папка медиатеки HA (media_content_id). Пусто — обычная папка фото + album.
+  media = '';
+  // Куда складывать новые фото внутри папки Photo Frame. null — ещё не выбирали, берём album.
+  upload: string | null = null;
+
+  // Фактическая папка загрузки: явный выбор или альбом рамки (как было до отдельной настройки).
+  get uploadFolder(): string {
+    if (this.upload !== null) return this.upload;
+    return this.album && this.album !== 'all' ? this.album : '';
+  }
 
   // Папка медиатеки внутри папки фото (для дерева в настройках): путь, фото в ней и во всех подпапках.
   folderTree(): Promise<FrameFolder[]> {
@@ -105,6 +149,42 @@ export class CardBackend {
     if (!this.integration) return Promise.resolve();
     return this.client.call({ type: 'photoframe/frame/album', frame_id: frameId(), album: this.album })
       .then(() => undefined, (e: Error) => { throw e; });
+  }
+
+  // Источник фото: любая папка медиатеки HA. Пусто — вернуться к папке фото интеграции.
+  // Локальную папку Photo Frame сервер хранит как альбом — поэтому ответ обновляет и album.
+  setMedia(media: string, album?: string): Promise<void> {
+    const msg: Record<string, unknown> = { type: 'photoframe/frame/media', frame_id: frameId(), media: media || '' };
+    if (album !== undefined) msg.album = album;
+    return this.client.call<{ media?: string; album?: string }>(msg).then(
+      (r) => {
+        this.media = r && typeof r.media === 'string' ? r.media : media || '';
+        if (r && typeof r.album === 'string') this.album = r.album;
+        else if (album !== undefined) this.album = album && album !== 'all' ? album : 'all';
+      },
+      (e: Error) => { throw e; },
+    );
+  }
+
+  // Куда складывать новые фото: подпапка папки Photo Frame. Не зависит от источника показа.
+  setUploadFolder(folder: string): Promise<void> {
+    this.upload = folder;
+    if (!this.integration) return Promise.resolve();
+    return this.client.call({ type: 'photoframe/frame/upload', frame_id: frameId(), upload: folder })
+      .then(() => undefined, (e: Error) => { throw e; });
+  }
+
+  // Полный media_content_id текущей локальной папки (источник + альбом) — чтобы выбор источника
+  // открывался там, где рамка показывает фото сейчас. Пусто — корень медиатеки.
+  currentSource(): Promise<string> {
+    if (this.media) return Promise.resolve(this.media);
+    if (!this.album || this.album === 'all') return Promise.resolve('');
+    return this.folderId();
+  }
+
+  // Один уровень медиатеки: источники, папки и кадры. Выбор папки в настройках и в разделе «Фоторамки».
+  browseMedia(id: string): Promise<MediaNode> {
+    return this.client.call<MediaRaw>({ type: 'media_source/browse_media', media_content_id: id }).then((r) => toMediaNode(r, id));
   }
 
   get folder() {
@@ -132,7 +212,12 @@ export class CardBackend {
   }
 
   // Ссылка на папку фото (или альбом) в медиатеке HA — там их смотрят, удаляют и раскладывают.
+  // Если выбран сторонний источник — открываем его папку, а не локальную.
   mediaBrowserUrl(album?: string): Promise<string> {
+    if (this.media) {
+      const steps = ['app,media-source://media_source', ',' + this.media];
+      return Promise.resolve(this.client.resolveUrl('/media-browser/browser/' + steps.map(encodeURIComponent).join('/')));
+    }
     return this.source().then((source) => {
       const base = 'media-source://media_source/' + source + '/' + (this.config.media_folder || 'photoframe').replace(/^\/+|\/+$/g, '');
       const steps = ['app,media-source://media_source', ',' + base];
@@ -202,6 +287,8 @@ export class CardBackend {
     return this.client.call<{ photos: Array<{ id: string; url: string }> }>({
       type: 'photoframe/photos',
       album: this.album || 'all',
+      // Папку источника сервер берёт у этого устройства: она хранится в HA, а не в браузере.
+      frame_id: frameId(),
       width: size.w,
       height: size.h,
     }).then((r) => r.photos.map((p) => ({ id: p.id, url: this.client.resolveUrl(p.url) })));
@@ -237,7 +324,7 @@ export class CardBackend {
     if (this.integration) {
       // Файл как есть: поворот по EXIF, HEIC → JPEG и уменьшение делает сервер.
       const form = new FormData();
-      form.append('album', album != null ? album : this.album && this.album !== 'all' ? this.album : '');
+      form.append('album', album != null ? album : this.uploadFolder);
       form.append('file', f, f.name);
       return this.client.fetch('/api/photoframe/upload', { method: 'POST', body: form }).then((r) => {
         if (r.ok) return;

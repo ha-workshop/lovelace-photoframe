@@ -1,8 +1,11 @@
 import { render } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { Image, LayoutGrid, RefreshCw } from 'lucide-preact';
+import { Folder, Image, Images, LayoutGrid, RefreshCw, Trash2, Upload } from 'lucide-preact';
 import css from './styles.css?inline';
 import { GridEditor, INSET, SPAN } from './components/Ambient';
+import { MediaPicker } from './components/MediaPicker';
+import { FolderPicker } from './components/FolderPicker';
+import { toMediaNode, type FrameFolder, type MediaRaw } from './lib/cardBackend';
 import { GRID, cleanLook, defaultGrid, lockPrefs, validGrid, type GridRect, type HAlign, type LockGrid, type Orientation, type VAlign } from './lib/lockscreen';
 import { t } from './i18n';
 
@@ -36,14 +39,23 @@ function DashboardPreview(props: { disp: Display; frame: string }) {
   );
 }
 
-interface Hass { callWS<T>(msg: Record<string, unknown>): Promise<T> }
+interface Hass {
+  callWS<T>(msg: Record<string, unknown>): Promise<T>;
+  // HA-клиент умеет авторизованные HTTP-запросы: через него загружаем файлы в папку Photo Frame.
+  fetchWithAuth?(path: string, init?: RequestInit): Promise<Response>;
+}
 interface Display { w: number; h: number }
 interface FrameInfo {
   frame_id: string; name?: string; model?: string; online: boolean;
   grid?: LockGrid | null; grid_portrait?: LockGrid | null;
+  // Источник фото этой рамки: любая папка медиатеки HA (media_content_id).
+  media?: string; album?: string;
+  // Куда складывать новые фото внутри папки Photo Frame; null/undefined — как альбом рамки.
+  upload?: string | null;
   // Последний известный размер экрана; displays — по ориентациям (у рамок, ещё не присылавших display).
   display?: Display | null; displays?: Partial<Record<Orientation, Display>>; lockscreen?: unknown;
 }
+interface FramePhoto { id: string; url: string }
 
 // Экран в том размере, в каком рамку видели в последний раз. Не сообщала — 16:10.
 function lastDisplay(f: FrameInfo | null | undefined): Display | null {
@@ -66,12 +78,21 @@ function AdminApp(props: { hass: Hass }) {
   const [moving, setMoving] = useState<LockGrid | null>(null);
   const [block, setBlock] = useState<'clock' | 'widgets'>('clock');
   const [status, setStatus] = useState('');
-  const [mode, setMode] = useState<'photo' | 'dashboard'>('photo');
+  const [mode, setMode] = useState<'photo' | 'dashboard' | 'content'>('photo');
+  const [sourcePick, setSourcePick] = useState(false);
+  const [sourceValue, setSourceValue] = useState('');
+  const [folderPick, setFolderPick] = useState(false);
+  const [photos, setPhotos] = useState<FramePhoto[] | null>(null);
+  const [photosTick, setPhotosTick] = useState(0);
+  const [mediaRoot, setMediaRoot] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const uploadRef = useRef<HTMLInputElement>(null);
 
   const load = () => {
     setError('');
-    props.hass.callWS<{ frames: FrameInfo[] }>({ type: 'photoframe/frames' }).then((r) => {
+    props.hass.callWS<{ frames: FrameInfo[]; media_root?: string }>({ type: 'photoframe/frames' }).then((r) => {
       setFrames(r.frames);
+      setMediaRoot(r.media_root || '');
       if (!pick && r.frames.length) choose(r.frames[0]);
     }, (e: Error) => setError(e.message || String(e)));
   };
@@ -90,6 +111,128 @@ function AdminApp(props: { hass: Hass }) {
   const known = !!last;
   const grid = moving || draft[orient];
   const setGrid = (g: LockGrid | null) => { setDraft({ ...draft, [orient]: g }); setStatus(''); };
+
+  // ── Контент: откуда рамка берёт фото ─────────────────────
+  // Источник — любая папка медиатеки HA: «Мои медиа», Google Photos, SMB и другие интеграции.
+  // Локальная папка Photo Frame хранится альбомом, поэтому подпись и путь учитывают оба поля.
+  const mediaName = (frame && frame.media) || '';
+  const albumName = (frame && frame.album && frame.album !== 'all' && frame.album) || '';
+  const sourceName = mediaName || albumName;
+  const mediaTitle = sourceName ? sourceName.replace(/\/+$/, '').split('/').pop() || sourceName : t('admin.content_default');
+  const sourcePath = mediaName || (albumName && mediaRoot ? mediaRoot + '/' + albumName : '');
+  // Локальная папка: источник не задан или указывает внутрь папки Photo Frame.
+  const isLocal = !mediaName || (!!mediaRoot && (mediaName === mediaRoot || mediaName.startsWith(mediaRoot + '/')));
+  // Куда складывать новые фото: явный выбор папки загрузки, иначе альбом рамки (как раньше).
+  const uploadFolder = frame ? (frame.upload !== null && frame.upload !== undefined ? frame.upload : albumName) : '';
+
+  const openSource = () => {
+    setSourceValue(mediaName || (albumName && mediaRoot ? mediaRoot + '/' + albumName : ''));
+    setSourcePick(true);
+  };
+
+  useEffect(() => {
+    if (!frame || mode !== 'content') return;
+    let alive = true;
+    setPhotos(null);
+    props.hass.callWS<{ photos: FramePhoto[] }>({
+      type: 'photoframe/photos',
+      frame_id: frame.frame_id,
+      width: 480,
+      height: 320,
+    }).then((r) => { if (alive) setPhotos(r.photos); }, () => { if (alive) setPhotos([]); });
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pick, mode, photosTick, mediaName, albumName]);
+
+  const setSource = (id: string, album?: string) => {
+    if (!frame) return;
+    setStatus(t('admin.saving'));
+    const msg: Record<string, unknown> = { type: 'photoframe/frame/media', frame_id: frame.frame_id, media: id };
+    if (album !== undefined) msg.album = album;
+    props.hass.callWS<{ media?: string; album?: string }>(msg).then(
+      () => {
+        setSourcePick(false);
+        setPhotosTick((n) => n + 1);
+        setStatus(t(frame.online ? 'admin.content_saved_online' : 'admin.content_saved_offline'));
+        load();
+      },
+      (e: Error) => setStatus(e.message || String(e)),
+    );
+  };
+
+  // Новые фото всегда идут в локальную папку Photo Frame, даже если показывается внешний источник.
+  const uploadFiles = (files: FileList | null) => {
+    if (!frame || !files || !files.length) return;
+    const fetchWithAuth = props.hass.fetchWithAuth?.bind(props.hass);
+    if (!fetchWithAuth) {
+      setStatus(t('admin.content_upload_unavailable'));
+      return;
+    }
+    const list = Array.from(files);
+    let done = 0;
+    setUploading(true);
+    setStatus(t('admin.saving'));
+    const next = (i: number): Promise<void> => {
+      if (i >= list.length) {
+        setUploading(false);
+        setStatus(t('admin.content_uploaded', { n: done }));
+        setPhotosTick((n) => n + 1);
+        load();
+        if (uploadRef.current) uploadRef.current.value = '';
+        return Promise.resolve();
+      }
+      const file = list[i];
+      const form = new FormData();
+      form.append('album', uploadFolder);
+      form.append('file', file, file.name);
+      return fetchWithAuth('/api/photoframe/upload', { method: 'POST', body: form }).then((r) => {
+        if (!r.ok) {
+          if (r.status === 401 || r.status === 403) throw new Error(t('errors.upload_admin'));
+          if (r.status === 415) throw new Error(t('errors.decode', { name: file.name }));
+          throw new Error(t('errors.upload', { status: r.status }));
+        }
+        done++;
+        return next(i + 1);
+      });
+    };
+    next(0).catch((e: Error) => {
+      setUploading(false);
+      if (uploadRef.current) uploadRef.current.value = '';
+      setStatus(e.message || String(e));
+    });
+  };
+
+  const removePhoto = (id: string) => {
+    if (!frame) return;
+    if (!window.confirm(t('admin.content_delete_confirm'))) return;
+    setStatus(t('admin.saving'));
+    props.hass.callWS({ type: 'photoframe/photo/delete', frame_id: frame.frame_id, photo: id }).then(
+      () => {
+        setStatus(t('admin.content_deleted'));
+        setPhotosTick((n) => n + 1);
+        load();
+      },
+      (e: Error) => setStatus(e.message || String(e)),
+    );
+  };
+
+  const setUploadFolder = (path: string) => {
+    if (!frame) return;
+    const target = path === 'all' ? '' : path;
+    setFolderPick(false);
+    setStatus(t('admin.saving'));
+    props.hass.callWS<{ upload?: string }>({
+      type: 'photoframe/frame/upload',
+      frame_id: frame.frame_id,
+      upload: target,
+    }).then(
+      () => {
+        setStatus(t(frame.online ? 'admin.content_saved_online' : 'admin.content_saved_offline'));
+        load();
+      },
+      (e: Error) => setStatus(e.message || String(e)),
+    );
+  };
 
   // Отправить рамкам экран с фото: в сети — сразу, остальным — при подключении.
   const push = (ids: string[], patch: Record<string, unknown>) =>
@@ -161,6 +304,7 @@ function AdminApp(props: { hass: Hass }) {
               <div class="seg">
                 <button class={mode === 'photo' ? 'active' : ''} onClick={() => setMode('photo')}><Image size={14} /> {t('admin.mode_photo')}</button>
                 <button class={mode === 'dashboard' ? 'active' : ''} onClick={() => setMode('dashboard')}><LayoutGrid size={14} /> {t('admin.mode_dashboard')}</button>
+                <button class={mode === 'content' ? 'active' : ''} onClick={() => setMode('content')}><Images size={14} /> {t('admin.mode_content')}</button>
               </div>
               {mode === 'photo' && <label class="check">
                 <input type="checkbox" checked={!!draft[orient]}
@@ -174,6 +318,55 @@ function AdminApp(props: { hass: Hass }) {
               <>
                 <p class="hint small">{t('admin.dashboard_hint')}</p>
                 <DashboardPreview disp={disp} frame={pick} />
+              </>
+            )}
+            {mode === 'content' && (
+              <>
+                <p class="hint small">{t('admin.content_hint')}</p>
+                <div class="admin-content-head">
+                  <button class="folder-choose" onClick={openSource}>
+                    <Folder size={16} />
+                    <span>{mediaTitle}</span>
+                  </button>
+                  <button class="btn btn-ghost" onClick={() => setPhotosTick((n) => n + 1)}>
+                    <RefreshCw size={14} /><span>{t('admin.refresh')}</span>
+                  </button>
+                </div>
+                {sourcePath && <p class="hint small admin-content-path">{sourcePath}</p>}
+                <div class="admin-content-actions">
+                  <button class="pill-btn accent-bg" onClick={openSource}>{t('admin.content_pick')}</button>
+                  {sourceName && <button class="btn btn-ghost" onClick={() => setSource('', 'all')}>{t('admin.content_default')}</button>}
+                  <button class="btn btn-ghost" onClick={() => setFolderPick(true)}>
+                    <Folder size={14} /><span>{t('admin.content_upload_folder')}: {uploadFolder || t('photos.folder_all')}</span>
+                  </button>
+                  <span class="hint small">{status}</span>
+                </div>
+                <p class="hint small">{t('admin.content_upload_hint')}</p>
+                <label class={'folder-choose admin-upload' + (uploading ? ' busy' : '')}>
+                  <Upload size={16} />
+                  <span>{uploading ? t('photos.uploading') : t('admin.content_upload')}</span>
+                  <input ref={uploadRef} type="file" multiple accept="image/*,.heic,.heif"
+                    onChange={(e) => uploadFiles(e.currentTarget.files)} disabled={uploading} />
+                </label>
+                {!isLocal && <p class="hint small admin-content-note">{t('admin.content_external_hint')}</p>}
+                {!photos && <div class="folder-loading"><i class="cam-spinner" /><span>{t('photos.folder_loading')}</span></div>}
+                {photos && !photos.length && <p class="hint muted">{t('admin.content_empty')}</p>}
+                {photos && photos.length > 0 && (
+                  <div class="admin-thumbs">
+                    {photos.map((p) => (
+                      <div key={p.id} class="admin-thumb">
+                        <img src={p.url} alt="" loading="lazy" />
+                        {isLocal && (
+                          <button class="admin-thumb-del" onClick={() => removePhoto(p.id)}
+                            title={t('admin.content_delete')} aria-label={t('admin.content_delete')}>
+                            <Trash2 size={14} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {photos && <p class="hint small">{t('admin.content_count', { n: photos.length })}</p>}
               </>
             )}
             {mode === 'photo' && <>
@@ -253,6 +446,29 @@ function AdminApp(props: { hass: Hass }) {
           </section>
         )}
       </div>
+      {sourcePick && (
+        <MediaPicker
+          value={sourceValue}
+          title={t('admin.content_pick')}
+          browse={(id) => props.hass.callWS<MediaRaw>({ type: 'media_source/browse_media', media_content_id: id })
+            .then((r) => toMediaNode(r, id))}
+          onPick={(id) => setSource(id)}
+          onReset={() => setSource('', 'all')}
+          onClose={() => setSourcePick(false)}
+        />
+      )}
+      {folderPick && (
+        <FolderPicker
+          value={uploadFolder}
+          allowCreate
+          title={t('admin.content_upload_folder')}
+          hint={t('admin.content_upload_folder_hint')}
+          load={() => props.hass.callWS<{ folders?: FrameFolder[] }>({ type: 'photoframe/folders' })
+            .then((r) => r.folders || [])}
+          onPick={setUploadFolder}
+          onClose={() => setFolderPick(false)}
+        />
+      )}
     </div>
   );
 }
@@ -291,7 +507,22 @@ const ADMIN_CSS = ':host{display:block;min-height:100vh;background:#0b0d14;color
   + '.admin-copy .check{display:flex;margin:8px 0}'
   + '.admin-copy .row-btns{display:flex;justify-content:flex-end;margin-top:10px}'
   + '.admin-copy .row-btns > *{margin-left:8px}'
-  + '@media (max-width:700px){.admin-body{flex-direction:column}.admin-list{width:100%;margin:0 0 14px}}';
+  + '.admin-content-head{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}'
+  + '.admin-content-head .folder-choose{flex:1;max-width:460px}'
+  + '.admin-content-path{margin:0 0 10px;word-break:break-all}'
+  + '.admin-content-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}'
+  + '.admin-upload{cursor:pointer;width:fit-content;max-width:100%;margin-bottom:10px}'
+  + '.admin-upload input{display:none}'
+  + '.admin-upload.busy{opacity:.6;pointer-events:none}'
+  + '.admin-content-note{margin:0 0 10px}'
+  + '.admin-thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;max-width:900px}'
+  + '.admin-thumb{position:relative;min-width:0}'
+  + '.admin-thumbs img{width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:10px;background:rgba(255,255,255,0.05)}'
+  + '.admin-thumb-del{position:absolute;top:6px;right:6px;display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9px;background:rgba(8,10,16,0.72);color:#fecaca;border:1px solid rgba(255,255,255,0.16)}'
+  + '.admin-thumb-del:hover{background:rgba(220,38,38,0.82);color:#fff}'
+  // На узком экране список рамок и редактор идут друг под другом. align-items:stretch важен:
+  // иначе редактор сжимается по содержимому и вылезает за экран вправо.
+  + '@media (max-width:700px){.admin-body{flex-direction:column;align-items:stretch}.admin-list{width:100%;margin:0 0 14px}.admin-editor{width:100%}}';
 
 // Элемент панели HA: получает hass (и narrow, panel) от фронтенда HA.
 class PhotoFrameAdmin extends HTMLElement {

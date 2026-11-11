@@ -8,6 +8,7 @@ import { cleanLook, setLockPrefs, validGrid, type LockGrid } from '../lib/locksc
 import type { HAClient } from '../lib/ha';
 import { defaultLayout, screenTitle, type Layout } from '../lib/layout';
 import { kioskPref, setKioskPref, type KioskPref } from '../lib/kiosk';
+import { isDesktop } from '../lib/desktop';
 import { autostart, setAutostart } from '../lib/screen';
 import { autoQuality, photoFit, qualityPref, setPhotoFit, setQualityPref, type PhotoFit, type QualityPref } from '../lib/quality';
 import { applyLanguage, languages, preferredLanguage, setPreferredLanguage, t } from '../i18n';
@@ -16,21 +17,10 @@ import { deviceSpeechRate, deviceVoiceId, deviceVoices, listVoicePipelines, prim
 import { WakeWordPicker } from './WakeWord';
 import { MAIN_HOME, mainHome, startScreen, store as frame, useStore, type Home, type Settings } from '../lib/store';
 import { FolderPicker } from './FolderPicker';
+import { MediaPicker } from './MediaPicker';
+import { Modal } from './Modal';
 
-export function Modal(props: { title: ComponentChildren; onClose: () => void; wide?: boolean; footer?: ComponentChildren; children: ComponentChildren }) {
-  return (
-    <div class="modal" onClick={props.onClose}>
-      <div class={'modal-box' + (props.wide ? ' modal-wide' : '') + (props.footer ? ' has-foot' : '')} onClick={(e) => e.stopPropagation()}>
-        <div class="modal-head">
-          <h2>{props.title}</h2>
-          <button class="icon-btn" onClick={props.onClose}><X size={24} /></button>
-        </div>
-        <div class="modal-body">{props.children}</div>
-        {props.footer && <div class="modal-foot">{props.footer}</div>}
-      </div>
-    </div>
-  );
-}
+export { Modal } from './Modal';
 
 const INTERVALS = [5000, 10000, 30000, 60000];
 const IDLE = [20, 45, 120, 0];
@@ -106,6 +96,8 @@ export function SettingsModal(props: { onClose: () => void }) {
   // inCard — карточка внутри фронтенда HA: входить некуда, вкладки HA нет. Иначе это PWA, она входит в HA сама
   // (вошла и в HA есть дашборд — store.card тоже есть, но standalone).
   const inCard = !!store.card && !store.card.standalone;
+  // Electron: the kiosk setting controls the OS window (fullscreen without chrome).
+  const desktop = isDesktop();
   // Вкладка HA сразу — только если PWA ещё не вошла в HA.
   // Пока PWA не вошла в HA, настройки — это только вход: без вкладок.
   const signedIn = !!store.card || !!haSession();
@@ -194,14 +186,26 @@ export function SettingsModal(props: { onClose: () => void }) {
   const session = haSession();
   // Фото живут в медиатеке HA — смотреть и удалять их там; здесь только загрузка (и альбом с интеграцией).
   const integration = !!store.card && store.card.integration;
-  const albums = (store.card && store.card.config.albums) || [];
-  const [uploadAlbum, setUploadAlbum] = useState(store.card && store.card.album && store.card.album !== 'all' ? store.card.album : '');
-  // Дерево папок медиатеки — какую папку показывает эта рамка.
+  // Подпись источника: последняя часть media_content_id (для local это имя папки, для сторонних — заголовок).
+  // Локальная папка Photo Frame хранится альбомом — показываем его имя, а не общий заголовок.
+  const sourceName = (() => {
+    const id = (store.card && store.card.media) || '';
+    const album = (store.card && store.card.album && store.card.album !== 'all' && store.card.album) || '';
+    const value = id || album;
+    if (!value) return t('photos.source_default');
+    const parts = value.replace(/\/+$/, '').split('/');
+    return parts[parts.length - 1] || value;
+  })();
+  // Если источник не задан, выбор открываем в текущем альбоме (а не в корне медиатеки).
+  const [sourceValue, setSourceValue] = useState((store.card && store.card.media) || '');
+  const [uploadAlbum, setUploadAlbum] = useState(store.card ? store.card.uploadFolder : '');
+  // Папка загрузки внутри папки Photo Frame и источник фото в медиатеке HA.
   const [folderPick, setFolderPick] = useState(false);
+  const [sourcePick, setSourcePick] = useState(false);
   const [mediaUrl, setMediaUrl] = useState('');
   useEffect(() => {
     if (store.card) store.card.mediaBrowserUrl(uploadAlbum).then(setMediaUrl, () => setMediaUrl(''));
-  }, [uploadAlbum, !!store.card]);
+  }, [uploadAlbum, !!store.card, store.card && store.card.media]);
   const [frameName, setFrameNameDraft] = useState(currentFrameName());
   // Ассистенты Assist из HA — для выбора голосового помощника этой рамки.
   const [pipes, setPipes] = useState<VoicePipeline[] | null>(null);
@@ -222,6 +226,16 @@ export function SettingsModal(props: { onClose: () => void }) {
     store.saveSettings(draft);
     if (homesChanged) store.saveHomes(homes);
     props.onClose();
+  };
+
+  // Открываем медиатеку сразу на текущей папке: для локального альбома узнаём его media_content_id.
+  const openSource = () => {
+    const card = store.card;
+    if (!card) return;
+    card.currentSource().then(
+      (id) => { setSourceValue(id); setSourcePick(true); },
+      () => { setSourceValue(card.media); setSourcePick(true); },
+    );
   };
 
   const importLayout = () => {
@@ -284,23 +298,26 @@ export function SettingsModal(props: { onClose: () => void }) {
             {(uploadError || store.photoError) &&
                 <div className="c-red small upload-error">{uploadError || store.photoError}</div>}
 
-            {integration && albums.length > 0 && (
-                <div className="option">
-                  <label>{t('photos.album')}</label>
-                  <select value={uploadAlbum} onChange={(e) => setUploadAlbum(e.currentTarget.value)}>
-                    <option value="">{t('photos.album_root')}</option>
-                    {albums.map((a) => <option key={a} value={a}>{a}</option>)}
-                  </select>
-                </div>
-            )}
-            {/* Папка, которую показывает рамка: дерево подпапок папки фото, выбор хранится у устройства. */}
+            {/* Источник фото — любая папка медиатеки HA: «Мои медиа», Google Photos, SMB и другие интеграции. */}
             {integration && store.card && (
                 <div className="option">
-                  <label>{t('photos.folder')}</label>
+                  <label>{t('photos.source')}</label>
+                  <button class="folder-choose" onClick={openSource}>
+                    <Folder size={16} />
+                    <span>{sourceName}</span>
+                  </button>
+                  <p class="hint small">{store.card.media ? store.card.media : t('photos.source_default_hint', {folder: store.card.folder})}</p>
+                </div>
+            )}
+            {/* Куда складывать загруженные файлы: подпапка папки Photo Frame (создать можно здесь же). */}
+            {integration && store.card && (
+                <div className="option">
+                  <label>{t('photos.upload_folder')}</label>
                   <button class="folder-choose" onClick={() => setFolderPick(true)}>
                     <Folder size={16} />
-                    <span>{store.card.album && store.card.album !== 'all' ? store.card.album : t('photos.folder_all')}</span>
+                    <span>{uploadAlbum || t('photos.folder_all')}</span>
                   </button>
+                  <p class="hint small">{t('photos.upload_folder_hint')}</p>
                 </div>
             )}
             {store.card && (
@@ -386,7 +403,7 @@ export function SettingsModal(props: { onClose: () => void }) {
                   </select>
                 </div>
             )}
-            {inCard && (
+            {(inCard || desktop) && (
                 <div className="option">
                   <label>{t('settings.kiosk')}</label>
                   <select value={kiosk} onChange={(e) => {
@@ -394,8 +411,8 @@ export function SettingsModal(props: { onClose: () => void }) {
                     setKiosk(v);
                     setKioskPref(v);
                   }}>
-                    <option value="">{t('settings.kiosk_auto')}</option>
-                    <option value="on">{t('settings.kiosk_on')}</option>
+                    <option value="">{t(desktop ? 'settings.kiosk_auto_desktop' : 'settings.kiosk_auto')}</option>
+                    <option value="on">{t(desktop ? 'settings.kiosk_on_desktop' : 'settings.kiosk_on')}</option>
                     <option value="off">{t('settings.kiosk_off')}</option>
                   </select>
                 </div>
@@ -580,11 +597,34 @@ export function SettingsModal(props: { onClose: () => void }) {
     </Modal>
     {folderPick && (
       <FolderPicker
+        value={uploadAlbum}
+        allowCreate
+        title={t('photos.upload_folder')}
+        hint={t('photos.upload_folder_hint')}
         onPick={(path) => {
           setFolderPick(false);
-          store.setAlbum(path).then(() => setUploadAlbum(path === 'all' ? '' : path), () => {});
+          const target = path === 'all' ? '' : path;
+          setUploadAlbum(target);
+          setUploadError('');
+          store.setUploadFolder(target).catch((e: Error) => setUploadError(e.message || String(e)));
         }}
         onClose={() => setFolderPick(false)}
+      />
+    )}
+    {sourcePick && store.card && (
+      <MediaPicker
+        value={sourceValue}
+        browse={(id) => store.card!.browseMedia(id)}
+        onPick={(id) => {
+          setSourcePick(false);
+          // Пустая папка источника — это не выбор: пусть останется прежний источник.
+          if (id) store.setMedia(id).catch(() => {});
+        }}
+        onReset={() => {
+          setSourcePick(false);
+          store.resetMedia().catch(() => {});
+        }}
+        onClose={() => setSourcePick(false)}
       />
     )}
     </>

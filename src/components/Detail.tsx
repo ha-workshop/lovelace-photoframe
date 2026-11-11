@@ -4,7 +4,7 @@ import { isAvailable, isUnknown, unitOf, useHA } from '../lib/hooks';
 import { deviceSiblings, kindOf, load, summarize, RANGE_MS, type Range, type Series, type Summary } from '../lib/history';
 import type { HAClient } from '../lib/ha';
 import { Chart, fmtDay, fmtNum, fmtTime, fmtWhen } from './Chart';
-import { Modal } from './Modals';
+import { Modal } from './Modal';
 import { WeatherCard } from './Weather';
 import { useSize } from '../lib/useSize';
 import { t } from '../i18n';

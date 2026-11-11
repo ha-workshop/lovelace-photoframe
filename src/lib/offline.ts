@@ -10,14 +10,14 @@ export const OFFLINE_MAX = 120;
 let last = '';
 let lastAt = 0;
 
-// Повторно не дёргаем один и тот же альбом чаще раза в 10 минут: список перечитывается по таймеру,
+// Повторно не дёргаем один и тот же альбом чаще раза в 5 минут: список перечитывается по таймеру,
 // а кадры уже лежат в кэше (проверка существующих бесплатная).
 export function prefetchPhotos(urls: string[]) {
   const list = urls.filter((u) => /^https?:/.test(u)).slice(0, OFFLINE_MAX);
   if (!list.length) return;
   const sig = list.join('|');
   const now = Date.now();
-  if (sig === last && now - lastAt < 10 * 60e3) return;
+  if (sig === last && now - lastAt < 5 * 60e3) return;
   last = sig;
   lastAt = now;
   // APK: скачивает и хранит сам Android — страница только отдаёт список.

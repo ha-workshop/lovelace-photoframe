@@ -5,7 +5,7 @@ import { isAvailable, unitOf, useHA } from '../lib/hooks';
 import { Icon, guessIcon, iconMatches, useIconGroups } from '../lib/icons';
 import { ACCENTS, CARD_TYPES, cardTypeHint, cardTypeTitle, newId, type CameraFit, type Card, type CardType, type Item } from '../lib/layout';
 import { expandItem, fits } from '../lib/devices';
-import { Modal } from './Modals';
+import { Modal } from './Modal';
 import { itemName } from './CardView';
 import { t } from '../i18n';
 

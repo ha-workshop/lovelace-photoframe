@@ -18,6 +18,8 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -31,6 +33,7 @@ import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
+import android.webkit.PermissionRequest;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -69,6 +72,7 @@ public class MainActivity extends Activity {
     // Интеграции нет (404) — переходим на копию в www и запоминаем это до следующего запуска.
     private boolean local;
     private static final int PICK_PHOTOS = 1;
+    private static final int REQ_AUDIO = 1001;
 
     private static final String KEY_ADMIN_ASKED = "admin_asked";
     private static final int ADD_ADMIN = 2;
@@ -112,6 +116,7 @@ public class MainActivity extends Activity {
         sleepLock = power.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "photoframe:sleep");
         sleepLock.setReferenceCounted(false);
         registerReceiver(network, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        requestAudioPermissionIfNeeded();
 
         // Фото рисует Android (PhotoLayer), страница поверх — прозрачная: часы, виджеты, панель.
         photos = new PhotoLayer(this, new PhotoLayer.Listener() {
@@ -176,6 +181,21 @@ public class MainActivity extends Activity {
         });
 
         web.setWebChromeClient(new WebChromeClient() {
+            // Микрофон для wake word / Assist: выдаём разрешение странице, если есть системное RECORD_AUDIO.
+            @Override
+            public void onPermissionRequest(PermissionRequest request) {
+                String[] resources = request.getResources();
+                boolean audio = false;
+                for (String res : resources) {
+                    if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(res)) audio = true;
+                }
+                if (audio && (Build.VERSION.SDK_INT < 23 || checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)) {
+                    request.grant(resources);
+                    return;
+                }
+                super.onPermissionRequest(request);
+            }
+
             // <input type="file" multiple> — загрузка пачки фото с рамки.
             @Override
             public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
@@ -211,6 +231,22 @@ public class MainActivity extends Activity {
         if (sleepLock.isHeld()) sleepLock.release();
         photos.release();
         super.onDestroy();
+    }
+
+    // Разрешение на микрофон: без него wake word и Assist не слышат. Запрашиваем при старте.
+    private void requestAudioPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < 23) return;
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) return;
+        requestPermissions(new String[]{ Manifest.permission.RECORD_AUDIO }, REQ_AUDIO);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int request, String[] permissions, int[] grantResults) {
+        if (request == REQ_AUDIO && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            // Перезагружаем страницу — теперь микрофон доступен (wake word / Assist)
+            web.reload();
+        }
+        super.onRequestPermissionsResult(request, permissions, grantResults);
     }
 
     // ── Сон экрана из HA ──────────────────────────────────

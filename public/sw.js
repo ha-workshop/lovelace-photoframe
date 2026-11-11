@@ -3,7 +3,8 @@
 // а размер (w/h) меняется при повороте — кадр при этом тот же, и в кэше не плодятся копии.
 // Запросы к Home Assistant (/api/...) и WebSocket не трогаем, кроме самих фото.
 var CACHE = 'photoframe-v4';
-var PHOTO = '/api/photoframe/photo/';
+// Кадры из обычной папки и из любого источника медиатеки (Google Photos, SMB и т.п.) — оба адреса.
+var PHOTOS = ['/api/photoframe/photo/', '/api/photoframe/media/'];
 // Сколько фото держим офлайн и сколько места под них отводим (в APK — те же лимиты на диске).
 var PHOTO_MAX = 120;
 var PHOTO_BUDGET = 120 * 1024 * 1024;
@@ -20,17 +21,24 @@ self.addEventListener('activate', function (event) {
   self.clients.claim();
 });
 
-// Ключ кадра — путь без параметров: /api/photoframe/photo/<rel>
+// Ключ кадра — путь без параметров: /api/photoframe/photo/<rel> или /api/photoframe/media/<token>.
 function photoKey(href) {
   var q = href.indexOf('?');
   return q < 0 ? href : href.slice(0, q);
+}
+
+function isPhoto(path) {
+  for (var i = 0; i < PHOTOS.length; i++) {
+    if (path.indexOf(PHOTOS[i]) === 0) return true;
+  }
+  return false;
 }
 
 self.addEventListener('fetch', function (event) {
   var req = event.request;
   var url = new URL(req.url);
   if (req.method !== 'GET' || url.origin !== self.location.origin) return;
-  var photo = url.pathname.indexOf(PHOTO) === 0;
+  var photo = isPhoto(url.pathname);
   if (!photo && url.pathname.indexOf('/api/') !== -1) return;
   var key = photo ? photoKey(url.href) : req;
   event.respondWith(

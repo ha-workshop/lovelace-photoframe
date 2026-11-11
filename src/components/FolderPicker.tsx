@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import type { JSX } from 'preact';
 import { ChevronDown, ChevronRight, Folder, FolderOpen } from 'lucide-preact';
-import { Modal } from './Modals';
+import { Modal } from './Modal';
 import { store } from '../lib/store';
 import type { FrameFolder } from '../lib/cardBackend';
 import { t } from '../i18n';
@@ -47,25 +47,39 @@ function buildTree(list: FrameFolder[]): Node {
   return root;
 }
 
-export function FolderPicker(props: { onPick: (path: string) => void; onClose: () => void }) {
+export function FolderPicker(props: {
+  onPick: (path: string) => void;
+  onClose: () => void;
+  // Начальный выбор; не задан — текущая папка рамки.
+  value?: string;
+  // Разрешить ввести новую подпапку: она появится в кэше после первой загрузки.
+  allowCreate?: boolean;
+  title?: string;
+  // Пояснение под заголовком: для загрузки и для показа оно разное.
+  hint?: string;
+  // Откуда взять дерево папок. В приложении — из store, в разделе «Фоторамки» — через hass.callWS.
+  load?: () => Promise<FrameFolder[]>;
+}) {
   const [tree, setTree] = useState<Node | null>(null);
   const [error, setError] = useState('');
   // '' — вся папка фото.
-  const [sel, setSel] = useState(store.card && store.card.album && store.card.album !== 'all' ? store.card.album : '');
+  const [sel, setSel] = useState(
+    props.value !== undefined
+      ? props.value
+      : store.card && store.card.album && store.card.album !== 'all' ? store.card.album : '',
+  );
+  const [newName, setNewName] = useState('');
   // Раскрытые ветки: корень всегда открыт, ветки до выбранной папки тоже.
   const [open, setOpen] = useState<Record<string, boolean>>({ '': true });
 
   useEffect(() => {
     const card = store.card;
-    if (!card) {
-      setTree({ name: '', path: '', count: 0, total: 0, children: [] });
-      return;
-    }
-    card.folderTree().then((list) => {
+    const loader = props.load || (() => (card ? card.folderTree() : Promise.resolve([])));
+    loader().then((list) => {
       setTree(buildTree(list));
       const next: Record<string, boolean> = { '': true };
       let acc = '';
-      String(card.album || '').split('/').filter(Boolean).forEach((part) => {
+      String(props.value !== undefined ? props.value : card && card.album || '').split('/').filter(Boolean).forEach((part) => {
         acc = acc ? acc + '/' + part : part;
         next[acc] = true;
       });
@@ -77,6 +91,14 @@ export function FolderPicker(props: { onPick: (path: string) => void; onClose: (
   }, []);
 
   const toggle = (path: string) => setOpen({ ...open, [path]: !open[path] });
+
+  // Новая папка: путь собираем от выбранной — можно выбрать корень и создать ветку с нуля.
+  const create = () => {
+    const name = newName.trim().replace(/^\/+|\/+$/g, '');
+    if (!name || name.split('/').some((p) => p === '..' || p === '.')) return;
+    setSel(sel ? sel + '/' + name : name);
+    setNewName('');
+  };
 
   const row = (node: Node, depth: number): JSX.Element => {
     const hasKids = node.children.length > 0;
@@ -102,18 +124,29 @@ export function FolderPicker(props: { onPick: (path: string) => void; onClose: (
 
   return (
     <Modal
-      title={t('photos.folder_title')}
+      title={props.title || t('photos.folder_title')}
       onClose={props.onClose}
       wide
       footer={<>
         <button class="btn btn-ghost" onClick={props.onClose}>{t('common.cancel')}</button>
         <button class="btn btn-accent" onClick={() => props.onPick(sel || 'all')}>{t('common.done')}</button>
       </>}>
-      <p class="hint">{t('photos.folder_hint')}</p>
+      <p class="hint">{props.hint || t('photos.folder_hint')}</p>
       {!tree && <div class="folder-loading"><i class="cam-spinner" /><span>{t('photos.folder_loading')}</span></div>}
       {error && <p class="hint c-red">{error}</p>}
       {tree && <div class="folder-tree">{row(tree, 0)}</div>}
       {tree && !error && !tree.children.length && <p class="hint muted">{t('photos.folder_empty')}</p>}
+      {props.allowCreate && (
+        <div class="folder-new">
+          <input value={newName} onInput={(e) => setNewName(e.currentTarget.value)}
+            placeholder={t('photos.folder_new')} aria-label={t('photos.folder_new')}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); create(); } }} />
+          <button type="button" class="btn btn-ghost" onClick={create} disabled={!newName.trim()}>
+            {t('photos.folder_create')}
+          </button>
+        </div>
+      )}
+      {sel && <p class="hint muted">{t('photos.folder_target', { path: sel })}</p>}
     </Modal>
   );
 }

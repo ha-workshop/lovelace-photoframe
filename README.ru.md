@@ -11,7 +11,7 @@
 > *A digital photo frame for Home Assistant: full-screen slideshow with clock and weather;
 > swipe up for a customizable smart-home control panel. HACS dashboard card, no add-ons, no tokens.*
 
-[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories)
+[![HACS & Marketplace](https://img.shields.io/badge/HACS%20%26%20Marketplace-41BDF5.svg)](https://hacs.xyz/)
 [![Release](https://img.shields.io/github/v/release/ha-workshop/lovelace-photoframe)](https://github.com/ha-workshop/lovelace-photoframe/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -63,20 +63,22 @@ Photo Frame — это **одна карточка дашборда** (`custom:p
 - **Стартовый экран — настройка устройства**, а не дашборда: на кухонном планшете — «Квартира · Кухня»,
   на даче — «Дача · Камеры».
 
+<!-- ha-marketplace:exclude-start -->
 ## Установка
 
 > **Совет:** [интеграция Photo Frame](https://github.com/ha-workshop/ha-photoframe) приносит и эту карточку,
 > и отдельное приложение, делает каждую рамку устройством в Home Assistant и обрабатывает фото на сервере.
 > Нужны рамки на планшетах или старых Android-устройствах — ставьте интеграцию вместо карточки.
 
-1. Откройте карточку в HACS:
+1. Откройте карточку в Marketplace (Home Assistant 2026.11+) или HACS:
 
    [![Открыть в HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ha-workshop&repository=lovelace-photoframe&category=plugin)
 
-   Или вручную: HACS → поиск **Photo Frame Card**. Ещё нет в списке? HACS → три точки →
-   **Пользовательские репозитории** → `https://github.com/ha-workshop/lovelace-photoframe`, тип **Dashboard**.
-2. Скачайте **Photo Frame Card**. Ресурс `/hacsfiles/lovelace-photoframe/dist/photoframe-card.js`
-   HACS добавит сам (если нет — «Настройки → Дашборды → Ресурсы», тип *JavaScript-модуль*).
+   Или вручную: **Настройки → Marketplace** (или HACS) → поиск **Photo Frame Card**.
+2. Скачайте **Photo Frame Card**. Ресурс добавится сам:
+   `/local/community/lovelace-photoframe/photoframe-card.js`. В Home Assistant 2026.10 и старше
+   через HACS путь — `/hacsfiles/lovelace-photoframe/photoframe-card.js`.
+   Если ресурса нет — «Настройки → Дашборды → Ресурсы», тип *JavaScript-модуль*.
 3. Создайте папку для фото: `/media/photoframe` (через Samba, File editor или терминал).
 4. Обновите страницу и откройте любой дашборд администратором: Photo Frame предложит
    **создать дашборд «Фоторамка»** в боковом меню — одной кнопкой. Хотите вручную?
@@ -92,6 +94,7 @@ views:
 ```
 
 5. Откройте дашборд на планшете, смахните вверх, нажмите ✏️ и соберите свои карточки.
+<!-- ha-marketplace:exclude-end -->
 
 ## Настройка
 
@@ -136,7 +139,7 @@ Home Assistant. Правка в карточке или на любой рамк
 ```bash
 npm install
 npm run dev            # PWA на http://localhost:5173 (вход в ваш HA — из её настроек)
-npm run build:card     # dist/photoframe-card.js — файл для HACS
+npm run build:card     # dist/photoframe-card.js — файл для Marketplace/HACS
 npm run apk:install    # APK-оболочка для старых рамок, ставится по adb
 ```
 
@@ -144,12 +147,12 @@ npm run apk:install    # APK-оболочка для старых рамок, с
 чтение); `?hadom` ещё и повторяет DOM фронтенда HA — для проверки режима киоска.
 
 **Деплой в свой HA** — `cp deploy.env.example .deploy.env`, заполните, затем:
-`./deploy.sh card` кладёт свежую сборку в ваш HA (туда же, куда HACS, — удобно до релиза),
+`./deploy.sh card` кладёт свежую сборку в ваш HA (туда же, куда Marketplace, — удобно до релиза),
 `./deploy.sh pwa` обновляет отдельное приложение в `www/photoframe`.
 
-**Релиз** — `scripts/release.sh 0.2.0`: ставит версию, пересобирает `dist/photoframe-card.js`, ставит тег,
-пушит и создаёт GitHub Release; workflow прикладывает к нему собранную карточку. HACS показывает
-последний релиз как доступную версию.
+**Релиз** — `scripts/release.sh 1.9.4`: ставит версию, пересобирает `dist/photoframe-card.js`, ставит тег,
+пушит и создаёт GitHub Release; workflow прикладывает к нему собранную карточку. Marketplace и HACS
+показывают последний релиз как доступную версию.
 
 ## Лицензия
 

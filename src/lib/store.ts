@@ -190,6 +190,7 @@ class Store {
   // после каждого сохранения дашборда (перенос карточки в редакторе) — без этого рамка «схлопывалась» на фото.
   ui = { controls: PREVIEW, editing: false };
   private photoTimer = 0;
+  private photoSyncTimer = 0;
 
   subscribe(fn: () => void) {
     this.listeners.push(fn);
@@ -271,6 +272,9 @@ class Store {
     // Фото в HA главнее локальных: если в кэше уже лежат снимки из HA, локальные не подмешиваем
     // (они нужны только как источник для переноса в медиатеку, а не для показа).
     if (!this.state.photos.length) this.reloadLocalPhotos();
+    // Сразу после запуска догружаем кадры прошлой сессии: даже если HA ещё не ответил,
+    // офлайн-альбом уже лежит в кэше устройства.
+    else prefetchPhotos(this.state.photos.map((p) => p.url));
     this.connectHa();
   }
 
@@ -281,12 +285,20 @@ class Store {
     this.applyCardConfig(backend.config);
     // Новое хранилище (например, нашлась интеграция) — папка фото могла смениться.
     if (!previous || previous.folder !== backend.folder) this.reloadCardPhotos();
-    if (!previous) {
-      // Подписанные ссылки на фото живут сутки — обновляем раз в 12 часов,
-      // а новые и удалённые фото (загрузили через «Медиа» в HA) подхватываем каждые 10 минут.
-      this.photoTimer = window.setInterval(() => this.reloadCardPhotos(), 12 * 3600e3);
-      window.setInterval(() => this.checkCardPhotos(), 10 * 60e3);
-    }
+    // Подписанные ссылки на фото живут сутки — обновляем раз в 12 часов,
+    // а новые и удалённые фото (загрузили через «Медиа» в HA) подхватываем каждые 10 минут.
+    // Таймеры пересоздаём: attachCard вызывается и для карточки, и для интеграции.
+    if (this.photoTimer) window.clearInterval(this.photoTimer);
+    if (this.photoSyncTimer) window.clearInterval(this.photoSyncTimer);
+    this.photoTimer = window.setInterval(() => this.reloadCardPhotos(), 12 * 3600e3);
+    this.photoSyncTimer = window.setInterval(() => this.syncCardPhotos(), 10 * 60e3);
+  }
+
+  // Раз в 10 минут: проверяем, не изменился ли альбом, и догружаем недостающие кадры.
+  // prefetchPhotos не перекачивает уже скачанное, поэтому это дешёвая операция.
+  private syncCardPhotos() {
+    this.checkCardPhotos();
+    prefetchPhotos(this.state.photos.map((p) => p.url));
   }
 
   // Поменялся ли набор фото в папке — только тогда перечитываем ссылки (иначе кадр на экране перезагрузится).
@@ -342,6 +354,28 @@ class Store {
     const card = this.card;
     if (!card) return Promise.resolve();
     return card.setAlbum(album).then(() => this.reloadCardPhotos());
+  }
+
+  // Источник фото — любая папка медиатеки HA (Google Photos, SMB, «Мои медиа»).
+  // Пустая строка возвращает обычную папку Photo Frame.
+  setMedia(media: string, album?: string) {
+    const card = this.card;
+    if (!card) return Promise.resolve();
+    return card.setMedia(media, album).then(() => this.reloadCardPhotos());
+  }
+
+  // «Папка Photo Frame»: сбросить и источник, и альбом — показать всю локальную папку.
+  resetMedia() {
+    const card = this.card;
+    if (!card) return Promise.resolve();
+    return card.setMedia('', 'all').then(() => this.reloadCardPhotos());
+  }
+
+  // Куда складывать загруженные фото. Источник показа при этом не меняется.
+  setUploadFolder(folder: string) {
+    const card = this.card;
+    if (!card) return Promise.resolve();
+    return card.setUploadFolder(folder);
   }
 
   private saveCard(patch: Partial<CardConfig>) {
@@ -495,9 +529,15 @@ class Store {
     if (s.brightness !== undefined) this.brightness = s.brightness;
     const card = this.card;
     const album = s.album || 'all';
-    if (card && card.album !== album) {
+    const media = s.media || '';
+    const upload = typeof s.upload === 'string' ? s.upload : null;
+    // Источник важнее альбома: если он задан, фото берутся из папки медиатеки, а не из подпапки.
+    if (card) {
+      const photosChanged = card.album !== album || card.media !== media;
       card.album = album;
-      this.reloadCardPhotos();
+      card.media = media;
+      card.upload = upload;
+      if (photosChanged) this.reloadCardPhotos();
     }
     this.notify();
   }

@@ -39,7 +39,7 @@
 ```bash
 npm install
 npm run dev                  # Vite: http://localhost:5173 — PWA (вход через ваш HA: адрес в «Настройки → Home Assistant»)
-npm run build:card           # dist/photoframe-card.js — файл, который ставит HACS
+npm run build:card           # dist/photoframe-card.js — файл, который ставит Marketplace/HACS
 ```
 
 Стенд карточки: `card-harness.html?ha=http://<HA>:8123` — имитация дашборда с живыми данными вашего HA
