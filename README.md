@@ -65,7 +65,8 @@ Photo Frame is **one dashboard card** (`custom:photoframe-card`) — not an add-
 > the standalone app, makes every frame a device in Home Assistant and processes photos on the server.
 > Install the integration instead of the card if you want frames on tablets or old Android devices.
 
-1. Open the card in the Marketplace (Home Assistant 2026.11+) or HACS:
+1. Photo Frame Card is in the **HACS default list** and the **Home Assistant Marketplace** — it is a
+   ready package, so there is no custom repository to add: just find it by name.
 
    [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ha-workshop&repository=lovelace-photoframe&category=plugin)
 

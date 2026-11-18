@@ -70,7 +70,8 @@ Photo Frame — это **одна карточка дашборда** (`custom:p
 > и отдельное приложение, делает каждую рамку устройством в Home Assistant и обрабатывает фото на сервере.
 > Нужны рамки на планшетах или старых Android-устройствах — ставьте интеграцию вместо карточки.
 
-1. Откройте карточку в Marketplace (Home Assistant 2026.11+) или HACS:
+1. Карточка Photo Frame есть в **стандартном списке HACS** и в **Marketplace Home Assistant** — это
+   готовый пакет, добавлять пользовательский репозиторий не нужно: достаточно найти её по названию.
 
    [![Открыть в HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ha-workshop&repository=lovelace-photoframe&category=plugin)
 
