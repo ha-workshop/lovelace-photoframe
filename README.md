@@ -15,7 +15,6 @@ air conditioner, cameras, speakers and TV are right there. Leave it alone for a 
 **Photo Frame Card is in the HACS default list and the Home Assistant Marketplace.**
 Both already know it by name — no custom repository to add. Search **Photo Frame Card**, install, reload.
 
-
 | Photo frame | Control panel |
 |---|---|
 | ![Photo frame mode](https://raw.githubusercontent.com/ha-workshop/lovelace-photoframe/main/docs/screenshots/ambient.jpg) | ![Control panel](https://raw.githubusercontent.com/ha-workshop/lovelace-photoframe/main/docs/screenshots/controls.jpg) |
