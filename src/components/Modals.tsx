@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
-import { CloudUpload, Copy, Folder, ImagePlus, LogIn, LogOut, RotateCcw, Trash2, Volume2, X } from 'lucide-preact';
+import { CloudUpload, Folder, ImagePlus, LogIn, LogOut, Trash2, Volume2, X } from 'lucide-preact';
 import { haSession, login, logout } from '../lib/haAuth';
 import { useHA } from '../lib/hooks';
-import { frameId, frameName as currentFrameName } from '../lib/frame';
-import { cleanLook, setLockPrefs, validGrid, type LockGrid } from '../lib/lockscreen';
-import type { HAClient } from '../lib/ha';
-import { defaultLayout, screenTitle, type Layout } from '../lib/layout';
+import { frameName as currentFrameName } from '../lib/frame';
+import { screenTitle } from '../lib/layout';
 import { kioskPref, setKioskPref, type KioskPref } from '../lib/kiosk';
 import { isDesktop } from '../lib/desktop';
 import { autostart, setAutostart } from '../lib/screen';
@@ -25,7 +23,7 @@ export { Modal } from './Modal';
 const INTERVALS = [5000, 10000, 30000, 60000];
 const IDLE = [20, 45, 120, 0];
 
-type Tab = 'photos' | 'ha' | 'homes' | 'layout';
+type Tab = 'photos' | 'ha' | 'homes';
 
 // Стартовый экран устройства для списка: не выбран или удалён — первый экран главного дома.
 function startValue() {
@@ -105,8 +103,6 @@ export function SettingsModal(props: { onClose: () => void }) {
   const tab: Tab = signedIn ? chosen : 'ha';
   const [draft, setDraft] = useState(settings);
   const [busy, setBusy] = useState(false);
-  const [json, setJson] = useState('');
-  const [jsonError, setJsonError] = useState('');
   const set = (patch: Partial<Settings>) => setDraft({ ...draft, ...patch });
 
   const [dragOver, setDragOver] = useState(false);
@@ -241,18 +237,6 @@ export function SettingsModal(props: { onClose: () => void }) {
     );
   };
 
-  const importLayout = () => {
-    try {
-      const parsed = JSON.parse(json) as Layout;
-      if (!parsed || !Array.isArray(parsed.cards)) throw new Error(t('settings.no_cards_field'));
-      store.saveLayout(parsed);
-      setJsonError('');
-      setJson('');
-    } catch (e) {
-      setJsonError(t('settings.import_failed', { error: (e as Error).message }));
-    }
-  };
-
   return (
     <>
     <Modal
@@ -268,7 +252,6 @@ export function SettingsModal(props: { onClose: () => void }) {
         <div class="tabs">
           <button class={tab === 'photos' ? 'active' : ''} onClick={() => setTab('photos')}>{t('settings.tab.photos')}</button>
           <button class={tab === 'homes' ? 'active' : ''} onClick={() => setTab('homes')}>{t('settings.tab.homes')}</button>
-          <button class={tab === 'layout' ? 'active' : ''} onClick={() => setTab('layout')}>{t('settings.tab.layout')}</button>
           {/* В карточке HA входить некуда — вкладки HA нет. */}
           {!inCard && <button class={tab === 'ha' ? 'active' : ''} onClick={() => setTab('ha')}>Home Assistant</button>}
         </div>
@@ -596,27 +579,6 @@ export function SettingsModal(props: { onClose: () => void }) {
         </div>
       )}
 
-      {tab === 'layout' && (
-        <div>
-          {store.card && store.cardError && <div class="c-red small">{t('sync.save_failed', { error: store.cardError })}</div>}
-          {integration && <GridImport client={store.card!.client} />}
-
-          <div class="field">
-            <span>{t('layout.title')}</span>
-            <div class="row-btns">
-              <button class="btn btn-ghost" onClick={() => { setJson(JSON.stringify(store.state.layout, null, 2)); setJsonError(''); }}>
-                <Copy size={14} /><span>{t('layout.export')}</span>
-              </button>
-              <button class="btn btn-ghost" onClick={() => store.saveLayout(defaultLayout())}>
-                <RotateCcw size={14} /><span>{t('layout.reset')}</span>
-              </button>
-            </div>
-            <textarea class="json" value={json} placeholder={t('layout.import_placeholder')} onInput={(e) => setJson(e.currentTarget.value)} />
-            {jsonError && <div class="c-red small">{jsonError}</div>}
-            <button class="btn btn-ghost" disabled={!json} onClick={importLayout}><span>{t('layout.import')}</span></button>
-          </div>
-        </div>
-      )}
     </Modal>
     {folderPick && (
       <FolderPicker
@@ -651,52 +613,6 @@ export function SettingsModal(props: { onClose: () => void }) {
       />
     )}
     </>
-  );
-}
-
-// Экран с фото с другой рамки: рамки сообщают свой вид в HA (интеграция Photo Frame), здесь его можно взять
-// целиком (часы, цвета, виджеты, сетки) или только сетку — дальше он свой на этом устройстве.
-interface FrameInfo {
-  frame_id: string; name?: string; online: boolean; grid?: LockGrid | null; grid_portrait?: LockGrid | null; lockscreen?: unknown;
-}
-
-function GridImport(props: { client: HAClient }) {
-  const [frames, setFrames] = useState<FrameInfo[] | null>(null);
-  const [pick, setPick] = useState('');
-  const [done, setDone] = useState<'' | 'all' | 'grid'>('');
-  useEffect(() => {
-    props.client.call<{ frames: FrameInfo[] }>({ type: 'photoframe/frames' }).then(
-      (r) => {
-        const list = r.frames.filter((f) => f.frame_id !== frameId() && (!!f.lockscreen || validGrid(f.grid) || validGrid(f.grid_portrait)));
-        setFrames(list);
-        if (list.length) setPick(list[0].frame_id);
-      },
-      () => setFrames([]),
-    );
-  }, [props.client]);
-  if (!frames) return null;
-  const chosen = frames.filter((f) => f.frame_id === pick)[0];
-  return (
-    <div class="field">
-      <span>{t('layout.grid_title')}</span>
-      {frames.length === 0 ? <p class="hint small">{t('layout.grid_none')}</p> : (
-        <>
-          <select value={pick} onChange={(e) => { setPick(e.currentTarget.value); setDone(''); }}>
-            {frames.map((f) => (
-              <option key={f.frame_id} value={f.frame_id}>{(f.name || f.frame_id) + (f.online ? '' : ' · ' + t('layout.grid_offline'))}</option>
-            ))}
-          </select>
-          <div class="row-btns">
-            <button class="btn btn-ghost" disabled={!chosen || !chosen.lockscreen} onClick={() => { setLockPrefs(cleanLook(chosen.lockscreen)); setDone('all'); }}>
-              <span>{t(done === 'all' ? 'layout.grid_done' : 'layout.look_take')}</span>
-            </button>
-            <button class="btn btn-ghost" disabled={!chosen} onClick={() => { setLockPrefs({ grid: validGrid(chosen.grid), gridPortrait: validGrid(chosen.grid_portrait) }); setDone('grid'); }}>
-              <span>{t(done === 'grid' ? 'layout.grid_done' : 'layout.grid_take')}</span>
-            </button>
-          </div>
-        </>
-      )}
-    </div>
   );
 }
 

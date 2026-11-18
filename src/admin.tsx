@@ -427,7 +427,7 @@ function AdminApp(props: { hass: Hass }) {
                   <label key={f.frame_id} class="check">
                     <input type="checkbox" checked={targets.indexOf(f.frame_id) !== -1}
                       onChange={(e) => setTargets(e.currentTarget.checked ? targets.concat(f.frame_id) : targets.filter((x) => x !== f.frame_id))} />
-                    {(f.name || f.frame_id) + (f.online ? '' : ' · ' + t('layout.grid_offline'))}
+                    {(f.name || f.frame_id) + (f.online ? '' : ' · ' + t('admin.frame_offline'))}
                   </label>
                 ))}
                 {!others.length && <p class="hint small">{t('admin.copy_none')}</p>}
