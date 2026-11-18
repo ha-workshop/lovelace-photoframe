@@ -60,7 +60,18 @@ export function haSession(): HaSession | null {
     return { hassUrl: location.protocol + '//' + location.host, clientId: '', access_token: '', refresh_token: '', expires: 0, embedded: true };
   }
   const own = read(KEY);
-  if (own) return own;
+  if (own) {
+    // Рамка всегда открыта с сервера HA. Если вход когда-то был сделан по другому адресу
+    // (например, по внешнему DDNS), переключаем сессию на адрес, с которого открыта страница:
+    // без интернета внешний адрес недоступен, а LAN-адрес работает.
+    const here = location.protocol + '//' + location.host;
+    if (/^https?:$/.test(location.protocol) && location.pathname.indexOf('/photoframe') >= 0 && trim(own.hassUrl) !== trim(here)) {
+      const next: HaSession = { ...own, hassUrl: here };
+      save(next);
+      return next;
+    }
+    return own;
+  }
   const ha = read(HA_KEY);
   return ha && trim(ha.hassUrl) === trim(location.protocol + '//' + location.host) ? ha : null;
 }

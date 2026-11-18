@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+  <title>Photo Frame</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: #0d0f12; color: #e8eaed; font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .card { width: min(560px, calc(100vw - 48px)); padding: 32px; border: 1px solid #262b33; border-radius: 16px; background: #13161b; }
+    h1 { margin: 0 0 4px; font-size: 22px; font-weight: 600; }
+    .sub { margin: 0 0 24px; color: #9aa0a6; font-size: 14px; }
+    .status { min-height: 20px; margin-bottom: 12px; color: #9aa0a6; font-size: 14px; }
+    .status.error { color: #f28b82; }
+    .list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .server {
+      display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%;
+      padding: 12px 14px; border: 1px solid #2c323c; border-radius: 10px; background: #1a1e25;
+      color: inherit; font: inherit; text-align: left; cursor: pointer;
+    }
+    .server:hover { border-color: #4c8dff; background: #1e2530; }
+    .server b { font-weight: 600; }
+    .server span { color: #8b929b; font-size: 13px; }
+    form { display: flex; gap: 8px; margin-top: 8px; }
+    input {
+      flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid #2c323c; border-radius: 10px;
+      background: #0f1216; color: inherit; font: inherit;
+    }
+    input:focus { outline: none; border-color: #4c8dff; }
+    button.connect {
+      padding: 10px 16px; border: 0; border-radius: 10px; background: #4c8dff; color: #fff;
+      font: inherit; font-weight: 600; cursor: pointer;
+    }
+    button.connect:disabled { opacity: .5; cursor: default; }
+    .hint { margin-top: 18px; color: #7b828c; font-size: 12px; }
+    .spinner {
+      display: inline-block; width: 14px; height: 14px; margin-right: 8px; vertical-align: -2px;
+      border: 2px solid #3a414c; border-top-color: #4c8dff; border-radius: 50%; animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Photo Frame</h1>
+    <p class="sub" id="sub">Подключение к Home Assistant</p>
+
+    <div class="status" id="status"><span class="spinner"></span><span id="statusText">Ищу Home Assistant в локальной сети…</span></div>
+    <div class="list" id="list"></div>
+
+    <form id="form" autocomplete="off">
+      <input id="url" placeholder="http://192.168.1.10:8123" spellcheck="false">
+      <button class="connect" id="connect" type="submit">Подключиться</button>
+    </form>
+
+    <p class="hint" id="hint">Рамка и Home Assistant должны быть в одной локальной сети. Интернет не нужен.</p>
+  </main>
+
+  <script>
+    const ru = (navigator.language || 'ru').toLowerCase().startsWith('ru');
+    const T = ru ? {
+      sub: 'Подключение к Home Assistant',
+      searching: 'Ищу Home Assistant в локальной сети…',
+      searchingLong: 'Поиск занимает несколько секунд…',
+      found: 'Найдено в сети:',
+      none: 'Автоматически найти не удалось. Введите адрес вручную.',
+      connecting: 'Подключаюсь…',
+      unreachable: 'Не удалось подключиться. Проверьте адрес и локальную сеть.',
+      invalid: 'Некорректный адрес.',
+      failedSaved: 'Сохранённый сервер недоступен. Выберите другой или введите адрес.',
+      connect: 'Подключиться',
+      col: 'Можно указать IP-адрес или имя вида homeassistant.local:8123.',
+      hint: 'Рамка и Home Assistant должны быть в одной локальной сети. Интернет не нужен.',
+    } : {
+      sub: 'Connect to Home Assistant',
+      searching: 'Looking for Home Assistant on the local network…',
+      searchingLong: 'Discovery takes a few seconds…',
+      found: 'Found on the network:',
+      none: 'Nothing found automatically. Enter the address manually.',
+      connecting: 'Connecting…',
+      unreachable: 'Could not connect. Check the address and the local network.',
+      invalid: 'Invalid address.',
+      failedSaved: 'The saved server is unreachable. Pick another one or enter an address.',
+      connect: 'Connect',
+      col: 'An IP address or a name like homeassistant.local:8123 works.',
+      hint: 'The frame and Home Assistant must be on the same local network. No internet needed.',
+    };
+
+    const params = new URLSearchParams(location.search);
+    const status = document.getElementById('status');
+    const statusText = document.getElementById('statusText');
+    const list = document.getElementById('list');
+    const form = document.getElementById('form');
+    const input = document.getElementById('url');
+    const button = document.getElementById('connect');
+
+    document.getElementById('sub').textContent = T.sub;
+    document.getElementById('hint').textContent = T.hint;
+    document.getElementById('hint').textContent += ' ' + T.col;
+    button.textContent = T.connect;
+
+    function say(text, error, busy) {
+      status.className = 'status' + (error ? ' error' : '');
+      status.innerHTML = (busy ? '<span class="spinner"></span>' : '') + '<span id="statusText"></span>';
+      document.getElementById('statusText').textContent = text;
+    }
+
+    function render(servers) {
+      list.textContent = '';
+      if (!servers.length) {
+        say(T.none, false, false);
+        return;
+      }
+      say(T.found, false, false);
+      servers.forEach((s) => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'server';
+        const name = document.createElement('b');
+        name.textContent = s.name || 'Home Assistant';
+        const url = document.createElement('span');
+        url.textContent = s.url + (s.version ? ' · ' + s.version : '');
+        item.appendChild(name);
+        item.appendChild(url);
+        item.addEventListener('click', () => connect(s.url));
+        list.appendChild(item);
+      });
+    }
+
+    async function scan() {
+      if (!window.SmartFrameSetup) {
+        say(T.none, true, false);
+        return;
+      }
+      say(T.searching, false, true);
+      const servers = await window.SmartFrameSetup.discover().catch(() => []);
+      render(servers);
+    }
+
+    async function connect(value) {
+      const url = String(value || '').trim();
+      if (!url) { say(T.invalid, true, false); return; }
+      button.disabled = true;
+      say(T.connecting, false, true);
+      const result = await window.SmartFrameSetup.connect(url).catch(() => ({ ok: false, error: 'unreachable' }));
+      button.disabled = false;
+      if (!result || !result.ok) {
+        say(result && result.error === 'invalid' ? T.invalid : T.unreachable, true, false);
+        return;
+      }
+      say(T.connecting, false, true);
+    }
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      connect(input.value);
+    });
+
+    const failed = params.get('url') || '';
+    if (failed) input.value = failed;
+    if (params.get('error') === 'unreachable') say(T.failedSaved, true, false);
+    scan();
+  </script>
+</body>
+</html>

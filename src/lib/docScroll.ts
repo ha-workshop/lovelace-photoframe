@@ -34,9 +34,19 @@ function standalone() {
   return nav.standalone === true || (!!window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
 }
 
+// Сворачивать панели прокруткой умеет только Safari на iPhone и iPad. В Chromium (Electron на Windows и
+// macOS, Chrome, Android WebView) панелей Safari нет, а страница на 1 px выше экрана даёт вертикальную
+// полосу прокрутки — на Windows она ещё и отнимает место справа.
+function iosSafari() {
+  const ua = navigator.userAgent;
+  const iOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  // Chrome, Firefox, Edge и Opera на iOS — тоже WebKit, но панелей Safari не сворачивают.
+  return iOS && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+}
+
 export function setPhotoPeek(on: boolean) {
   const html = document.documentElement;
-  const want = on && docScrollAllowed() && !standalone();
+  const want = on && iosSafari() && docScrollAllowed() && !standalone();
   if (want) {
     html.classList.add('photo-peek');
     // После раскладки: страница уже выше экрана — прокручиваем на 1 px.

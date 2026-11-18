@@ -13,7 +13,7 @@ import { autostart, setAutostart } from '../lib/screen';
 import { autoQuality, photoFit, qualityPref, setPhotoFit, setQualityPref, type PhotoFit, type QualityPref } from '../lib/quality';
 import { applyLanguage, languages, preferredLanguage, setPreferredLanguage, t } from '../i18n';
 import { cameraDisplayPref, setCameraDisplayPref, type CameraDisplayPref } from '../lib/cameraPrefs';
-import { deviceSpeechRate, deviceVoiceId, deviceVoices, listVoicePipelines, primeVoice, setDeviceSpeechRate, setDeviceVoiceId, setTtsSource, speakVoice, ttsSource, type DeviceVoice, type TtsSource, type VoicePipeline, type VoiceRun } from '../lib/voice';
+import { deviceSpeechRate, deviceSttSupported, deviceVoiceId, deviceVoices, listVoicePipelines, primeVoice, setDeviceSpeechRate, setDeviceVoiceId, setSttSource, setTtsSource, speakVoice, sttSource, ttsSource, type DeviceVoice, type SttSource, type TtsSource, type VoicePipeline, type VoiceRun } from '../lib/voice';
 import { WakeWordPicker } from './WakeWord';
 import { MAIN_HOME, mainHome, startScreen, store as frame, useStore, type Home, type Settings } from '../lib/store';
 import { FolderPicker } from './FolderPicker';
@@ -132,6 +132,9 @@ export function SettingsModal(props: { onClose: () => void }) {
   const [qPref, setQPref] = useState<QualityPref>(qualityPref());
   // Озвучка ответов: системный синтез устройства (Web Speech API) или TTS Home Assistant
   // (тот, что выбран в Assist — Piper, Google, любой другой).
+  // Распознавание речи: сервер HA (faster-whisper в пайплайне) или системный движок устройства.
+  const [stt, setStt] = useState<SttSource>(sttSource());
+  const [sttDevice] = useState(deviceSttSupported());
   const [tts, setTts] = useState<TtsSource>(ttsSource());
   // Список голосов Chrome отдаёт асинхронно: без подписки на voiceschanged список голосов
   // и предупреждение «нет русского голоса» оставались пустыми до перезагрузки.
@@ -443,6 +446,25 @@ export function SettingsModal(props: { onClose: () => void }) {
                 {!draft.voicePipeline && <div className="hint small">{t('settings.voice_hint')}</div>}
               </Section>
               {draft.voicePipeline && (
+                <Section title={t('settings.section.stt')}>
+                  <div className="option">
+                    <label>{t('settings.stt')}</label>
+                    <select value={stt} onChange={(e) => {
+                      const v = e.currentTarget.value as SttSource;
+                      setStt(v);
+                      setSttSource(v);
+                    }}>
+                      <option value="ha">{t('settings.stt_ha')}</option>
+                      <option value="device" disabled={!sttDevice}>{t('settings.stt_device')}</option>
+                    </select>
+                  </div>
+                  {stt === 'device'
+                    ? <div className="hint small">{t('settings.stt_device_hint')}</div>
+                    : <div className="hint small">{t('settings.stt_ha_hint')}</div>}
+                  {!sttDevice && <div className="hint small">{t('settings.stt_device_none')}</div>}
+                </Section>
+              )}
+              {draft.voicePipeline && (
                 <Section title={t('settings.section.tts')}>
                   <div className="option">
                     <label>{t('settings.tts')}</label>
@@ -454,8 +476,9 @@ export function SettingsModal(props: { onClose: () => void }) {
                       <option value="ha">{t('settings.tts_ha')}</option>
                       <option value="device">{t('settings.tts_device')}</option>
                     </select>
-                    {tts === 'device' && !ttsDevice && <div className="hint small">{t('settings.tts_device_none')}</div>}
                   </div>
+                  {tts === 'device' && !ttsDevice && <div className="hint small">{t('settings.tts_device_none')}</div>}
+                  {tts === 'ha' && <div className="hint small">{t('settings.tts_ha_hint')}</div>}
                   {/* Системный голос: можно выбрать конкретный голос и темп речи. */}
                   {tts === 'device' && ttsDevice && (
                     <>

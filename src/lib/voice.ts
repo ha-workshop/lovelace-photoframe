@@ -49,6 +49,8 @@ export interface VoicePipeline {
   name: string;
   // Есть ли в ассистенте распознавание речи и озвучка — без них голосом не поговорить.
   ready: boolean;
+  // Разговорный агент пайплайна: по нему видно, что выбран пайплайн с роутером Photo Frame.
+  agent?: string;
 }
 
 const SAMPLE_RATE = 16000;
@@ -175,6 +177,29 @@ export function setWakeWordModel(model: WakeModel | '') {
 }
 
 export const WAKE_WORD_OPTIONS = WAKE_MODELS;
+
+// ── Распознавание речи ───────────────────────────────────
+// 'ha'     — звук уходит в Assist: распознаёт сервер HA (faster-whisper). В локальной сети
+//            работает без интернета и не зависит от языковых пакетов устройства.
+// 'device' — системное распознавание (Web Speech API). Быстро и не грузит сервер, но на
+//            Android без скачанного языкового пакета запрос уходит в Google, а на iOS — в
+//            сервисы Apple, то есть офлайн работает не на каждом устройстве.
+const STT_KEY = 'photoframe.voiceStt';
+export type SttSource = 'device' | 'ha';
+
+export function sttSource(): SttSource {
+  try { return localStorage.getItem(STT_KEY) === 'device' ? 'device' : 'ha'; } catch (e) { return 'ha'; }
+}
+
+export function setSttSource(v: SttSource) {
+  try { localStorage.setItem(STT_KEY, v); } catch (e) { /* ignore */ }
+}
+
+export function deviceSttSupported(): boolean {
+  if (typeof window === 'undefined') return false;
+  const w = window as any;
+  return !!(w.SpeechRecognition || w.webkitSpeechRecognition);
+}
 
 export function deviceTtsReady(): boolean {
   return ttsSource() === 'device' && deviceTtsSupported();
@@ -309,6 +334,7 @@ export function listVoicePipelines(): Promise<VoicePipeline[]> {
           id: p.id,
           name: p.name,
           ready: !!p.stt_engine && !!p.tts_engine,
+          agent: p.conversation_engine,
         })));
       }
     };
@@ -1096,7 +1122,104 @@ function run(mode: 'audio' | 'text' | 'speak', text: string, handlers: VoiceHand
   };
 }
 
+// Распознавание на устройстве: системный движок слушает микрофон и отдаёт текст,
+// дальше он уходит в Assist как обычный текстовый запрос — ответ и озвучку делает пайплайн.
+function runDeviceStt(handlers: VoiceHandlers, conversationId?: string, pipeline?: string, deviceId?: string, noSpeechMs = NO_SPEECH_MS): VoiceRun {
+  const Ctor = typeof window === 'undefined' ? null : ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+  let finished = false;
+  let rec: any = null;
+  let inner: VoiceRun | null = null;
+  let silenceTimer = 0;
+  let maxTimer = 0;
+
+  const clearTimers = () => {
+    window.clearTimeout(silenceTimer);
+    window.clearTimeout(maxTimer);
+  };
+
+  const stopRec = () => {
+    try { rec && rec.stop(); } catch (e) { /* ignore */ }
+  };
+
+  const fail = (error: string) => {
+    if (finished) return;
+    finished = true;
+    clearTimers();
+    stopRec();
+    handlers.onStatus({ phase: 'error', error });
+  };
+
+  if (!Ctor) {
+    handlers.onStatus({ phase: 'error', error: 'unsupported' });
+    return { stop() {}, cancel() {} };
+  }
+
+  // Пауза в речи завершает сессию так же, как в серверном распознавании.
+  const arm = (ms: number) => {
+    window.clearTimeout(silenceTimer);
+    silenceTimer = window.setTimeout(() => fail('no-speech'), ms);
+  };
+
+  rec = new Ctor();
+  const lang = speechLang();
+  rec.lang = lang === 'ru' ? 'ru-RU' : lang === 'en' ? 'en-US' : lang;
+  rec.interimResults = true;
+  rec.continuous = false;
+  rec.maxAlternatives = 1;
+
+  rec.onresult = (e: any) => {
+    let text = '';
+    for (let i = e.resultIndex; i < e.results.length; i += 1) text += e.results[i][0].transcript;
+    text = text.trim();
+    if (text) {
+      handlers.onStatus({ phase: 'listening', transcript: text });
+      arm(noSpeechMs);
+    }
+    const last = e.results[e.results.length - 1];
+    if (!text || !last || !last.isFinal) return;
+    if (finished) return;
+    finished = true;
+    clearTimers();
+    stopRec();
+    // Текст распознан — дальше обычный путь Assist: агент и озвучка.
+    handlers.onStatus({ phase: 'thinking', transcript: text });
+    inner = askVoice(text, handlers, conversationId, pipeline, true, deviceId);
+  };
+
+  rec.onerror = (e: any) => {
+    const code = e && e.error;
+    fail(code === 'not-allowed' || code === 'service-not-allowed' ? 'denied'
+      : code === 'no-speech' ? 'no-speech'
+        : code === 'audio-capture' ? 'no-mic'
+          : code === 'network' ? 'network' : 'unsupported');
+  };
+
+  // Движок может закончиться без финального результата — считаем, что речь не распознали.
+  rec.onend = () => { if (!finished) fail('no-speech'); };
+
+  handlers.onStatus({ phase: 'listening' });
+  try {
+    rec.start();
+  } catch (e) {
+    fail('unsupported');
+    return { stop() {}, cancel() {} };
+  }
+  arm(noSpeechMs);
+  maxTimer = window.setTimeout(stopRec, MAX_LISTEN_MS);
+
+  return {
+    stop() { stopRec(); },
+    cancel() {
+      finished = true;
+      clearTimers();
+      stopRec();
+      if (inner) inner.cancel();
+    },
+  };
+}
+
 export function listenVoice(handlers: VoiceHandlers, conversationId?: string, pipeline?: string, deviceId?: string, noSpeechMs = NO_SPEECH_MS): VoiceRun {
+  if (sttSource() === 'device' && deviceSttSupported()) return runDeviceStt(handlers, conversationId, pipeline, deviceId, noSpeechMs);
   return run('audio', '', handlers, conversationId, pipeline, true, deviceId, noSpeechMs);
 }
 

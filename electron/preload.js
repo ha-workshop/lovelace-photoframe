@@ -24,3 +24,9 @@ contextBridge.exposeInMainWorld('SmartFrame', {
     // TODO: implement auto-updater
   },
 });
+
+// Server setup window: mDNS discovery and connecting to the chosen Home Assistant.
+contextBridge.exposeInMainWorld('SmartFrameSetup', {
+  discover: () => ipcRenderer.invoke('photoframe:discover'),
+  connect: (url) => ipcRenderer.invoke('photoframe:connect', url),
+});

@@ -25,45 +25,23 @@ let engineReady = false;
 
 // Движок wake word собирается из исходников (см. src/wakeword-standalone.js ->
 // public/models/wakeword-standalone.js): полностью автономный, с onnxruntime-web внутри.
-const WAKE_SOURCE_KEY = 'photoframe.wakeSource';
-type WakeSource = 'local' | 'cdn';
-
-function wakeSource(): WakeSource {
-  try { return localStorage.getItem(WAKE_SOURCE_KEY) === 'cdn' ? 'cdn' : 'local'; } catch (e) { return 'local'; }
-}
-
-function setWakeSource(v: WakeSource) {
-  try { localStorage.setItem(WAKE_SOURCE_KEY, v); } catch (e) { /* ignore */ }
-}
-
-function wakeUrls(source: WakeSource) {
-  // Локальная сборка (самодостаточна); CDN-режим оставлен для сравнения.
-  if (source === 'cdn') {
-    return {
-      engine: '/photoframe/models/wakeword-standalone.js',
-      models: '/photoframe/models',
-    };
-  }
-  return {
-    engine: '/photoframe/models/wakeword-standalone.js',
-    models: '/photoframe/models',
-  };
-}
+// Всё, что нужно движку, раздаёт сервер Home Assistant — из интернета ничего не тянется.
+const WAKE_ENGINE_URL = '/photoframe/models/wakeword-standalone.js';
+const WAKE_MODELS_URL = '/photoframe/models';
 
 let engineModel = '';
 
-async function ensureEngine(source: WakeSource, model: string) {
+async function ensureEngine(model: string) {
   if (engine && engineModel === model) return;
   if (engine) {
     try { await engine.stop().catch(() => {}); } catch (e) { /* ignore */ }
     engine = null;
   }
   engineModel = model;
-  const urls = wakeUrls(source);
   if (!(window as any).WakeWordEngine) {
     await new Promise<void>((resolve, reject) => {
       const s = document.createElement('script');
-      s.src = urls.engine;
+      s.src = WAKE_ENGINE_URL;
       s.onload = () => resolve();
       s.onerror = () => reject(new Error('Failed to load wakeword engine'));
       document.head.appendChild(s);
@@ -72,8 +50,8 @@ async function ensureEngine(source: WakeSource, model: string) {
   const WakeWordEngine = (window as any).WakeWordEngine;
   engine = new WakeWordEngine({
     keywords: [model],
-    baseAssetUrl: urls.models,
-    ortWasmPath: urls.models + '/',
+    baseAssetUrl: WAKE_MODELS_URL,
+    ortWasmPath: WAKE_MODELS_URL + '/',
     detectionThreshold: 0.5,
     cooldownMs: 3000,
     debug: true,
@@ -98,7 +76,7 @@ export function WakeWordDetector(props: Props) {
     const tryStart = async () => {
       if (started.current) return;
       try {
-        await ensureEngine(wakeSource(), model);
+        await ensureEngine(model);
         if (!mounted.current) return;
         engine.setActiveKeywords([model]);
         // iOS Safari требует жеста пользователя для AudioContext — ждём первого касания
@@ -126,7 +104,7 @@ export function WakeWordDetector(props: Props) {
       const m = wakeWordModel();
       if (!m) return;
       try {
-        await ensureEngine(wakeSource(), m);
+        await ensureEngine(m);
         if (!mounted.current) return;
         engine.setActiveKeywords([m]);
         await engine.start().catch((e: any) => console.warn('[WakeWord] restart failed:', e));
@@ -158,7 +136,6 @@ export function WakeWordDetector(props: Props) {
 
 export function WakeWordPicker() {
   const [model, setModel] = useState(wakeWordModel());
-  const [source, setSource] = useState(wakeSource());
   const models = ['', 'alexa', 'hey_jarvis', 'hey_mycroft', 'hey_rhasspy', 'hey_jarvis_v2'] as const;
 
   const changeModel = async (value: string) => {
@@ -166,17 +143,11 @@ export function WakeWordPicker() {
     setWakeWordModel(value as typeof model);
     if (value) {
       try {
-        await ensureEngine(source, value);
+        await ensureEngine(value);
         engine.setActiveKeywords([value]);
         await engine.start().catch(() => {});
       } catch (e) { /* offline — без wake word */ }
     }
-  };
-
-  const changeSource = (value: string) => {
-    const v = value as WakeSource;
-    setSource(v);
-    setWakeSource(v);
   };
 
   return (
@@ -190,15 +161,6 @@ export function WakeWordPicker() {
           ))}
         </select>
       </div>
-      {model && (
-        <div className="option">
-          <label>{t('settings.wake_source')}</label>
-          <select value={source} onChange={(e) => changeSource(e.currentTarget.value)}>
-            <option value="local">{t('settings.wake_source_local')}</option>
-            <option value="cdn">{t('settings.wake_source_cdn')}</option>
-          </select>
-        </div>
-      )}
       {model && <div className="hint small" style={{ marginTop: 0 }}>{t('settings.wake_word_hint')}</div>}
     </>
   );

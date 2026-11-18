@@ -1,6 +1,6 @@
 {
   "name": "photoframe",
-  "version": "1.9.4",
+  "version": "1.9.6",
   "description": "Photo Frame for Home Assistant — desktop app",
   "author": {
     "name": "ha-workshop",
@@ -21,7 +21,8 @@
     "icon": "icon.png",
     "files": [
       "main.js",
-      "preload.js"
+      "preload.js",
+      "setup.html"
     ],
     "mac": {
       "category": "public.app-category.lifestyle",
