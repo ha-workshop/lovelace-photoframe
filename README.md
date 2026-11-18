@@ -12,6 +12,10 @@ air conditioner, cameras, speakers and TV are right there. Leave it alone for a 
 [![Release](https://img.shields.io/github/v/release/ha-workshop/lovelace-photoframe)](https://github.com/ha-workshop/lovelace-photoframe/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+**Photo Frame Card is in the HACS default list and the Home Assistant Marketplace.**
+Both already know it by name — no custom repository to add. Search **Photo Frame Card**, install, reload.
+
+
 | Photo frame | Control panel |
 |---|---|
 | ![Photo frame mode](https://raw.githubusercontent.com/ha-workshop/lovelace-photoframe/main/docs/screenshots/ambient.jpg) | ![Control panel](https://raw.githubusercontent.com/ha-workshop/lovelace-photoframe/main/docs/screenshots/controls.jpg) |

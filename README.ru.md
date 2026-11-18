@@ -15,6 +15,10 @@
 [![Release](https://img.shields.io/github/v/release/ha-workshop/lovelace-photoframe)](https://github.com/ha-workshop/lovelace-photoframe/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+**Карточка Photo Frame есть в стандартном списке HACS и в Marketplace Home Assistant.**
+Оба знают её по названию — пользовательский репозиторий добавлять не нужно. Найдите **Photo Frame Card**,
+установите и обновите страницу.
+
 | Фоторамка | Панель управления |
 |---|---|
 | ![Режим фоторамки](https://raw.githubusercontent.com/ha-workshop/lovelace-photoframe/main/docs/screenshots/ambient.jpg) | ![Панель управления](https://raw.githubusercontent.com/ha-workshop/lovelace-photoframe/main/docs/screenshots/controls.jpg) |
